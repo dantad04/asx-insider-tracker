@@ -201,11 +201,11 @@ async def process_record(
         return
 
     # Extract fields
-    issuer_name = record.get("issuer_name", "").strip()
-    director_name = record.get("director_name", "Unknown").strip()
+    issuer_name = (record.get("issuer_name") or "").strip()
+    director_name = (record.get("director_name") or "Unknown").strip()
     date_of_change_str = record.get("date_of_change")
     transaction_type = record.get("transaction_type", "Other")
-    nature_of_change = record.get("nature_of_change", "")
+    nature_of_change = record.get("nature_of_change") or ""
     quantity = record.get("quantity")
     per_share = record.get("per_share")
     date_readable_str = record.get("dateReadable")
@@ -213,6 +213,10 @@ async def process_record(
     # Validate required fields
     if not issuer_name:
         stats["null_issuer_skipped"] += 1
+        return
+
+    if not date_of_change_str:
+        stats["null_date_skipped"] += 1
         return
 
     if quantity is None or quantity == 0:
@@ -330,6 +334,7 @@ async def seed_from_json(file_path: str) -> None:
         "duplicates_skipped": 0,
         "null_symbol_skipped": 0,
         "null_issuer_skipped": 0,
+        "null_date_skipped": 0,
         "null_quantity_skipped": 0,
         "malformed_skipped": 0,
     }
@@ -374,6 +379,7 @@ async def seed_from_json(file_path: str) -> None:
     print(f"Duplicates skipped: {stats['duplicates_skipped']}")
     print(f"Null symbol skipped: {stats['null_symbol_skipped']}")
     print(f"Null issuer name skipped: {stats['null_issuer_skipped']}")
+    print(f"Null date skipped: {stats['null_date_skipped']}")
     print(f"Null quantity skipped: {stats['null_quantity_skipped']}")
     print(f"Malformed records skipped: {stats['malformed_skipped']}")
     print("=" * 60)
