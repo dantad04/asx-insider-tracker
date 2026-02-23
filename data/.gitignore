@@ -4,6 +4,10 @@
 # Ignore all CSV files
 *.csv
 
+# Ignore all PDF files
+*.pdf
+pdfs/
+
 # But keep this directory tracked
 !.gitignore
 !README.md
