@@ -208,7 +208,7 @@ async def process_record(
     nature_of_change = record.get("nature_of_change", "")
     quantity = record.get("quantity")
     per_share = record.get("per_share")
-    lodgeable_str = record.get("lodgeable")
+    date_readable_str = record.get("dateReadable")
 
     # Validate required fields
     if not issuer_name:
@@ -229,7 +229,20 @@ async def process_record(
     # Parse dates
     try:
         date_of_trade = datetime.strptime(date_of_change_str, "%Y-%m-%d")
-        date_lodged = datetime.strptime(lodgeable_str, "%Y-%m-%dT%H:%M:%S.%fZ") if lodgeable_str else date_of_trade
+        # Try multiple date formats for date_readable
+        if date_readable_str:
+            try:
+                # Try format: "2025-10-17 11:57:38"
+                date_lodged = datetime.strptime(date_readable_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    # Try ISO format with milliseconds: "2025-10-17T11:57:38.123Z"
+                    date_lodged = datetime.strptime(date_readable_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except ValueError:
+                    # Fallback to trade date if parsing fails
+                    date_lodged = date_of_trade
+        else:
+            date_lodged = date_of_trade
     except (ValueError, TypeError):
         date_of_trade = datetime.now()
         date_lodged = datetime.now()
