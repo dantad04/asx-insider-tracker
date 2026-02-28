@@ -1,8 +1,11 @@
 """
-Scrape Appendix 3Y announcements from ASX API and download PDFs.
+Scrape Appendix 3Y announcements from ASX website using BeautifulSoup and download PDFs.
 
 Usage:
-    # Scrape specific tickers
+    # Scrape today's announcements (recommended - fastest, no JavaScript)
+    python -m app.scripts.scrape_3y_announcements --today
+
+    # Scrape specific tickers (for backlog/historical)
     python -m app.scripts.scrape_3y_announcements --tickers BHP,CBA,WES
 
     # Scrape all companies in database
@@ -12,6 +15,8 @@ Usage:
     python -m app.scripts.scrape_3y_announcements --retry-from /app/data/failed_tickers_20240223_140000.json
 """
 
+from __future__ import annotations
+
 import argparse
 import asyncio
 import hashlib
@@ -19,6 +24,7 @@ import json
 import logging
 import os
 import random
+import re
 import sys
 import time
 from datetime import datetime
@@ -26,6 +32,8 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright, Page, Browser
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,14 +49,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-ASX_ANNOUNCEMENTS_URL = "https://asx.api.markitdigital.com/asx-research/1.0/companies/{ticker}/announcements"
-ASX_ACCESS_TOKEN = "83ff96335c2d45a094df02a206a39ff4"
-PDF_BASE_URL = "https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file"
+ASX_ANNOUNCEMENTS_URL = "https://www.asx.com.au/asx/v2/statistics/announcements.do"
+ASX_TODAY_ANNS_URL = "https://www.asx.com.au/asx/v2/statistics/todayAnns.do"
+ASX_BASE_URL = "https://www.asx.com.au"
 PDF_DOWNLOAD_DIR = Path("/app/data/pdfs/raw")
-MAX_ANNOUNCEMENTS_PER_TICKER = 20
 REQUEST_TIMEOUT = 30.0
 MAX_RETRIES = 3
 RETRY_BACKOFF_BASE = 60  # seconds
+# How many years back to search for 3Y announcements
+YEARS_TO_SEARCH = 3
+
+# User agent to avoid bot detection
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
 
 class RateLimiter:
@@ -87,7 +103,7 @@ async def fetch_with_retry(
         await rate_limiter.acquire()
 
         try:
-            response = await client.get(url, timeout=REQUEST_TIMEOUT)
+            response = await client.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT, follow_redirects=True)
 
             if response.status_code == 200:
                 return response
@@ -128,10 +144,10 @@ async def is_duplicate(
     return result.scalar_one_or_none() is not None
 
 
-def is_3y_announcement(header: str) -> bool:
-    """Check if announcement header contains '3Y' or 'Appendix 3Y'."""
-    header_lower = header.lower()
-    return "3y" in header_lower or "appendix 3y" in header_lower
+def is_3y_announcement(title: str) -> bool:
+    """Check if announcement title contains '3Y' or 'Appendix 3Y'."""
+    title_lower = title.lower()
+    return "3y" in title_lower or "appendix 3y" in title_lower
 
 
 async def download_pdf(
@@ -175,7 +191,213 @@ async def save_pdf(
     return str(pdf_path)
 
 
-async def scrape_ticker_announcements(
+def parse_asx_date(date_str: str) -> datetime.date | None:
+    """
+    Parse ASX date string to datetime.date.
+
+    ASX uses formats like: "23/02/2026", "2026-02-23", "23 Feb 2026"
+    """
+    date_formats = [
+        "%d/%m/%Y",      # 23/02/2026
+        "%Y-%m-%d",      # 2026-02-23
+        "%d %b %Y",      # 23 Feb 2026
+        "%d %B %Y",      # 23 February 2026
+    ]
+
+    for fmt in date_formats:
+        try:
+            return datetime.strptime(date_str.strip(), fmt).date()
+        except ValueError:
+            continue
+
+    logger.warning(f"Could not parse date: {date_str}")
+    return None
+
+
+def extract_direct_pdf_url(link_element) -> str | None:
+    """
+    Extract direct PDF URL from announcement link.
+
+    Direct URLs have format: https://announcements.asx.com.au/asxpdf/YYYYMMDD/pdf/[HASH].pdf
+    Old displayAnnouncement.do URLs are NOT used.
+    """
+    if not link_element:
+        return None
+
+    href = link_element.get("href", "")
+
+    # If it's already a direct PDF URL, return it
+    if "announcements.asx.com.au/asxpdf/" in href or "/asxpdf/" in href:
+        # Make it absolute if needed
+        if href.startswith("http"):
+            return href
+        elif href.startswith("/"):
+            return f"https://announcements.asx.com.au{href}"
+        else:
+            return f"https://announcements.asx.com.au/{href}"
+
+    # If it's a displayAnnouncement.do URL, we can't use it (needs JavaScript)
+    # Return None and log a warning
+    if "displayAnnouncement" in href:
+        logger.debug(f"Skipping displayAnnouncement.do URL (needs JavaScript): {href}")
+        return None
+
+    return None
+
+
+async def scrape_today_announcements(
+    session: AsyncSession,
+    client: httpx.AsyncClient,
+    rate_limiter: RateLimiter,
+    stats: dict[str, int]
+) -> None:
+    """
+    Scrape today's announcements from ASX todayAnns.do endpoint.
+
+    This is the RECOMMENDED approach - it's faster and doesn't require JavaScript.
+    Gets all 3Y announcements for ALL tickers from today in one request.
+    """
+    logger.info("Fetching today's announcements from ASX")
+
+    # Fetch today's announcements page
+    response = await fetch_with_retry(client, ASX_TODAY_ANNS_URL, rate_limiter)
+    if not response:
+        logger.error("Failed to fetch today's announcements")
+        return
+
+    # Parse HTML with BeautifulSoup
+    try:
+        soup = BeautifulSoup(response.text, "lxml")
+    except Exception as e:
+        logger.error(f"Failed to parse HTML: {e}")
+        return
+
+    # Find the announcements table
+    # The todayAnns.do page has a table with columns: Code, Time, Headline
+    table = soup.find("table")
+    if not table:
+        logger.warning("No announcements table found on todayAnns.do page")
+        return
+
+    # Get all table rows (skip header row)
+    rows = table.find_all("tr")
+    if len(rows) <= 1:
+        logger.info("No announcements found for today")
+        return
+
+    # Skip the header row
+    data_rows = rows[1:]
+    logger.info(f"Found {len(data_rows)} announcements for today")
+
+    # Track tickers processed
+    tickers_found = set()
+
+    # Parse each announcement row
+    for row in data_rows:
+        try:
+            cells = row.find_all("td")
+            if len(cells) < 3:
+                continue
+
+            # Expected structure: [Code, Time, Headline (with PDF link)]
+            ticker_cell = cells[0]
+            time_cell = cells[1]
+            headline_cell = cells[2]
+
+            # Extract ticker
+            ticker = ticker_cell.get_text(strip=True).upper()
+            if not ticker:
+                continue
+
+            # Extract title from headline cell
+            title = headline_cell.get_text(strip=True)
+
+            # Remove PDF size info from title (e.g., "2 pages 119.9 KB")
+            title = re.sub(r'\d+\s+pages?\s+\d+(\.\d+)?\s*[KM]B', '', title, flags=re.I).strip()
+
+            # Check if it's a 3Y announcement
+            if not is_3y_announcement(title):
+                continue
+
+            stats["3y_announcements_found"] += 1
+            tickers_found.add(ticker)
+            logger.info(f"Found 3Y announcement for {ticker}: {title}")
+
+            # Extract PDF link from headline cell
+            # Look for direct PDF URLs (announcements.asx.com.au/asxpdf/...)
+            pdf_link = headline_cell.find("a", href=True)
+            pdf_url = extract_direct_pdf_url(pdf_link)
+
+            if not pdf_url:
+                logger.warning(f"No direct PDF URL found for {ticker}: {title}")
+                # Try to find any link with .pdf in it
+                all_links = headline_cell.find_all("a", href=True)
+                for link in all_links:
+                    href = link.get("href", "")
+                    if ".pdf" in href.lower():
+                        pdf_url = extract_direct_pdf_url(link)
+                        if pdf_url:
+                            logger.info(f"Found PDF URL on retry: {pdf_url}")
+                            break
+
+                if not pdf_url:
+                    logger.error(f"Could not find direct PDF URL for {ticker}: {title}")
+                    stats["pdf_download_failed"] += 1
+                    continue
+
+            # Check if already processed
+            if await is_duplicate(session, pdf_url):
+                logger.debug(f"Duplicate PDF URL: {pdf_url}")
+                stats["duplicates_skipped"] += 1
+                continue
+
+            # Extract time and construct today's date
+            # Time format is like: "09:15 AM"
+            time_str = time_cell.get_text(strip=True)
+            document_date = datetime.now().date()
+
+            # Download PDF
+            pdf_content = await download_pdf(client, pdf_url, rate_limiter)
+            if not pdf_content:
+                logger.error(f"Failed to download PDF: {pdf_url}")
+                stats["pdf_download_failed"] += 1
+                continue
+
+            # Save PDF
+            pdf_path = await save_pdf(ticker, document_date.strftime("%Y-%m-%d"), pdf_content)
+
+            # Create database record
+            try:
+                parse_record = Pending3YParse(
+                    ticker=ticker,
+                    pdf_path=pdf_path,
+                    pdf_url=pdf_url,
+                    document_date=document_date,
+                    announcement_header=title[:500],  # Truncate if needed
+                    status=ParseStatus.PENDING,
+                    parse_attempts=0,
+                )
+                session.add(parse_record)
+                stats["pdfs_downloaded"] += 1
+
+                # Commit every 20 records
+                if stats["pdfs_downloaded"] % 20 == 0:
+                    await session.commit()
+                    logger.info(f"Committed {stats['pdfs_downloaded']} PDFs to database")
+            except Exception as e:
+                logger.error(f"Error creating database record for {ticker}: {e}")
+                await session.rollback()
+
+        except Exception as e:
+            logger.error(f"Error parsing announcement row: {e}")
+            continue
+
+    # Final commit
+    await session.commit()
+    logger.info(f"Completed today's announcements: found 3Y announcements for {len(tickers_found)} tickers")
+
+
+async def scrape_ticker_announcements_api(
     ticker: str,
     session: AsyncSession,
     client: httpx.AsyncClient,
@@ -183,98 +405,118 @@ async def scrape_ticker_announcements(
     stats: dict[str, int]
 ) -> None:
     """
-    Scrape announcements for a single ticker.
-    Filters for Appendix 3Y and downloads new PDFs.
+    Scrape announcements for a single ticker using ASX API.
+
+    Uses the ASX Market Data API to fetch announcements and filter for 3Y forms.
+    Much faster than Playwright approach!
     """
-    url = ASX_ANNOUNCEMENTS_URL.format(ticker=ticker)
-    url += f"?access_token={ASX_ACCESS_TOKEN}"
+    logger.info(f"Fetching announcements for {ticker} via API")
 
-    logger.info(f"Fetching announcements for {ticker}")
+    # Apply rate limiting
+    await rate_limiter.acquire()
 
-    response = await fetch_with_retry(client, url, rate_limiter)
-    if not response:
-        stats["failed_tickers"] += 1
-        return
+    # Fetch announcements from API
+    api_url = f"https://asx.api.markitdigital.com/asx-research/1.0/companies/{ticker}/announcements?count=200"
 
     try:
+        response = await fetch_with_retry(client, api_url, rate_limiter)
+        if not response:
+            logger.error(f"Failed to fetch announcements for {ticker}")
+            return
+
         data = response.json()
-    except json.JSONDecodeError:
-        logger.error(f"Invalid JSON response for {ticker}")
-        stats["failed_tickers"] += 1
+        items = data.get("data", {}).get("items", [])
+        logger.debug(f"Found {len(items)} total announcements for {ticker}")
+
+        # Filter for 3Y announcements
+        for item in items:
+            headline = item.get("headline", "")
+
+            # Check if it's a 3Y announcement
+            if not is_3y_announcement(headline):
+                continue
+
+            stats["3y_announcements_found"] += 1
+            logger.info(f"Found 3Y announcement for {ticker}: {headline}")
+
+            # Extract document details
+            document_key = item.get("documentKey", "")
+            date_str = item.get("date", "")
+
+            # Parse date (format: "2026-02-16T21:39:43.000Z")
+            document_date = None
+            if date_str:
+                try:
+                    document_date = datetime.fromisoformat(date_str.replace("Z", "+00:00")).date()
+                except ValueError:
+                    logger.warning(f"Could not parse date: {date_str}")
+                    document_date = datetime.now().date()
+            else:
+                document_date = datetime.now().date()
+
+            # Construct PDF URL from documentKey
+            # documentKey format: "2924-03057190-3A687227"
+            # PDF URL format: https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/{documentKey}&v=undefined
+            if document_key:
+                pdf_url = f"https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/{document_key}&v=undefined"
+            else:
+                logger.warning(f"No documentKey for {ticker}: {headline}")
+                stats["pdf_download_failed"] += 1
+                continue
+
+            # Check if already processed
+            if await is_duplicate(session, pdf_url):
+                logger.debug(f"Duplicate PDF URL: {pdf_url}")
+                stats["duplicates_skipped"] += 1
+                continue
+
+            # Download PDF
+            pdf_content = await download_pdf(client, pdf_url, rate_limiter)
+            if not pdf_content:
+                logger.error(f"Failed to download PDF: {pdf_url}")
+                stats["pdf_download_failed"] += 1
+                continue
+
+            # Save PDF
+            pdf_path = await save_pdf(ticker, document_date.strftime("%Y-%m-%d"), pdf_content)
+
+            # Create database record
+            try:
+                parse_record = Pending3YParse(
+                    ticker=ticker,
+                    pdf_path=pdf_path,
+                    pdf_url=pdf_url,
+                    document_date=document_date,
+                    announcement_header=headline[:500],  # Truncate if needed
+                    status=ParseStatus.PENDING,
+                    parse_attempts=0,
+                )
+                session.add(parse_record)
+                stats["pdfs_downloaded"] += 1
+
+                # Commit every 20 records
+                if stats["pdfs_downloaded"] % 20 == 0:
+                    await session.commit()
+                    logger.info(f"Committed {stats['pdfs_downloaded']} PDFs to database")
+            except Exception as e:
+                logger.error(f"Error creating database record for {ticker}: {e}")
+                await session.rollback()
+
+    except Exception as e:
+        logger.error(f"Error scraping {ticker} via API: {e}")
         return
 
-    # New API structure: data.items
-    response_data = data.get("data", {})
-    announcements = response_data.get("items", [])
-    logger.debug(f"Found {len(announcements)} announcements for {ticker}")
-
-    for announcement in announcements:
-        headline = announcement.get("headline", "")
-        if not is_3y_announcement(headline):
-            continue
-
-        stats["3y_announcements_found"] += 1
-
-        # Extract document key to build PDF URL
-        document_key = announcement.get("documentKey")
-        if not document_key:
-            logger.warning(f"No document key for {ticker}: {headline}")
-            continue
-
-        # Build full PDF URL from document key
-        pdf_url = f"{PDF_BASE_URL}/{document_key}"
-
-        # Check if already processed
-        if await is_duplicate(session, pdf_url):
-            logger.debug(f"Duplicate PDF URL: {pdf_url}")
-            stats["duplicates_skipped"] += 1
-            continue
-
-        # Download PDF
-        pdf_content = await download_pdf(client, pdf_url, rate_limiter)
-        if not pdf_content:
-            logger.error(f"Failed to download PDF: {pdf_url}")
-            stats["pdf_download_failed"] += 1
-            continue
-
-        # Parse date from ISO datetime string (e.g., "2026-02-16T21:39:43.000Z")
-        date_str = announcement.get("date", "")
-        document_date = date_str[:10]  # Extract YYYY-MM-DD
-        if not document_date:
-            logger.warning(f"No date for {ticker}: {headline}")
-            continue
-
-        pdf_path = await save_pdf(ticker, document_date, pdf_content)
-
-        # Create database record
-        try:
-            parse_record = Pending3YParse(
-                ticker=ticker,
-                pdf_path=pdf_path,
-                pdf_url=pdf_url,
-                document_date=datetime.strptime(document_date, "%Y-%m-%d").date(),
-                announcement_header=headline[:500],  # Truncate if needed
-                status=ParseStatus.PENDING,
-                parse_attempts=0,
-            )
-            session.add(parse_record)
-            stats["pdfs_downloaded"] += 1
-
-            # Commit every 20 records
-            if stats["pdfs_downloaded"] % 20 == 0:
-                await session.commit()
-                logger.info(f"Committed {stats['pdfs_downloaded']} PDFs to database")
-        except Exception as e:
-            logger.error(f"Error creating database record for {ticker}: {e}")
-            await session.rollback()
+    # Log completion
+    if stats.get("3y_announcements_found", 0) == 0:
+        logger.debug(f"No 3Y announcements found for {ticker}")
 
 
 async def scrape_tickers(
     tickers: list[str],
-    max_concurrent: int = 5
+    max_concurrent: int = 5  # Higher concurrency for API (no browser overhead)
 ) -> dict[str, int]:
     """
-    Scrape announcements for multiple tickers with concurrency control.
+    Scrape announcements for multiple tickers using ASX API.
 
     Returns statistics dictionary.
     """
@@ -295,14 +537,14 @@ async def scrape_tickers(
 
     # Create HTTP client and rate limiter
     async with httpx.AsyncClient() as client:
-        rate_limiter = RateLimiter(requests_per_second=1.0, jitter_ms=500)
+        rate_limiter = RateLimiter(requests_per_second=2.0, jitter_ms=500)  # Faster for API
         semaphore = asyncio.Semaphore(max_concurrent)
 
         async def process_with_limit(ticker: str):
             async with semaphore:
                 async with async_session() as session:
                     try:
-                        await scrape_ticker_announcements(
+                        await scrape_ticker_announcements_api(
                             ticker, session, client, rate_limiter, stats
                         )
                         await session.commit()
@@ -311,6 +553,7 @@ async def scrape_tickers(
                     except Exception as e:
                         logger.error(f"Error processing {ticker}: {e}")
                         failed_tickers.append({"ticker": ticker, "error": str(e)})
+                        stats["failed_tickers"] += 1
                         await session.rollback()
 
         # Process all tickers
@@ -339,6 +582,52 @@ async def main(args: argparse.Namespace) -> None:
     """Main entry point."""
     logger.info("Starting ASX Appendix 3Y scraper")
 
+    # Ensure PDF directory exists
+    PDF_DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    start_time = time.time()
+
+    # Check if using today's announcements approach (recommended)
+    if args.today:
+        logger.info("Using TODAY'S ANNOUNCEMENTS mode (recommended)")
+
+        # Initialize stats
+        stats = {
+            "3y_announcements_found": 0,
+            "pdfs_downloaded": 0,
+            "duplicates_skipped": 0,
+            "pdf_download_failed": 0,
+        }
+
+        # Run today's announcements scraper
+        async with httpx.AsyncClient() as client:
+            rate_limiter = RateLimiter(requests_per_second=1.0, jitter_ms=500)
+            async with async_session() as session:
+                try:
+                    await scrape_today_announcements(session, client, rate_limiter, stats)
+                    await session.commit()
+                except Exception as e:
+                    logger.error(f"Error scraping today's announcements: {e}")
+                    await session.rollback()
+
+        elapsed_time = time.time() - start_time
+
+        # Print summary
+        print("\n" + "=" * 60)
+        print("SCRAPER SUMMARY (TODAY'S ANNOUNCEMENTS)")
+        print("=" * 60)
+        print(f"Appendix 3Y announcements found: {stats['3y_announcements_found']}")
+        print(f"PDFs downloaded: {stats['pdfs_downloaded']}")
+        print(f"Duplicates skipped: {stats['duplicates_skipped']}")
+        print(f"PDF download failures: {stats['pdf_download_failed']}")
+        print(f"Elapsed time: {elapsed_time:.2f}s")
+        print("=" * 60)
+        logger.info("Scraper completed successfully")
+        return
+
+    # Otherwise, use ticker-based approach (for backlog/historical)
+    logger.info("Using TICKER-BASED mode (for backlog/historical)")
+
     # Determine tickers to process
     if args.retry_from:
         with open(args.retry_from, "r") as f:
@@ -352,7 +641,7 @@ async def main(args: argparse.Namespace) -> None:
         tickers = [t.strip().upper() for t in args.tickers.split(",")]
         logger.info(f"Processing {len(tickers)} specified tickers")
     else:
-        logger.error("Must specify --tickers, --all, or --retry-from")
+        logger.error("Must specify --today, --tickers, --all, or --retry-from")
         sys.exit(1)
 
     if not tickers:
@@ -360,13 +649,12 @@ async def main(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Run scraper
-    start_time = time.time()
     stats = await scrape_tickers(tickers, max_concurrent=5)
     elapsed_time = time.time() - start_time
 
     # Print summary
     print("\n" + "=" * 60)
-    print("SCRAPER SUMMARY")
+    print("SCRAPER SUMMARY (TICKER-BASED)")
     print("=" * 60)
     print(f"Tickers processed: {stats['tickers_processed']}/{len(tickers)}")
     print(f"Failed tickers: {stats['failed_tickers']}")
@@ -385,13 +673,18 @@ if __name__ == "__main__":
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
+        "--today",
+        action="store_true",
+        help="Scrape today's announcements (recommended - fastest, no JavaScript)"
+    )
+    group.add_argument(
         "--tickers",
-        help="Comma-separated list of tickers (e.g., BHP,CBA,WES)"
+        help="Comma-separated list of tickers for backlog/historical (e.g., BHP,CBA,WES)"
     )
     group.add_argument(
         "--all",
         action="store_true",
-        help="Process all tickers from companies table"
+        help="Process all tickers from companies table (for backlog/historical)"
     )
     group.add_argument(
         "--retry-from",

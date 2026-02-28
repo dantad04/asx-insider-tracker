@@ -12,3 +12,6 @@ pandas==2.2.1
 numpy==1.26.4
 apscheduler==3.10.4
 psycopg2-binary==2.9.11
+beautifulsoup4==4.12.3
+lxml==5.1.0
+playwright==1.42.0
