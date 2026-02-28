@@ -154,48 +154,59 @@ def parse_date_of_last_notice(text: str) -> datetime.date | None:
     return None
 
 
-def parse_number_acquired(text: str) -> int | None:
-    """Extract number of securities acquired."""
-    # Pattern: "Number acquired <number>" (more flexible with whitespace)
-    pattern = r"Number acquired\s+[\n\s]*([\d,]+)"
+def extract_quantity(text: str, field_type: str) -> int | None:
+    """
+    Extract quantity with flexible regex to handle various formatting.
+
+    Handles formats like:
+    - "Number acquired 123,456"
+    - "Number acquired: 123,456"
+    - "Number acquired Indirect – 123,456"
+    - "Number acquired\nIndirect: 123,456"
+    - "Number acquired 123,456* Ordinary Shares"
+    """
+    # First: Check for "Not applicable" or "N/A"
+    na_pattern = rf"Number {field_type}\s*:?\s*(?:Indirect|Direct)?\s*(?:–|-|—)?\s*(Not applicable|N/?A)"
+    if re.search(na_pattern, text, re.IGNORECASE):
+        return 0
+
+    # Main pattern: Match "Number [field_type]" followed by optional text, then capture digits
+    # Handles: descriptors (Indirect/Direct), dashes, colons, asterisks, multiline
+    pattern = rf"Number {field_type}\s*:?\s*(?:Indirect|Direct)?\s*(?:–|-|—)?\s*[\w\s]*?(\d{{1,3}}(?:,\d{{3}})*)\s*(?:\*)?(?:\s+\w+)?"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
         try:
-            # Remove commas and convert to int
             num_str = match.group(1).replace(",", "").strip()
             if num_str and num_str.isdigit():
                 return int(num_str)
         except ValueError:
             pass
 
-    # Check for "Not applicable" or "N/A"
-    if re.search(r"Number acquired\s+(Not applicable|N/?A)", text, re.IGNORECASE):
-        return 0
+    # Fallback: Try more lenient multiline pattern
+    # Capture anything that looks like a number after the label
+    pattern = rf"Number {field_type}[\s\S]{{0,50}}?(\d{{1,3}}(?:,\d{{3}})*)"
+    match = re.search(pattern, text, re.IGNORECASE)
+
+    if match:
+        try:
+            num_str = match.group(1).replace(",", "").strip()
+            if num_str and num_str.isdigit():
+                return int(num_str)
+        except ValueError:
+            pass
 
     return None
+
+
+def parse_number_acquired(text: str) -> int | None:
+    """Extract number of securities acquired."""
+    return extract_quantity(text, "acquired")
 
 
 def parse_number_disposed(text: str) -> int | None:
     """Extract number of securities disposed."""
-    # Pattern: "Number disposed <number>" (more flexible with whitespace)
-    pattern = r"Number disposed\s+[\n\s]*([\d,]+)"
-    match = re.search(pattern, text, re.IGNORECASE)
-
-    if match:
-        try:
-            # Remove commas and convert to int
-            num_str = match.group(1).replace(",", "").strip()
-            if num_str and num_str.isdigit():
-                return int(num_str)
-        except ValueError:
-            pass
-
-    # Check for "Not applicable" or "N/A"
-    if re.search(r"Number disposed\s+(Not applicable|N/?A)", text, re.IGNORECASE):
-        return 0
-
-    return None
+    return extract_quantity(text, "disposed")
 
 
 def parse_price_per_share(text: str) -> Decimal | None:
