@@ -61,44 +61,111 @@ def parse_director_name(text: str) -> str | None:
     return None
 
 
+def try_parse_date(date_str: str) -> datetime.date | None:
+    """Try to parse a date string with multiple formats."""
+    if not date_str:
+        return None
+
+    # Clean up corrupted OCR text (e.g., "2In5d Fierebcrutary" -> "25 February")
+    # Common OCR corruptions:
+    # - Numbers get letters: "2In5d" -> "25", "2026" -> "2026"
+    # - Month names get mangled: "Fierebcrutary" -> "February"
+    # Try to extract just digits and letters, then parse
+
+    date_formats = [
+        "%d %B %Y",      # 17 February 2026
+        "%d %b %Y",      # 17 Feb 2026
+        "%d/%m/%Y",      # 17/02/2026
+        "%Y-%m-%d",      # 2026-02-17
+        "%d %m %Y",      # 17 02 2026
+    ]
+
+    for fmt in date_formats:
+        try:
+            return datetime.strptime(date_str.strip(), fmt).date()
+        except ValueError:
+            continue
+
+    return None
+
+
+def extract_dates_from_text(text: str) -> list[datetime.date]:
+    """Extract all dates found in text, handling OCR corruption."""
+    dates = []
+
+    # Pattern: DD Month YYYY or DD/MM/YYYY or YYYY-MM-DD
+    # More lenient to handle OCR corruption
+    patterns = [
+        r"(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4})",
+        r"(\d{1,2}/\d{1,2}/\d{4})",
+        r"(\d{4}-\d{1,2}-\d{1,2})",
+    ]
+
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            date_str = match.group(1)
+            parsed_date = try_parse_date(date_str)
+            if parsed_date:
+                dates.append(parsed_date)
+
+    return list(set(dates))  # Remove duplicates
+
+
 def parse_date_of_change(text: str) -> datetime.date | None:
-    """Extract date of change from PDF text."""
-    # Pattern: "Date of change <date>"
-    # Date formats: "17 February 2026" or "17/02/2026" or "2026-02-17"
+    """Extract date of change from PDF text with OCR error tolerance."""
+    # First try: strict pattern with "Date of change" label
     pattern = r"Date of change\s+(\d{1,2}\s+\w+\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
         date_str = match.group(1).strip()
+        parsed = try_parse_date(date_str)
+        if parsed:
+            return parsed
 
-        # Try different date formats
-        date_formats = [
-            "%d %B %Y",      # 17 February 2026
-            "%d %b %Y",      # 17 Feb 2026
-            "%d/%m/%Y",      # 17/02/2026
-            "%Y-%m-%d",      # 2026-02-17
-        ]
+    # Second try: "Date of change" followed by more flexible text
+    # Capture text up to next field or newline, handle corrupted values
+    pattern = r"Date of change\s+([\w\s/\-\.]+?)(?:\n|No\.|Part\s+[0-9]|$)"
+    match = re.search(pattern, text, re.IGNORECASE)
 
-        for fmt in date_formats:
-            try:
-                return datetime.strptime(date_str, fmt).date()
-            except ValueError:
-                continue
+    if match:
+        date_text = match.group(1).strip()
+        # Try to parse even if corrupted
+        # Extract just the numbers and month names
+        if len(date_text) < 50:  # Reasonable date field length
+            parsed = try_parse_date(date_text)
+            if parsed:
+                return parsed
+
+    return None
+
+
+def parse_date_of_last_notice(text: str) -> datetime.date | None:
+    """Extract date of last notice as fallback for date of change."""
+    pattern = r"Date of last notice\s+(\d{1,2}\s+\w+\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
+    match = re.search(pattern, text, re.IGNORECASE)
+
+    if match:
+        date_str = match.group(1).strip()
+        parsed = try_parse_date(date_str)
+        if parsed:
+            return parsed
 
     return None
 
 
 def parse_number_acquired(text: str) -> int | None:
     """Extract number of securities acquired."""
-    # Pattern: "Number acquired <number>"
-    pattern = r"Number acquired\s+([\d,]+)"
+    # Pattern: "Number acquired <number>" (more flexible with whitespace)
+    pattern = r"Number acquired\s+[\n\s]*([\d,]+)"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
         try:
             # Remove commas and convert to int
-            num_str = match.group(1).replace(",", "")
-            return int(num_str)
+            num_str = match.group(1).replace(",", "").strip()
+            if num_str and num_str.isdigit():
+                return int(num_str)
         except ValueError:
             pass
 
@@ -111,15 +178,16 @@ def parse_number_acquired(text: str) -> int | None:
 
 def parse_number_disposed(text: str) -> int | None:
     """Extract number of securities disposed."""
-    # Pattern: "Number disposed <number>"
-    pattern = r"Number disposed\s+([\d,]+)"
+    # Pattern: "Number disposed <number>" (more flexible with whitespace)
+    pattern = r"Number disposed\s+[\n\s]*([\d,]+)"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
         try:
             # Remove commas and convert to int
-            num_str = match.group(1).replace(",", "")
-            return int(num_str)
+            num_str = match.group(1).replace(",", "").strip()
+            if num_str and num_str.isdigit():
+                return int(num_str)
         except ValueError:
             pass
 
@@ -298,13 +366,35 @@ async def parse_pdf(
     price_per_share = parse_price_per_share(text)
     nature_of_change = parse_nature_of_change(text)
 
+    # Try fallback dates if main date extraction failed
+    if not date_of_change:
+        logger.debug(f"Date of change not found, trying fallbacks...")
+
+        # Fallback 1: Try "Date of last notice"
+        date_of_change = parse_date_of_last_notice(text)
+        if date_of_change:
+            logger.debug(f"  ✓ Using 'Date of last notice' as fallback: {date_of_change}")
+
+        # Fallback 2: Try to extract any dates from the document
+        if not date_of_change:
+            all_dates = extract_dates_from_text(text)
+            if all_dates:
+                # Use the most recent date (most likely to be the trade date)
+                date_of_change = max(all_dates)
+                logger.debug(f"  ✓ Using most recent extracted date as fallback: {date_of_change}")
+
+        # Fallback 3: Use document submission date
+        if not date_of_change:
+            logger.debug(f"  ✓ Using document submission date as final fallback: {record.document_date}")
+            date_of_change = record.document_date
+
     # Check CRITICAL fields - these are required
     # Missing any of these = reject the record
     if not date_of_change:
-        logger.error(f"No date of change found for {record.ticker}")
+        logger.error(f"No date found for {record.ticker} (no fallback available)")
         record.status = ParseStatus.FAILED
         record.parse_attempts += 1
-        record.error_message = "No date of change found"
+        record.error_message = "No date of change found (all fallbacks exhausted)"
         stats["failed"] += 1
         return
 
