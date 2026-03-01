@@ -11,6 +11,7 @@ from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
 from app.routers import compliance, health, public
+from app.scheduler import setup_scheduler
 
 
 @asynccontextmanager
@@ -18,8 +19,16 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager for startup/shutdown events"""
     # Startup
     await init_db()
+
+    # Start the background scheduler for daily ASX updates
+    scheduler = setup_scheduler()
+    scheduler.start()
+    app.state.scheduler = scheduler
+
     yield
+
     # Shutdown
+    scheduler.shutdown(wait=True)
     await close_db()
 
 
