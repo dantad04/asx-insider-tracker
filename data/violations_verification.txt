@@ -1,0 +1,89 @@
+================================================================================
+ASX APPENDIX 3Y — TOP 5 WORST VIOLATIONS (VERIFIED)
+For manual verification on ASX website before media pitch
+Generated: 2026-02-28
+================================================================================
+
+#1  Dexus (DXS)
+--------------------------------------------------------------------------------
+  Director:          Unknown Director
+  Trade date:        2025-11-03
+  Lodged date:       2026-02-24
+  Calendar days:     113
+  Business days:     81  ← ASX allows 2
+  Severity:          SEVERE
+  Trade type:        TradeType.OTHER
+  Matching 3Y filings found: 3
+
+  Announcement:      Appendix 3Y
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03060294-2A1655483&v=undefined
+
+  Announcement:      Appendix 3Y
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03060981-2A1655856&v=undefined
+
+  Announcement:      Appendix 3Y
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03060292-2A1655482&v=undefined
+
+#2  Nexion Group Ltd (NNG)
+--------------------------------------------------------------------------------
+  Director:          Peter Christie
+  Trade date:        2025-10-31
+  Lodged date:       2026-02-15
+  Calendar days:     107
+  Business days:     76  ← ASX allows 2
+  Severity:          SEVERE
+  Trade type:        TradeType.ON_MARKET_SELL
+  Matching 3Y filings found: 1
+
+  Announcement:      NNG Appendix 3Y - Christie and Daly
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03056717-6A1312058&v=undefined
+
+#3  Amotiv Limited (AOV)
+--------------------------------------------------------------------------------
+  Director:          Unknown Director
+  Trade date:        2025-10-31
+  Lodged date:       2026-02-16
+  Calendar days:     108
+  Business days:     76  ← ASX allows 2
+  Severity:          SEVERE
+  Trade type:        TradeType.ON_MARKET_BUY
+  Matching 3Y filings found: 1
+
+  Announcement:      Appendix 3Y - Change of Director's Interest Notice
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03056932-3A687170&v=undefined
+
+#4  CLARA RESOURCES AUSTRALIA LIMITED (C7A)
+--------------------------------------------------------------------------------
+  Director:          Angus Middleton
+  Trade date:        2025-11-14
+  Lodged date:       2026-02-27
+  Calendar days:     105
+  Business days:     75  ← ASX allows 2
+  Severity:          SEVERE
+  Trade type:        TradeType.OTHER
+  Matching 3Y filings found: 1
+
+  Announcement:      Updated Appendix 3Y
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03063040-2A1657036&v=undefined
+
+#5  Amotiv Limited (AOV)
+--------------------------------------------------------------------------------
+  Director:          Unknown Director
+  Trade date:        2025-10-30
+  Lodged date:       2026-02-11
+  Calendar days:     104
+  Business days:     74  ← ASX allows 2
+  Severity:          SEVERE
+  Trade type:        TradeType.OTHER
+  Matching 3Y filings found: 1
+
+  Announcement:      Appendix 3Y - Change of Director's Interest Notice
+  ASX PDF URL:       https://cdn-api.markitdigital.com/apiman-gateway/ASX/asx-research/1.0/file/2924-03055357-3A686897&v=undefined
+
+================================================================================
+How to verify:
+  1. Open each PDF URL in a browser
+  2. Confirm 'Date of change' matches our trade date
+  3. Confirm the form was lodged on our lodged date (URL/header)
+  4. Note director name on form vs our database
+================================================================================

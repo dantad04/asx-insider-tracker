@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Director Profile — ASX Insider Tracker</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#fff;--bg2:#f5f5f5;--bg3:#e8e8e8;--text:#1a1a1a;--text2:#666;--border:#d0d0d0;--accent:#0066cc;--accent2:#0052a3;--success:#28a745;--danger:#dc3545}
+        body.dark{--bg:#1a1a1a;--bg2:#2d2d2d;--bg3:#3d3d3d;--text:#e8e8e8;--text2:#b0b0b0;--border:#444}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s}
+
+        nav{background:linear-gradient(135deg,var(--accent),#003d99);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+        .nav-left{display:flex;align-items:center;gap:1rem}
+        .nav-title{font-size:1.1rem;font-weight:700}
+        .back-link{color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;display:flex;align-items:center;gap:.4rem}
+        .back-link:hover{color:#fff}
+        button{background:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background .2s}
+        button:hover{background:var(--accent2)}
+        .btn-ghost{background:rgba(255,255,255,.2)}
+        .btn-ghost:hover{background:rgba(255,255,255,.3)}
+
+        .container{max-width:1300px;margin:2rem auto;padding:0 1rem}
+
+        /* Hero */
+        .hero{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:2rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem}
+        .hero-main h1{font-size:2rem;font-weight:700}
+        .hero-main .role-badge{display:inline-block;background:var(--bg3);color:var(--text2);padding:.2rem .8rem;border-radius:4px;font-size:.85rem;margin-bottom:.5rem}
+        .hero-stats{display:flex;gap:2rem;flex-wrap:wrap}
+        .hero-stat{text-align:center}
+        .hero-stat .val{font-size:1.8rem;font-weight:700;color:var(--accent)}
+        .hero-stat .lbl{font-size:.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+
+        /* Net position bar */
+        .net-bar{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:2rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+        .net-item{display:flex;flex-direction:column;gap:.2rem}
+        .net-item .lbl{font-size:.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+        .net-item .val{font-size:1.4rem;font-weight:700}
+        .buy-col{color:#28a745}
+        .sell-col{color:#dc3545}
+        .net-col{color:var(--text)}
+        .divider{width:1px;height:50px;background:var(--border)}
+
+        /* Companies */
+        .company-pills{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+        .company-pill{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:.4rem 1rem;font-size:.85rem;font-weight:600;text-decoration:none;color:var(--accent);transition:background .15s}
+        .company-pill:hover{background:var(--bg3)}
+        .company-pill .count{color:var(--text2);font-weight:400;margin-left:.3rem}
+
+        /* Section */
+        .section{margin-bottom:2.5rem}
+        .section-title{font-size:1.2rem;font-weight:600;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:2px solid var(--border)}
+
+        /* Table */
+        .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+        table{width:100%;border-collapse:collapse;font-size:.9rem}
+        thead{background:var(--bg3);border-bottom:2px solid var(--border)}
+        th{padding:.9rem 1rem;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;font-size:.85rem;text-transform:uppercase;letter-spacing:.4px}
+        td{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+        tbody tr:hover{background:var(--bg3)}
+        tbody tr:last-child td{border-bottom:none}
+
+        /* Badges */
+        .type-badge{display:inline-block;padding:.25rem .55rem;border-radius:4px;font-size:.78rem;font-weight:600}
+        .type-badge.buy{background:rgba(40,167,69,.15);color:#28a745}
+        .type-badge.sell{background:rgba(220,53,69,.15);color:#dc3545}
+        .type-badge.off{background:rgba(108,117,125,.15);color:#666}
+        .severity{display:inline-block;padding:.25rem .55rem;border-radius:4px;font-size:.78rem;font-weight:600;text-transform:uppercase}
+        .severity.minor{background:rgba(255,193,7,.2);color:#856404}
+        .severity.moderate{background:rgba(255,128,0,.2);color:#a86a2e}
+        .severity.severe{background:rgba(220,53,69,.2);color:#dc3545}
+
+        .ticker-link{font-family:monospace;font-weight:600;color:var(--accent);text-decoration:none}
+        .ticker-link:hover{text-decoration:underline}
+        .text-right{text-align:right}
+        .empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:.95rem}
+
+        @media(max-width:768px){.hero{flex-direction:column}.hero-stats{gap:1rem}.net-bar{gap:1rem}th,td{padding:.6rem .5rem;font-size:.8rem}}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-left">
+        <a class="back-link" href="/static/index.html">← ASX Insider Tracker</a>
+        <span class="nav-title" id="navTitle">Director Profile</span>
+    </div>
+    <button class="btn-ghost" onclick="toggleDark()">🌙</button>
+</nav>
+
+<div class="container" id="app">
+    <div class="empty">Loading…</div>
+</div>
+
+<script>
+const directorId = new URLSearchParams(location.search).get('id') || '';
+if (!directorId) {
+    document.getElementById('app').innerHTML = '<div class="empty">No director specified. <a href="/static/index.html">Go back</a></div>';
+}
+
+function fmt(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'});
+}
+function fmtCcy(v) {
+    if (!v && v !== 0) return '—';
+    const abs = Math.abs(v);
+    if (abs >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+    return '$' + parseFloat(v).toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtNum(v) {
+    if (!v && v !== 0) return '—';
+    return parseInt(v).toLocaleString();
+}
+function fmtVal(qty, price) {
+    if (!qty || !price) return '—';
+    const v = qty * price;
+    if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+    if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+    return '$' + v.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function typeLabel(t) {
+    return {on_market_buy:'Buy',on_market_sell:'Sell',off_market:'Off-Market',exercise_options:'Options',other:'Other'}[t] || t;
+}
+function typeCls(t) {
+    if (t.includes('buy')) return 'buy';
+    if (t.includes('sell')) return 'sell';
+    return 'off';
+}
+
+async function load() {
+    const res = await fetch(`/api/director/${encodeURIComponent(directorId)}`);
+    if (!res.ok) {
+        document.getElementById('app').innerHTML = '<div class="empty">Director not found. <a href="/static/index.html">Go back</a></div>';
+        return;
+    }
+    const d = await res.json();
+    document.title = `${d.full_name} — ASX Insider Tracker`;
+    document.getElementById('navTitle').textContent = d.full_name;
+
+    const net = d.total_buy_value - d.total_sell_value;
+    const netLabel = net >= 0 ? `+${fmtCcy(net)}` : fmtCcy(net);
+    const netCls = net >= 0 ? 'buy-col' : 'sell-col';
+    const compliance_ok = d.violations.length === 0;
+
+    document.getElementById('app').innerHTML = `
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-main">
+                <div class="role-badge">ASX Director</div>
+                <h1>${d.full_name}</h1>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><div class="val">${d.trades.length}</div><div class="lbl">Trades</div></div>
+                <div class="hero-stat"><div class="val">${d.companies.length}</div><div class="lbl">Companies</div></div>
+                <div class="hero-stat"><div class="val" style="color:${compliance_ok?'#28a745':'#dc3545'}">${d.violations.length}</div><div class="lbl">Violations</div></div>
+            </div>
+        </div>
+
+        <!-- Net position -->
+        <div class="net-bar">
+            <div class="net-item">
+                <span class="lbl">Total Buy Value</span>
+                <span class="val buy-col">▲ ${fmtCcy(d.total_buy_value)}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="net-item">
+                <span class="lbl">Total Sell Value</span>
+                <span class="val sell-col">▼ ${fmtCcy(d.total_sell_value)}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="net-item">
+                <span class="lbl">Net Position</span>
+                <span class="val ${netCls}">${netLabel}</span>
+            </div>
+        </div>
+
+        <!-- Companies -->
+        <div class="section">
+            <div class="section-title">Companies (${d.companies.length})</div>
+            <div class="company-pills">
+                ${d.companies.map(c => `
+                    <a class="company-pill" href="/static/company.html?ticker=${c.ticker}">
+                        ${c.ticker}<span class="count">${c.trade_count}</span>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+
+        <!-- Trades -->
+        <div class="section">
+            <div class="section-title">All Trades (${d.trades.length})</div>
+            ${d.trades.length === 0 ? '<div class="empty">No trades on record</div>' : `
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Date</th><th>Company</th><th>Type</th>
+                        <th class="text-right">Quantity</th><th class="text-right">Price</th>
+                        <th class="text-right">Value</th>
+                    </tr></thead>
+                    <tbody>
+                        ${d.trades.map(t => `
+                            <tr>
+                                <td>${fmt(t.date_of_trade)}</td>
+                                <td><a class="ticker-link" href="/static/company.html?ticker=${t.ticker}">${t.ticker}</a> <span style="color:var(--text2);font-size:.85rem">${t.company_name}</span></td>
+                                <td><span class="type-badge ${typeCls(t.trade_type)}">${typeLabel(t.trade_type)}</span></td>
+                                <td class="text-right">${fmtNum(t.quantity)}</td>
+                                <td class="text-right">${fmtCcy(t.price_per_share)}</td>
+                                <td class="text-right">${fmtVal(t.quantity, t.price_per_share)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>`}
+        </div>
+
+        <!-- Compliance -->
+        <div class="section">
+            <div class="section-title">Compliance Record (${d.violations.length} violation${d.violations.length !== 1 ? 's' : ''})</div>
+            ${d.violations.length === 0
+                ? '<div class="empty" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px">✅ No verified violations on record</div>'
+                : `<div class="table-wrap"><table>
+                    <thead><tr>
+                        <th>Trade Date</th><th>Lodged Date</th><th>Company</th>
+                        <th class="text-right">Days Late</th><th>Severity</th>
+                    </tr></thead>
+                    <tbody>
+                        ${d.violations.map(v => `
+                            <tr>
+                                <td>${fmt(v.date_of_trade)}</td>
+                                <td>${fmt(v.date_lodged)}</td>
+                                <td><a class="ticker-link" href="/static/company.html?ticker=${v.ticker}">${v.ticker}</a></td>
+                                <td class="text-right"><strong>${v.days_late}</strong></td>
+                                <td><span class="severity ${v.severity}">${v.severity}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table></div>`
+            }
+        </div>
+    `;
+}
+
+function toggleDark() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+}
+if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+if (directorId) load();
+</script>
+</body>
+</html>

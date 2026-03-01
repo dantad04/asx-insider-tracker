@@ -40,11 +40,12 @@ def business_days(start: date, end: date) -> int:
 
 
 def severity(bdays: int) -> str:
-    if bdays <= 2:
+    """ASX Listing Rule 3.19A.2: 5 business days to lodge."""
+    if bdays <= 5:
         return "compliant"
-    elif bdays <= 5:
-        return "minor"
     elif bdays <= 10:
+        return "minor"
+    elif bdays <= 20:
         return "moderate"
     return "severe"
 
@@ -171,7 +172,7 @@ async def get_late_filings(
     """
     Return all late Appendix 3Y filings, ordered by date lodged descending.
 
-    - **severity**: `minor` (3-5 bd), `moderate` (6-10 bd), `severe` (11+ bd)
+    - **severity**: `minor` (6-10 bd), `moderate` (11-20 bd), `severe` (21+ bd)
     - **verified_only**: restrict to trades sourced from the 3Y PDF scraper (high-confidence dates)
     - **days**: only show filings lodged within the last N days
     """

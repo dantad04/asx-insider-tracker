@@ -1,0 +1,211 @@
+================================================================================
+FAILED PDF ANALYSIS REPORT
+Generated: 2026-02-28T22:50:44.963790
+Total Failed PDFs: 24
+================================================================================
+
+FAILURE BREAKDOWN:
+  Missing date_of_change: 18
+  Missing quantity: 6
+  Other failures: 0
+
+================================================================================
+MISSING DATE_OF_CHANGE
+================================================================================
+
+Ticker: AOV
+Filename: AOV_2026-02-27_4b0268c565f7.pdf
+Error: No date of change found
+Text Length: 3451 chars
+Dates Found: ['01/01/2011', '18 February 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity AMOTIV LIMITED ABN 99 004 400 891 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohre 
+--------------------------------------------------------------------------------
+
+Ticker: AOV
+Filename: AOV_2026-02-11_e900340acc7b.pdf
+Error: No date of change found
+Text Length: 4125 chars
+Dates Found: ['01/01/2011', '30 October 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Amotiv Limited ABN 99 004 400 891 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohre 
+--------------------------------------------------------------------------------
+
+Ticker: AOV
+Filename: AOV_2026-02-16_d17183188385.pdf
+Error: No date of change found
+Text Length: 3239 chars
+Dates Found: ['01/01/2011', '31 October 2025', '16 February 2026']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Amotiv Limited ABN 99 004 400 891 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohre 
+--------------------------------------------------------------------------------
+
+Ticker: BUS
+Filename: BUS_2026-02-13_9b3181d22119.pdf
+Error: No date of change found
+Text Length: 8020 chars
+Dates Found: ['18 February 2026', '13 February 2026', '5 February 2026', '11 February 2026', '13 February\n2026', '12 February 2026']
+Text Sample: ASX: BUS ABN 17 654 970 751 W:www.bubalusresources.com.au T: +618 6188 8181 13 February 2026 E: admin@bubalusresources.com.au Level 2, 22 Mount Street ASX Compliance Perth WA 6000 By email: listingscomplianceperth@asx.com.au RESPONSE TO ASX QUERY – CHANGE OF DIRECTOR’S INTEREST NOTICE Bubalus Resources Limited (ASX: BUS) (BUS or the Company) refers to ASX’s letter dated 13 February 2026 regarding BUS’s Appendix 3Y lodged on the ASX Market Announcements Platform (‘MAP’) on 13 February 2026 for Mr
+--------------------------------------------------------------------------------
+
+Ticker: COH
+Filename: COH_2026-02-17_a41c6b7e8ba6.pdf
+Error: No date of change found
+Text Length: 3442 chars
+Dates Found: ['01/01/2011', '16 February 2026', '25 August 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity ABN Cochlear Limited 96 002 618 073 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohr
+--------------------------------------------------------------------------------
+
+Ticker: COH
+Filename: COH_2026-02-19_cb6df596203b.pdf
+Error: No date of change found
+Text Length: 3062 chars
+Dates Found: ['01/01/2011', '18 February 2026', '30 August 2024']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity ABN Cochlear Limited 96 002 618 073 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohr
+--------------------------------------------------------------------------------
+
+Ticker: DXS
+Filename: DXS_2026-02-24_0a01a9dc01fc.pdf
+Error: No date of change found
+Text Length: 3030 chars
+Dates Found: ['01/01/2011', '4 February 2026', '19 February 2026']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Dexus comprising the stapled securities of Dexus Property Trust (DPT) Dexus Operations Trust (DXO) ABN/ARSN 24 595 854 202 / 648 526 470 (DPT) 69 645 176 383 / 110 52
+--------------------------------------------------------------------------------
+
+Ticker: DXS
+Filename: DXS_2026-02-24_7e52dbbc23a8.pdf
+Error: No date of change found
+Text Length: 3049 chars
+Dates Found: ['01/01/2011', '3 November 2025', '19 February 2026']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Dexus comprising the stapled securities of Dexus Property Trust (DPT) Dexus Operations Trust (DXO) ABN/ARSN 24 595 854 202 / 648 526 470 (DPT) 69 645 176 383 / 110 52
+--------------------------------------------------------------------------------
+
+Ticker: ECP
+Filename: ECP_2026-02-11_7816d5131336.pdf
+Error: No date of change found
+Text Length: 3585 chars
+Dates Found: ['01/01/2011', '09 February 2026', '11 February 2026', '15 December 2025']
+Text Sample: 11 February 2026 ASX Compliance ASX Ltd, Exchange Centre Level 6, 20 Bridge Street SYDNEY NSW 2000 Dear Elvis, Thank you for your query regarding the recently lodged Appendix 3Y. Apologies for the missing information, to confirm the transaction to acquire shares occurred as an off-market transfer. Please find attached the amended Appendix 3Y. Yours faithfully Scott Barrett Company Secretary ECP EMERGING GROWTH LIMITED Redefining Active Investing ECP Emerging Growth Limited Tel: +61 2 8651 6800 A
+--------------------------------------------------------------------------------
+
+Ticker: ECP
+Filename: ECP_2026-02-17_698e2ade546b.pdf
+Error: No date of change found
+Text Length: 2941 chars
+Dates Found: ['01/01/2011', '16 February 2026', '09 February 2026']
+Text Sample: Appendix 3Y Change of Director's Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director's Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX becomes ASX's property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity ECP Emerging Growth Limited ABN 30 167 689 821 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for the director for the pu
+--------------------------------------------------------------------------------
+
+Ticker: EPX
+Filename: EPX_2026-02-02_47d5833b0067.pdf
+Error: No date of change found
+Text Length: 3588 chars
+Dates Found: ['01/01/2011', '23 January 2026', '27 November 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity EPX Limited ABN 50 645 144 314 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohre pur
+--------------------------------------------------------------------------------
+
+Ticker: EPX
+Filename: EPX_2026-02-02_abd61dd4f7d2.pdf
+Error: No date of change found
+Text Length: 3609 chars
+Dates Found: ['01/01/2011', '23 January 2026', '27 November 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity EPX Limited ABN 50 645 144 314 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt tohre pur
+--------------------------------------------------------------------------------
+
+Ticker: MBK
+Filename: MBK_2026-02-24_622f246168a8.pdf
+Error: No date of change found
+Text Length: 3589 chars
+Dates Found: ['01/01/2011', '23 February 2026', '12 December 2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity: Metal Bank Limited ABN 51 127 297 170 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt t
+--------------------------------------------------------------------------------
+
+Ticker: NAB
+Filename: NAB_2026-02-26_b410bfe377b1.pdf
+Error: No date of change found
+Text Length: 3492 chars
+Dates Found: ['23 December 2025', '24 February 2026', '27 February 2026']
+Text Sample: Appendix 3Y Change of Director's Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director's Interest Notice Information or documents not available now must be given to ASX as soon as possible. Information and documents given to ASX become ASX's property and may be made public. Name of Entity NATIONAL AUSTRALIA BANK LIMITED ABN 12 004 044 937 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for the Director for the purposes of section 205G of the Corpo
+--------------------------------------------------------------------------------
+
+Ticker: PRM
+Filename: PRM_2026-01-19_a1c14beaa734.pdf
+Error: No date of change found
+Text Length: 3238 chars
+Dates Found: ['15/12/2029', '01/01/2011', '15/12/2030', '19 January 2026', '5/12/2030', '5 January 2026']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Prominence Energy Limited ABN 69 009 196 810 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree cotfo Dr ifro
+--------------------------------------------------------------------------------
+
+Ticker: SHE
+Filename: SHE_2026-02-05_94b4c026310b.pdf
+Error: No date of change found
+Text Length: 1977 chars
+Dates Found: ['5 February 2026', '30/9/2001', '11/3/2002']
+Text Sample: Appendix 3X Initial Director’s Interest Notice Rule 3.19A.1 Appendix 3X Initial Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/9/2001. Name of entity STONEHORSE ENERGY LIMITED ABN 086 972 429 We (the entity) give ASX the following information under listing rule 3.19A.1 and as agent for the director for the purposes of section 205G of
+--------------------------------------------------------------------------------
+
+Ticker: VMS
+Filename: VMS_2026-02-16_afe0d0e66842.pdf
+Error: No date of change found
+Text Length: 4674 chars
+Dates Found: ['13 February 2026', '01/01/2011', '16 February 2026', '11 February 2026', '7 April 2027']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity ABN VENARI MINERA LS NL 96 007 090 904 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt t
+--------------------------------------------------------------------------------
+
+Ticker: VMS
+Filename: VMS_2026-02-11_1dba19a32ad5.pdf
+Error: No date of change found
+Text Length: 4541 chars
+Dates Found: ['01/01/2011', '6 February 2026', '7 April 2027', '9 February 2026']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity ABN VENARI MINERA LS NL 96 007 090 904 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for thNea dmiree octf oDri rfeocrt t
+--------------------------------------------------------------------------------
+
+================================================================================
+MISSING QUANTITY
+================================================================================
+
+Ticker: JHX
+Filename: JHX_2026-02-20_22fd0652f23e.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 3753 chars
+Quantities Found: ['196,269', '196,269', '829', '895', '2025', '2026', '217', '568', '192', '878', '196', '269']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity James Hardie Industries plc ARBN 097 829 895 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for the director for the purpo
+--------------------------------------------------------------------------------
+
+Ticker: SEK
+Filename: SEK_2026-02-24_f8cc328b35bc.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 4628 chars
+Quantities Found: ['20,000', '16.13', '2026', '0498', '455', '509', '0400', '587', '232', '3121', '613', '8517']
+Text Sample: 24 February 2026 The Manager ASX Market Announcements Office Australian Securities Exchange Dear Manager SEEK Limited – Appendix 3Y In accordance with the Listing Rules, attached is an Appendix 3Y (Change of Director’s Interest Notice) for the acquisition of SEEK shares by Ian Narev for release to the market. Yours faithfully, Rachel Agnew Company Secretary This announcement was authorised for release by the Company Secretary. For further information please contact: Investors & Analysts Media Pa
+--------------------------------------------------------------------------------
+
+Ticker: SEK
+Filename: SEK_2026-02-24_1904bee512b0.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 4449 chars
+Quantities Found: ['10,000', '16.45', '2026', '0498', '455', '509', '0400', '587', '232', '3121', '613', '8517']
+Text Sample: 24 February 2026 The Manager ASX Market Announcements Office Australian Securities Exchange Dear Manager SEEK Limited – Appendix 3Y – Michael Wachtel Please find attached an Appendix 3Y (Change of Director’s Interest Notice) for the acquisition of SEEK shares by Michael Wachtel for release to the market. Yours faithfully, Rachel Agnew Company Secretary This announcement was authorised for release by the Company Secretary. For further information please contact: Investors & Analysts Media Patrick
+--------------------------------------------------------------------------------
+
+Ticker: SEK
+Filename: SEK_2026-02-24_68c6624515b2.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 4849 chars
+Quantities Found: ['31,000', '16.13', '2026', '0498', '455', '509', '0400', '587', '232', '3121', '613', '8517']
+Text Sample: 24 February 2026 The Manager ASX Market Announcements Office Australian Securities Exchange Dear Manager SEEK Limited – Appendix 3Y In accordance with the Listing Rules, attached is an Appendix 3Y (Change of Director’s Interest Notice) for the acquisition of SEEK shares by Gregory Roebuck for release to the market. Yours faithfully, Rachel Agnew Company Secretary This announcement was authorised for release by the Company Secretary. For further information please contact: Investors & Analysts Me
+--------------------------------------------------------------------------------
+
+Ticker: SEN
+Filename: SEN_2025-12-11_7b7f7f20b4b8.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 4027 chars
+Quantities Found: ['16,725', '607', '2025', '2025', '725', '280', '2025', '2025', '100', '100', '2025']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity: Senetas Corporation Limited ABN: 33 006 067 607 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for the director for the p
+--------------------------------------------------------------------------------
+
+Ticker: TZN
+Filename: TZN_2025-12-29_19d9084d3daf.pdf
+Error: No quantity (acquired or disposed) found
+Text Length: 3200 chars
+Quantities Found: ['1', '1', '576', '238', '2019', '2025', '446', '656', '827', '126', '923', '235']
+Text Sample: Appendix 3Y Change of Director’s Interest Notice Rule 3.19A.2 Appendix 3Y Change of Director’s Interest Notice Information or documents not available now must be given to ASX as soon as available. Information and documents given to ASX become ASX’s property and may be made public. Introduced 30/09/01 Amended 01/01/11 Name of entity Terramin Australia Limited ABN 67 062 576 238 We (the entity) give ASX the following information under listing rule 3.19A.2 and as agent for the director for the purp
+--------------------------------------------------------------------------------
+

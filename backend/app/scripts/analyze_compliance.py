@@ -2,7 +2,7 @@
 ASX Appendix 3Y Compliance Analyser.
 
 ASX Listing Rule 3.19A.2 requires directors to lodge an Appendix 3Y within
-2 business days of a change in relevant interest.
+5 business days of a change in relevant interest.
 
 Data notes:
   - "Verified" trades: date_lodged sourced directly from ASX announcements
@@ -13,11 +13,11 @@ Data notes:
     set to the batch-import date rather than the real lodging date.  Those
     records are included in aggregates but flagged separately.
 
-Severity scale (business days late):
-  0-2  → Compliant
-  3-5  → Minor
-  6-10 → Moderate
-  11+  → Severe
+Severity scale (business days to lodge, rule = 5 bd):
+  0-5  → Compliant
+  6-10 → Minor
+  11-20 → Moderate
+  21+  → Severe
 
 Usage:
     docker-compose exec backend python -m app.scripts.analyze_compliance
@@ -91,11 +91,12 @@ def business_days_between(start: date, end: date) -> int:
 
 
 def classify_severity(bdays: int) -> str:
-    if bdays <= 2:
+    """ASX Listing Rule 3.19A.2: 5 business days to lodge."""
+    if bdays <= 5:
         return "compliant"
-    elif bdays <= 5:
-        return "minor"
     elif bdays <= 10:
+        return "minor"
+    elif bdays <= 20:
         return "moderate"
     else:
         return "severe"

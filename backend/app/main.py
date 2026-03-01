@@ -1,14 +1,16 @@
 """FastAPI application entry point"""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import compliance, health
+from app.routers import compliance, health, public
 
 
 @asynccontextmanager
@@ -41,11 +43,17 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(compliance.router)
+app.include_router(public.router)
+
+# Mount static files
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    """Root endpoint"""
+    """Root endpoint - API info"""
     return {
         "message": "ASX Insider Tracker API",
         "version": __version__,
