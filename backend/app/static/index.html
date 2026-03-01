@@ -490,6 +490,44 @@
         .table-container.no-data table tbody {
             display: none;
         }
+
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 1rem;
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .footer-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        .footer-disclaimer {
+            max-width: 480px;
+            line-height: 1.7;
+        }
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            text-align: right;
+        }
+        .footer-links a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .footer-links a:hover { text-decoration: underline; }
+        @media (max-width: 600px) {
+            .footer-inner { flex-direction: column; }
+            .footer-links { text-align: left; }
+        }
     </style>
 </head>
 <body>
@@ -501,6 +539,8 @@
                 <p class="header-subtitle">Real-time monitoring of director trades on the Australian Securities Exchange</p>
             </div>
             <div class="header-controls">
+                <a href="/static/about.html" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">About</a>
+                <a href="/docs" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">API Docs</a>
                 <button class="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
                 <button onclick="exportCSV()">📥 Export CSV</button>
             </div>
@@ -980,5 +1020,21 @@
             document.body.removeChild(link);
         }
     </script>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-disclaimer">
+                <strong>Disclaimer:</strong> Data sourced from ASX public announcements (Appendix 3Y filings).
+                For informational purposes only. Not financial advice. Always verify information with official ASX sources before making investment decisions.
+            </div>
+            <div class="footer-links">
+                <a href="/static/about.html">About &amp; Methodology</a>
+                <a href="/docs" target="_blank">API Documentation</a>
+                <a href="https://github.com/dantadmore/asx-insider-tracker" target="_blank">GitHub</a>
+                <span>Built by <strong>Dan Tadmore</strong></span>
+                <span style="font-size:.8rem;margin-top:.25rem">Contact: dan.tadmore@gmail.com</span>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

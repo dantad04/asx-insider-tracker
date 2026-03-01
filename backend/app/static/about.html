@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — ASX Insider Tracker</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#fff;--bg2:#f5f5f5;--bg3:#e8e8e8;--text:#1a1a1a;--text2:#666;--border:#d0d0d0;--accent:#0066cc;--accent2:#0052a3}
+        body.dark{--bg:#1a1a1a;--bg2:#2d2d2d;--bg3:#3d3d3d;--text:#e8e8e8;--text2:#b0b0b0;--border:#444}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background .3s,color .3s}
+
+        nav{background:linear-gradient(135deg,var(--accent),#003d99);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+        .nav-left{display:flex;align-items:center;gap:1rem}
+        .back-link{color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem}
+        .back-link:hover{color:#fff}
+        .nav-title{font-size:1.1rem;font-weight:700}
+        button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background .2s}
+        button:hover{background:rgba(255,255,255,.3)}
+
+        .container{max-width:860px;margin:2.5rem auto;padding:0 1.5rem}
+
+        h2{font-size:1.5rem;font-weight:700;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:2px solid var(--border);color:var(--text)}
+        h3{font-size:1.1rem;font-weight:600;margin:1.5rem 0 .5rem;color:var(--text)}
+        p{margin-bottom:1rem;color:var(--text)}
+        ul,ol{margin:.5rem 0 1rem 1.5rem;color:var(--text)}
+        li{margin-bottom:.35rem}
+        a{color:var(--accent);text-decoration:none}
+        a:hover{text-decoration:underline}
+
+        .section{margin-bottom:2.5rem}
+
+        .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1rem}
+
+        .badge{display:inline-block;padding:.2rem .7rem;border-radius:4px;font-size:.8rem;font-weight:600;margin-right:.4rem}
+        .badge-green{background:rgba(40,167,69,.15);color:#28a745}
+        .badge-yellow{background:rgba(255,193,7,.2);color:#856404}
+        .badge-orange{background:rgba(255,128,0,.2);color:#a86a2e}
+        .badge-red{background:rgba(220,53,69,.2);color:#dc3545}
+        .badge-blue{background:rgba(0,102,204,.15);color:#0066cc}
+
+        .pipeline{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin:1rem 0}
+        .pipe-step{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;font-size:.9rem;font-weight:600;white-space:nowrap}
+        .pipe-arrow{color:var(--text2);font-size:1.1rem}
+
+        .limit-item{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.75rem}
+        .limit-icon{font-size:1.1rem;flex-shrink:0;margin-top:.1rem}
+
+        code{background:var(--bg3);padding:.15rem .4rem;border-radius:3px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:.88em}
+
+        table.summary{width:100%;border-collapse:collapse;font-size:.9rem}
+        table.summary th{background:var(--bg3);padding:.6rem .9rem;text-align:left;font-weight:600;color:var(--text2);font-size:.82rem;text-transform:uppercase;letter-spacing:.4px}
+        table.summary td{padding:.7rem .9rem;border-bottom:1px solid var(--border)}
+        table.summary tr:last-child td{border-bottom:none}
+
+        footer{background:var(--bg2);border-top:1px solid var(--border);padding:1.5rem;margin-top:3rem;text-align:center;color:var(--text2);font-size:.85rem}
+        footer a{color:var(--accent)}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-left">
+        <a class="back-link" href="/static/index.html">← ASX Insider Tracker</a>
+        <span class="nav-title">About &amp; Methodology</span>
+    </div>
+    <button onclick="toggleDark()">🌙</button>
+</nav>
+
+<div class="container">
+
+    <!-- Overview -->
+    <div class="section">
+        <h2>What is ASX Insider Tracker?</h2>
+        <p>
+            ASX Insider Tracker monitors director share transactions on the Australian Securities Exchange (ASX).
+            Under ASX Listing Rule 3.19A, every director of a listed company must lodge an <strong>Appendix 3Y</strong>
+            form within five business days of any change in their relevant interests. This tracker collects, parses,
+            and analyses those filings to surface patterns in insider trading activity and flag late lodgements.
+        </p>
+        <p>
+            The project is built as a portfolio piece demonstrating end-to-end data engineering: automated PDF parsing,
+            a relational database, a FastAPI backend, and a JavaScript frontend — all containerised with Docker.
+        </p>
+    </div>
+
+    <!-- How it works -->
+    <div class="section">
+        <h2>How It Works</h2>
+
+        <h3>Data Pipeline</h3>
+        <div class="pipeline">
+            <div class="pipe-step">ASX API<br><small style="font-weight:400;color:var(--text2)">Announcement feed</small></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">PDF Downloader<br><small style="font-weight:400;color:var(--text2)">Filter Appendix 3Y</small></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">PDF Parser<br><small style="font-weight:400;color:var(--text2)">Extract fields</small></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">PostgreSQL<br><small style="font-weight:400;color:var(--text2)">Normalised storage</small></div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">FastAPI<br><small style="font-weight:400;color:var(--text2)">REST endpoints</small></div>
+        </div>
+
+        <h3>Step 1 — ASX Announcement Feed</h3>
+        <p>
+            The ASX provides a public JSON feed of company announcements. The tracker queries this feed and filters
+            for documents with type <code>3Y</code> (Appendix 3Y — Change in Director's Interest Notice).
+            Each matching announcement yields a URL pointing to a PDF.
+        </p>
+
+        <h3>Step 2 — PDF Parsing</h3>
+        <p>
+            Appendix 3Y forms are unstructured PDFs with no consistent layout. The parser uses
+            <strong>pdfplumber</strong> to extract text, then applies a set of regex patterns tuned to the
+            most common ASX form templates. Key fields extracted:
+        </p>
+        <ul>
+            <li><strong>Date of change</strong> — when the director's interest changed</li>
+            <li><strong>Date lodged</strong> — when the form was submitted to ASX</li>
+            <li><strong>Nature of change</strong> — on-market buy/sell, off-market transfer, options exercise</li>
+            <li><strong>Quantity</strong> — number of securities transacted</li>
+            <li><strong>Price per security</strong> — where disclosed</li>
+            <li><strong>Director name &amp; company ticker</strong></li>
+        </ul>
+        <p>
+            The parser includes fallback patterns and OCR-error tolerance to handle scanned or
+            low-quality PDFs.
+        </p>
+
+        <h3>Step 3 — Compliance Classification</h3>
+        <p>
+            Once a trade is stored, the system calculates the gap (in business days, Mon–Fri) between the
+            date of change and the date lodged. Under <strong>ASX Listing Rule 3.19A.2</strong>, directors
+            have five business days to lodge. Any filing beyond that threshold is classified as late:
+        </p>
+        <div class="card" style="padding:1rem">
+            <table class="summary">
+                <thead><tr><th>Classification</th><th>Business Days to Lodge</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="badge badge-green">Compliant</span></td><td>1 – 5 business days</td></tr>
+                    <tr><td><span class="badge badge-yellow">Minor</span></td><td>6 – 10 business days (1–5 days past deadline)</td></tr>
+                    <tr><td><span class="badge badge-orange">Moderate</span></td><td>11 – 20 business days (6–15 days past deadline)</td></tr>
+                    <tr><td><span class="badge badge-red">Severe</span></td><td>21+ business days (16+ days past deadline)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="section">
+        <h2>Data Sources</h2>
+        <div class="card">
+            <h3 style="margin-top:0">ASX Company Announcements Platform</h3>
+            <p>
+                Primary source for all filings. The ASX publicly exposes an announcement feed at
+                <code>asx.com.au</code> which returns JSON metadata and PDF links for each lodgement.
+                Appendix 3Y forms are identified by document type <code>3Y</code>.
+            </p>
+            <p style="margin-bottom:0">
+                <strong>Coverage:</strong> All ASX-listed companies. Historical seed data covers
+                approximately 2024–2025; live scraping covers 2026 onwards.
+            </p>
+        </div>
+        <div class="card">
+            <h3 style="margin-top:0">Historical Seed Data (JSON)</h3>
+            <p style="margin-bottom:0">
+                A bulk JSON export of ~14,400 historical director transaction records (sourced from a
+                prior ASX data aggregation) was imported to bootstrap the database.
+                <strong>Important:</strong> dates in the seed data are less reliable than dates extracted
+                directly from 3Y PDFs — compliance violations are therefore only reported for trades
+                where the date of lodgement is on or after <strong>1 January 2026</strong>
+                (i.e. verified via direct PDF parsing).
+            </p>
+        </div>
+        <div class="card" style="opacity:.75">
+            <h3 style="margin-top:0">Price Data — Yahoo Finance <span class="badge badge-yellow">Blocked</span></h3>
+            <p style="margin-bottom:0">
+                The tracker is designed to fetch daily OHLCV price data for each company to calculate
+                price performance around insider trade dates. Yahoo Finance's API currently blocks
+                automated requests from this environment. The <code>price_snapshots</code> table exists
+                but is empty. A future version will use an alternative data provider.
+            </p>
+        </div>
+    </div>
+
+    <!-- Update Frequency -->
+    <div class="section">
+        <h2>Update Frequency</h2>
+        <div class="card">
+            <p><strong>Current status:</strong> <span class="badge badge-yellow">Manual</span></p>
+            <p>
+                The pipeline is triggered manually. Each run queries the ASX announcement feed for new
+                3Y filings, downloads any PDFs not yet in the database, parses them, and upserts records.
+            </p>
+            <p style="margin-bottom:0">
+                <strong>Planned:</strong> A daily scheduled job (cron or Celery beat) will run at
+                approximately 7 pm AEDT each trading day, shortly after the ASX closes at 4 pm and
+                the announcement platform is updated.
+            </p>
+        </div>
+    </div>
+
+    <!-- Known Limitations -->
+    <div class="section">
+        <h2>Known Limitations</h2>
+        <div class="card">
+            <div class="limit-item">
+                <div class="limit-icon">⚠️</div>
+                <div>
+                    <strong>PDF parsing accuracy</strong> — Appendix 3Y forms have no standard machine-readable
+                    format. Some PDFs use scanned images, unusual layouts, or proprietary fonts. The parser
+                    achieves high accuracy on common templates but may miss or misread fields on atypical forms.
+                    Failed PDFs are logged for manual review.
+                </div>
+            </div>
+            <div class="limit-item">
+                <div class="limit-icon">⚠️</div>
+                <div>
+                    <strong>Historical date reliability</strong> — Pre-2026 trade dates come from the seed JSON
+                    export, not from PDFs directly. Some records appear to use the announcement date rather than
+                    the actual date of change, which would inflate calculated lodgement delays. Compliance
+                    violations are therefore restricted to post-2025 verified data only.
+                </div>
+            </div>
+            <div class="limit-item">
+                <div class="limit-icon">⚠️</div>
+                <div>
+                    <strong>No price data</strong> — Without price history, the "smart money score"
+                    (price performance in the 30 days following a director buy) cannot yet be calculated.
+                    This feature is planned once a reliable price data source is integrated.
+                </div>
+            </div>
+            <div class="limit-item">
+                <div class="limit-icon">⚠️</div>
+                <div>
+                    <strong>Public holidays not excluded from business day counts</strong> — The compliance
+                    calculation uses Mon–Fri weekday counts via <code>numpy.busday_count</code> but does not
+                    account for Australian public holidays. This may slightly overstate days-late figures for
+                    trades around public holiday periods.
+                </div>
+            </div>
+            <div class="limit-item">
+                <div class="limit-icon">ℹ️</div>
+                <div>
+                    <strong>Not a complete record</strong> — The tracker only processes Appendix 3Y forms.
+                    Changes disclosed via other mechanism (e.g. substantial holder notices, initial director
+                    interests) are not included.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="section">
+        <h2>Technical Stack</h2>
+        <div class="card">
+            <table class="summary">
+                <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+                <tbody>
+                    <tr><td>API Framework</td><td>FastAPI (Python 3.11, async)</td></tr>
+                    <tr><td>Database</td><td>PostgreSQL 15 with SQLAlchemy 2 (async)</td></tr>
+                    <tr><td>Migrations</td><td>Alembic</td></tr>
+                    <tr><td>PDF Parsing</td><td>pdfplumber + regex</td></tr>
+                    <tr><td>Business Day Maths</td><td>numpy.busday_count</td></tr>
+                    <tr><td>Frontend</td><td>Vanilla JavaScript (no framework)</td></tr>
+                    <tr><td>Containerisation</td><td>Docker + Docker Compose</td></tr>
+                    <tr><td>API Docs</td><td>FastAPI auto-generated OpenAPI (<a href="/docs" target="_blank">/docs</a>)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- About / Contact -->
+    <div class="section">
+        <h2>About the Project</h2>
+        <p>
+            This project was built by <strong>Dan Tadmore</strong> as a portfolio piece for software
+            engineering internship applications. It demonstrates practical skills across the full
+            data engineering stack: API design, database modelling, document parsing, and frontend
+            development.
+        </p>
+        <p>
+            Feedback, bug reports, and contributions welcome.
+        </p>
+        <div class="card" style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center">
+            <div>
+                <div style="font-size:.82rem;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.25rem">Contact</div>
+                <a href="mailto:dan.tadmore@gmail.com">dan.tadmore@gmail.com</a>
+            </div>
+            <div>
+                <div style="font-size:.82rem;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.25rem">Source Code</div>
+                <a href="https://github.com/dantadmore/asx-insider-tracker" target="_blank">github.com/dantadmore/asx-insider-tracker</a>
+            </div>
+            <div>
+                <div style="font-size:.82rem;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.25rem">API Docs</div>
+                <a href="/docs" target="_blank">localhost:8000/docs</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Data sourced from ASX public announcements. For informational purposes only. Not financial advice.
+    &nbsp;·&nbsp; <a href="/static/index.html">← Back to Tracker</a>
+</footer>
+
+<script>
+function toggleDark() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+}
+if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+</script>
+</body>
+</html>
