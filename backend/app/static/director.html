@@ -102,21 +102,23 @@ function fmt(d) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'});
 }
 function fmtCcy(v) {
-    if (!v && v !== 0) return '—';
-    const abs = Math.abs(v);
-    if (abs >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
-    if (abs >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
-    return '$' + parseFloat(v).toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
+    if (v === null || v === undefined || v === '') return '—';
+    const n = parseFloat(v);
+    if (isNaN(n)) return '—';
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return '$' + (abs/1e6).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}) + 'M';
+    if (abs >= 1e3) return '$' + (abs/1e3).toLocaleString('en-AU',{minimumFractionDigits:1,maximumFractionDigits:1}) + 'K';
+    return '$' + abs.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function fmtNum(v) {
-    if (!v && v !== 0) return '—';
-    return parseInt(v).toLocaleString();
+    if (v === null || v === undefined) return '—';
+    return Math.abs(parseInt(v)).toLocaleString();
 }
 function fmtVal(qty, price) {
     if (!qty || !price) return '—';
-    const v = qty * price;
-    if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
-    if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+    const v = Math.abs(qty) * Math.abs(price);
+    if (v >= 1e6) return '$' + (v/1e6).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}) + 'M';
+    if (v >= 1e3) return '$' + (v/1e3).toLocaleString('en-AU',{minimumFractionDigits:1,maximumFractionDigits:1}) + 'K';
     return '$' + v.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function typeLabel(t) {

@@ -185,7 +185,7 @@ def _build_trade_response(r) -> TradeResponse:
         director_name=r.director_name,
         date_of_trade=r.date_of_trade,
         date_lodged=r.date_lodged,
-        quantity=r.quantity,
+        quantity=abs(r.quantity) if r.quantity is not None else None,
         price_per_share=float(r.price_per_share) if r.price_per_share else None,
         trade_type=r.trade_type,
         days_to_report=days_to_report,
@@ -413,7 +413,7 @@ async def get_company_profile(ticker: str, db: AsyncSession = Depends(get_db)):
             }
         d = director_map[t.director_id]
         d["trade_count"] += 1
-        val = (t.quantity or 0) * (t.price_per_share or 0)
+        val = abs(t.quantity or 0) * abs(t.price_per_share or 0)
         if t.trade_type == "on_market_buy":
             d["buy_value"] += val
         elif t.trade_type == "on_market_sell":
@@ -490,13 +490,13 @@ async def get_director_profile(director_id: str, db: AsyncSession = Depends(get_
         for v in sorted(company_map.values(), key=lambda x: -x["trade_count"])
     ]
 
-    # Buy/sell totals
+    # Buy/sell totals (use abs to handle negative quantities from seed data)
     total_buy = sum(
-        (t.quantity or 0) * (t.price_per_share or 0)
+        abs(t.quantity or 0) * abs(t.price_per_share or 0)
         for t in trades if t.trade_type == "on_market_buy"
     )
     total_sell = sum(
-        (t.quantity or 0) * (t.price_per_share or 0)
+        abs(t.quantity or 0) * abs(t.price_per_share or 0)
         for t in trades if t.trade_type == "on_market_sell"
     )
 

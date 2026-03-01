@@ -253,6 +253,35 @@
             margin-top: 0.8rem;
         }
 
+        /* Type button group */
+        .type-btn-group {
+            display: flex;
+            gap: 0;
+            margin-top: 0.1rem;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .type-btn {
+            flex: 1;
+            padding: 0.55rem 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+        }
+        .type-btn + .type-btn { border-left: 1px solid var(--border-color); }
+        .type-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .type-btn.active { background: var(--accent); color: #fff; }
+        .type-btn.active-buy  { background: #28a745; color: #fff; }
+        .type-btn.active-sell { background: #dc3545; color: #fff; }
+        .type-btn.active-off  { background: #6c757d; color: #fff; }
+
         /* Table Styles */
         .table-container {
             background-color: var(--bg-secondary);
@@ -573,13 +602,13 @@
                 <input type="text" id="directorFilter" placeholder="Director name" onkeyup="applyFilters()">
             </div>
             <div class="filter-group">
-                <label for="typeFilter">Trade Type</label>
-                <select id="typeFilter" onchange="applyFilters()">
-                    <option value="">All Types</option>
-                    <option value="on_market_buy">On-Market Buy</option>
-                    <option value="on_market_sell">On-Market Sell</option>
-                    <option value="off_market">Off-Market</option>
-                </select>
+                <label>Trade Type</label>
+                <div class="type-btn-group" id="typeFilter">
+                    <button class="type-btn active" data-val="" onclick="setTypeFilter(this, '')">All</button>
+                    <button class="type-btn" data-val="on_market_buy" onclick="setTypeFilter(this, 'on_market_buy')">Buy</button>
+                    <button class="type-btn" data-val="on_market_sell" onclick="setTypeFilter(this, 'on_market_sell')">Sell</button>
+                    <button class="type-btn" data-val="off_market" onclick="setTypeFilter(this, 'off_market')">Off-Market</button>
+                </div>
             </div>
             <div class="filter-group">
                 <label for="dateFromFilter">Trade Date From</label>
@@ -594,6 +623,13 @@
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()">
                     <label for="lateFilingsFilter" style="margin: 0; font-weight: normal; text-transform: none;">Show only violations</label>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label for="incompleteFilter">Data Completeness</label>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="incompleteFilter" onchange="applyFilters()">
+                    <label for="incompleteFilter" style="margin: 0; font-weight: normal; text-transform: none;">Include trades without price data</label>
                 </div>
             </div>
         </div>
@@ -762,13 +798,23 @@
         }
 
         function formatCurrency(value) {
-            if (!value) return '—';
-            return '$' + parseFloat(value).toFixed(2);
+            if (value === null || value === undefined || value === '') return '—';
+            const n = parseFloat(value);
+            if (isNaN(n)) return '—';
+            return '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatValue(qty, price) {
+            if (!qty || !price) return '—';
+            const v = Math.abs(qty) * Math.abs(price);
+            if (v >= 1e6) return '$' + (v / 1e6).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'M';
+            if (v >= 1e3) return '$' + (v / 1e3).toLocaleString('en-AU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'K';
+            return '$' + v.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function formatNumber(value) {
-            if (!value && value !== 0) return '—';
-            return parseInt(value).toLocaleString();
+            if (value === null || value === undefined) return '—';
+            return Math.abs(parseInt(value)).toLocaleString();
         }
 
         function getTradeTypeClass(type) {
@@ -788,22 +834,37 @@
             return labels[type] || type;
         }
 
+        // Type filter button group
+        let activeType = '';
+        function setTypeFilter(btn, val) {
+            activeType = val;
+            document.querySelectorAll('#typeFilter .type-btn').forEach(b => {
+                b.classList.remove('active', 'active-buy', 'active-sell', 'active-off');
+            });
+            if (val === 'on_market_buy') btn.classList.add('active-buy');
+            else if (val === 'on_market_sell') btn.classList.add('active-sell');
+            else if (val === 'off_market') btn.classList.add('active-off');
+            else btn.classList.add('active');
+            applyFilters();
+        }
+
         // Apply trade filters
         function applyFilters() {
             const ticker = document.getElementById('tickerFilter').value.toUpperCase();
             const director = document.getElementById('directorFilter').value.toLowerCase();
-            const type = document.getElementById('typeFilter').value;
             const dateFrom = document.getElementById('dateFromFilter').value;
             const dateTo = document.getElementById('dateToFilter').value;
             const lateOnly = document.getElementById('lateFilingsFilter').checked;
+            const includeIncomplete = document.getElementById('incompleteFilter').checked;
 
             filteredTrades = allTrades.filter(trade => {
                 if (ticker && !trade.ticker.includes(ticker)) return false;
                 if (director && !trade.director_name.toLowerCase().includes(director)) return false;
-                if (type && trade.trade_type !== type) return false;
+                if (activeType && trade.trade_type !== activeType) return false;
                 if (dateFrom && trade.date_of_trade < dateFrom) return false;
                 if (dateTo && trade.date_of_trade > dateTo) return false;
-                if (lateOnly && (!trade.days_to_report || trade.days_to_report <= 2)) return false;
+                if (lateOnly && (!trade.days_to_report || trade.days_to_report <= 5)) return false;
+                if (!includeIncomplete && !trade.price_per_share) return false;
                 return true;
             });
 
@@ -841,12 +902,7 @@
             } else {
                 noResults.classList.remove('show');
                 container.classList.remove('no-data');
-                tbody.innerHTML = pageData.map(trade => {
-                    const value = (trade.quantity && trade.price_per_share)
-                        ? (trade.quantity * trade.price_per_share).toFixed(2)
-                        : null;
-
-                    return `
+                tbody.innerHTML = pageData.map(trade => `
                         <tr>
                             <td>${formatDate(trade.date_of_trade)}</td>
                             <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a></td>
@@ -855,11 +911,10 @@
                             <td><span class="trade-type ${getTradeTypeClass(trade.trade_type)}">${getTradeTypeLabel(trade.trade_type)}</span></td>
                             <td class="text-right">${formatNumber(trade.quantity)}</td>
                             <td class="text-right">${formatCurrency(trade.price_per_share)}</td>
-                            <td class="text-right">${value ? '$' + parseFloat(value).toFixed(2) : '—'}</td>
+                            <td class="text-right">${formatValue(trade.quantity, trade.price_per_share)}</td>
                             <td class="text-right">${trade.days_to_report !== null ? trade.days_to_report : '—'}</td>
                         </tr>
-                    `;
-                }).join('');
+                    `).join('');
             }
 
             updatePagination();
@@ -985,8 +1040,9 @@
 
             const headers = ['Date', 'Ticker', 'Company', 'Director', 'Type', 'Quantity', 'Price', 'Value', 'Days to Report'];
             const rows = filteredTrades.map(trade => {
+                const absQty = trade.quantity != null ? Math.abs(trade.quantity) : '';
                 const value = (trade.quantity && trade.price_per_share)
-                    ? (trade.quantity * trade.price_per_share).toFixed(2)
+                    ? (Math.abs(trade.quantity) * trade.price_per_share).toFixed(2)
                     : '';
                 return [
                     trade.date_of_trade,
@@ -994,7 +1050,7 @@
                     trade.company_name,
                     trade.director_name,
                     getTradeTypeLabel(trade.trade_type),
-                    trade.quantity || '',
+                    absQty,
                     trade.price_per_share || '',
                     value,
                     trade.days_to_report || ''
