@@ -377,27 +377,20 @@ async def parse_pdf(
     price_per_share = parse_price_per_share(text)
     nature_of_change = parse_nature_of_change(text)
 
-    # Try fallback dates if main date extraction failed
+    # Fallback: use document submission date when "Date of change" can't be parsed.
+    #
+    # NOTE: "Date of last notice" and "most recent date in document" are NOT
+    # safe fallbacks — both can return the date of the *previous* filing, which
+    # would make compliance calculations report fake multi-month violations.
+    # The document submission date equals date_lodged, so the resulting gap is
+    # 0 business days (conservative / compliant), which is far better than a
+    # false positive.
     if not date_of_change:
-        logger.debug(f"Date of change not found, trying fallbacks...")
-
-        # Fallback 1: Try "Date of last notice"
-        date_of_change = parse_date_of_last_notice(text)
-        if date_of_change:
-            logger.debug(f"  ✓ Using 'Date of last notice' as fallback: {date_of_change}")
-
-        # Fallback 2: Try to extract any dates from the document
-        if not date_of_change:
-            all_dates = extract_dates_from_text(text)
-            if all_dates:
-                # Use the most recent date (most likely to be the trade date)
-                date_of_change = max(all_dates)
-                logger.debug(f"  ✓ Using most recent extracted date as fallback: {date_of_change}")
-
-        # Fallback 3: Use document submission date
-        if not date_of_change:
-            logger.debug(f"  ✓ Using document submission date as final fallback: {record.document_date}")
-            date_of_change = record.document_date
+        logger.debug(
+            f"Date of change not found for {record.ticker} — "
+            f"using document submission date ({record.document_date}) as fallback"
+        )
+        date_of_change = record.document_date
 
     # Check CRITICAL fields - these are required
     # Missing any of these = reject the record
