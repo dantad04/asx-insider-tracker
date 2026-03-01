@@ -210,44 +210,64 @@ def parse_number_disposed(text: str) -> int | None:
 
 
 def parse_price_per_share(text: str) -> Decimal | None:
-    """Extract price per share from consideration."""
-    # Pattern: "Value/Consideration $X.XX per share"
-    pattern = r"Value/Consideration\s+\$?([\d,]+\.?\d*)\s*per share"
-    match = re.search(pattern, text, re.IGNORECASE)
+    """Extract price per share ONLY when the form explicitly states a per-share price.
 
+    Most 3Y forms list Value/Consideration as the TOTAL transaction amount, not
+    the per-share price.  Only use this function when "per share", "per security",
+    or "per unit" appears immediately after the dollar figure.  Otherwise use
+    parse_total_consideration() and divide by quantity.
+    """
+    pattern = r"Value/Consideration\s+\$?([\d,]+\.?\d*)\s*per\s*(?:share|security|unit)"
+    match = re.search(pattern, text, re.IGNORECASE)
     if match:
         try:
-            price_str = match.group(1).replace(",", "")
-            return Decimal(price_str)
+            return Decimal(match.group(1).replace(",", ""))
         except (InvalidOperation, ValueError):
             pass
+    return None
 
-    # Try without "per share"
+
+def parse_total_consideration(text: str) -> Decimal | None:
+    """Extract the total Value/Consideration from the form.
+
+    This is the TOTAL amount paid for the transaction, not the per-share price.
+    Divide by the number of securities to derive price_per_share.
+    Returns None for N/A, Nil, non-cash, or when no dollar amount is present.
+    """
+    # Skip N/A / Nil entries
+    if re.search(r"Value/Consideration\s+(?:N/?A|Nil|Not applicable|Non-?cash)", text, re.IGNORECASE):
+        return None
+    # Skip if it's already a per-share figure (handled by parse_price_per_share)
+    if re.search(r"Value/Consideration\s+\$?[\d,]+\.?\d*\s*per\s*(?:share|security|unit)", text, re.IGNORECASE):
+        return None
     pattern = r"Value/Consideration\s+\$?([\d,]+\.?\d*)"
     match = re.search(pattern, text, re.IGNORECASE)
-
     if match:
         try:
-            price_str = match.group(1).replace(",", "")
-            return Decimal(price_str)
+            val = Decimal(match.group(1).replace(",", ""))
+            return val if val > 0 else None
         except (InvalidOperation, ValueError):
             pass
-
     return None
 
 
 def parse_nature_of_change(text: str) -> str | None:
-    """Extract nature of change (transaction type)."""
-    # Pattern: "Nature of change <description>"
-    pattern = r"Nature of change\s+([A-Za-z\s\-,]+?)(?:\n|Example:)"
-    match = re.search(pattern, text, re.IGNORECASE)
+    """Extract nature of change (transaction type).
 
+    The old regex was limited to [A-Za-z\\s\\-,] which failed when the
+    description contained digits or dollar signs (e.g. "Exercise of 100,000
+    options at $1.25").  Now captures everything up to "Example:" or "Part 2".
+    """
+    # Capture everything between "Nature of change" and the standard "Example:"
+    # label that always follows on the ASX form.
+    pattern = r"Nature of change\s+([\s\S]+?)(?:Example:|Part\s+2)"
+    match = re.search(pattern, text, re.IGNORECASE)
     if match:
         nature = match.group(1).strip()
-        # Clean up extra whitespace
-        nature = re.sub(r'\s+', ' ', nature)
-        return nature
-
+        # Take only the first non-empty line — subsequent lines are form boilerplate
+        lines = [l.strip() for l in nature.split("\n") if l.strip()]
+        if lines:
+            return re.sub(r"\s+", " ", lines[0])
     return None
 
 
@@ -256,22 +276,24 @@ def map_trade_type(nature_of_change: str) -> TradeType:
     if not nature_of_change:
         return TradeType.OTHER
 
-    nature_lower = nature_of_change.lower()
+    n = nature_of_change.lower()
 
-    # Map common patterns
-    if "on-market" in nature_lower and "buy" in nature_lower:
-        return TradeType.ON_MARKET_BUY
-    elif "on-market" in nature_lower and ("sell" in nature_lower or "sale" in nature_lower):
-        return TradeType.ON_MARKET_SELL
-    elif "on-market" in nature_lower:
-        # Default on-market to buy (most common in 3Y forms)
-        return TradeType.ON_MARKET_BUY
-    elif "off-market" in nature_lower:
-        return TradeType.OFF_MARKET
-    elif "exercise" in nature_lower and "option" in nature_lower:
+    # Options exercise takes priority (e.g. "Exercise of 100,000 options")
+    if "exercise" in n and "option" in n:
         return TradeType.EXERCISE_OPTIONS
-    else:
-        return TradeType.OTHER
+
+    on_market = "on-market" in n or "on market" in n
+    off_market = "off-market" in n or "off market" in n
+
+    if on_market and ("sell" in n or "sale" in n) and ("buy" not in n and "purchase" not in n):
+        return TradeType.ON_MARKET_SELL
+    if on_market:
+        # Covers: "buy", "purchase", "purchases and sales" (mixed), or plain "on-market"
+        return TradeType.ON_MARKET_BUY
+    if off_market:
+        return TradeType.OFF_MARKET
+
+    return TradeType.OTHER
 
 
 def calculate_parse_confidence(
@@ -374,7 +396,8 @@ async def parse_pdf(
     date_of_change = parse_date_of_change(text)
     num_acquired = parse_number_acquired(text)
     num_disposed = parse_number_disposed(text)
-    price_per_share = parse_price_per_share(text)
+    price_per_share = parse_price_per_share(text)        # only if "per share" explicit
+    total_consideration = parse_total_consideration(text)  # total deal value
     nature_of_change = parse_nature_of_change(text)
 
     # Fallback: use document submission date when "Date of change" can't be parsed.
@@ -404,11 +427,11 @@ async def parse_pdf(
 
     # Determine transaction type and quantity
     if num_acquired and num_acquired > 0:
-        trade_type = map_trade_type(nature_of_change) if nature_of_change else TradeType.ON_MARKET_BUY
+        trade_type = map_trade_type(nature_of_change) if nature_of_change else TradeType.OTHER
         quantity = num_acquired
     elif num_disposed and num_disposed > 0:
-        trade_type = TradeType.ON_MARKET_SELL
-        quantity = -num_disposed  # Negative for sales
+        trade_type = map_trade_type(nature_of_change) if nature_of_change else TradeType.ON_MARKET_SELL
+        quantity = num_disposed  # Store as positive; trade_type encodes direction
     else:
         logger.warning(f"No quantity found for {record.ticker}")
         record.status = ParseStatus.FAILED
@@ -451,6 +474,14 @@ async def parse_pdf(
     logger.debug(f"  Price: ${price_per_share if price_per_share else 'N/A'}")
     logger.debug(f"  Nature: {nature_of_change if nature_of_change else 'N/A'}")
     logger.debug(f"  Confidence: {confidence:.2f}")
+
+    # Derive per-share price from total consideration if no explicit per-share price.
+    # Value/Consideration on a 3Y form is almost always the TOTAL amount paid.
+    # Dividing by quantity gives the per-security price.
+    if price_per_share is None and total_consideration and quantity and abs(quantity) > 0:
+        derived = total_consideration / abs(quantity)
+        price_per_share = round(derived, 6)
+        logger.debug(f"  Price derived: ${total_consideration} / {abs(quantity)} = ${price_per_share:.6f}")
 
     # Get company
     result = await session.execute(
