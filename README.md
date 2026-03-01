@@ -10,13 +10,15 @@ asx-insider-tracker/
 │   ├── app/
 │   │   ├── models/         # SQLAlchemy ORM models
 │   │   ├── routers/        # API endpoint routers
+│   │   ├── static/         # Web UI (HTML/CSS/JS)
+│   │   ├── scripts/        # Data import and scraping scripts
 │   │   ├── main.py         # FastAPI app entry point
 │   │   ├── config.py       # Configuration management
-│   │   └── database.py     # Database setup
+│   │   ├── database.py     # Database setup
+│   │   └── scheduler.py    # Background job scheduler
 │   ├── alembic/            # Database migrations
 │   ├── requirements.txt    # Python dependencies
 │   └── Dockerfile
-├── frontend/               # Frontend application (placeholder)
 ├── docker-compose.yml      # Docker services orchestration
 ├── .env                    # Environment variables
 └── .env.example           # Example environment variables
@@ -39,6 +41,12 @@ This will:
 2. Build and run the FastAPI backend (port 8000)
 3. Apply database migrations automatically
 
+### Access the Application
+
+- **Web UI**: http://localhost:8000/static/index.html
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+
 ### Verify Installation
 
 ```bash
@@ -50,11 +58,19 @@ Expected response:
 {
   "status": "ok",
   "db": "connected",
-  "timestamp": "2024-02-17T10:00:00.000000",
-  "version": "0.1.0",
+  "timestamp": "2026-03-01T10:00:00.000000",
+  "version": "0.3.0",
   "environment": "development"
 }
 ```
+
+## Features
+
+- **Public Web Interface**: Browse insider trades, directors, and compliance records
+- **Daily Auto-Updates**: Automatically fetches and parses ASX announcements daily at 7 PM Sydney time
+- **Compliance Tracking**: Identifies late trade disclosures (ASX Listing Rule 3.19A.2 - 5 business days)
+- **Trade Analysis**: Filter and sort trades by date, company, director, and trade type
+- **Smart Formatting**: Sub-cent price handling, currency formatting, date parsing
 
 ## Database Models
 
@@ -63,24 +79,16 @@ Expected response:
 - **ticker**: Unique stock ticker (e.g., "CBA", "NAB")
 - **name**: Company name
 - **sector**: GICS sector classification
-- **industry_group**: Industry group classification
 - **market_cap**: Market capitalization in dollars
-- **is_asx200**: Boolean flag for ASX 200 membership
-- **is_asx300**: Boolean flag for ASX 300 membership
 
 ### directors
 - **id**: UUID primary key
 - **full_name**: Director's full name
 
 ### director_companies (Junction Table)
-- **id**: UUID primary key
 - **director_id**: Foreign key to directors
 - **company_id**: Foreign key to companies
-- **role**: Director's role (e.g., "Managing Director", "CFO")
-- **is_active**: Whether the director is currently active
-- **smart_money_score_30d**: Smart money score (30-day window)
-- **smart_money_score_60d**: Smart money score (60-day window)
-- **smart_money_score_90d**: Smart money score (90-day window)
+- **smart_money_score**: Historical smart money score
 - **trade_count**: Number of trades by this director
 
 ### trades
@@ -91,36 +99,33 @@ Expected response:
 - **date_lodged**: Date the trade was lodged
 - **trade_type**: Type of trade (on_market_buy, on_market_sell, off_market, exercise_options, other)
 - **quantity**: Number of shares traded
-- **price_per_share**: Price per share (if applicable)
+- **price_per_share**: Price per share
 
 ### price_snapshots
 - **id**: UUID primary key
 - **ticker**: Stock ticker
 - **date**: Date of the price snapshot
-- **open**: Opening price
-- **high**: High price
-- **low**: Low price
-- **close**: Closing price
+- **open, high, low, close**: OHLC prices
 - **volume**: Trading volume
 
 ### announcements
 - **id**: UUID primary key
 - **ticker**: Stock ticker
 - **announcement_date**: Date of announcement
-- **announcement_type**: Type of announcement (e.g., "Quarterly Report", "Director Change")
 - **title**: Announcement title
-- **url**: URL to the announcement
-- **is_price_sensitive**: Whether announcement is price-sensitive
+- **url**: URL to the announcement PDF
 
 ## API Endpoints
 
-### Health Check
-- **GET** `/health` - Health check endpoint
-  - Returns: API status, database connection status, timestamp, version
+### Public API
+- **GET** `/api/search` - Search companies and directors
+- **GET** `/api/company/{ticker}` - Get company profile with directors and trades
+- **GET** `/api/director/{id}` - Get director profile with trades and compliance record
+- **GET** `/api/compliance/violations` - Get all compliance violations
 
-### Root
+### Health
+- **GET** `/health` - Health check (API status, DB connection, version)
 - **GET** `/` - API information
-  - Returns: API name, version, environment
 
 ## Development
 
@@ -137,9 +142,6 @@ pip install -r requirements.txt
 
 ```bash
 cd backend
-# Create a new migration
-alembic revision --autogenerate -m "Description"
-
 # Apply migrations
 alembic upgrade head
 
@@ -156,6 +158,14 @@ uvicorn app.main:app --reload
 
 Server will be available at http://localhost:8000
 
+## Data Import
+
+To import historical trade data:
+
+```bash
+docker-compose exec backend python -m app.scripts.seed_from_json /app/data/asx_director_transactions.json
+```
+
 ## Environment Variables
 
 See `.env.example` for all available environment variables.
@@ -164,34 +174,20 @@ Key variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `APP_ENV`: Application environment (development/production)
 - `APP_VERSION`: Application version
-
-## Testing
-
-Health check endpoint returns:
-```json
-{
-  "status": "ok",
-  "db": "connected",
-  "timestamp": "ISO 8601 timestamp",
-  "version": "0.1.0",
-  "environment": "development"
-}
-```
+- `DEBUG`: Enable debug mode
 
 ## Technology Stack
 
 - **Framework**: FastAPI
-- **ORM**: SQLAlchemy
+- **ORM**: SQLAlchemy (async)
 - **Database**: PostgreSQL
 - **Async**: asyncpg
 - **Migrations**: Alembic
 - **Server**: Uvicorn
+- **Scheduling**: APScheduler
 - **Containerization**: Docker & Docker Compose
+- **Frontend**: Vanilla JavaScript (no frameworks)
 
-## Future Features
+## Deployment
 
-- Director and company data ingestion from ASX
-- Trade analysis and smart money scoring
-- Frontend dashboard
-- WebSocket real-time updates
-- REST API endpoints for querying data
+This application is designed for deployment on Railway.app. See Railway documentation for setup instructions.
