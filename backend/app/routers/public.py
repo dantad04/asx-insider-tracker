@@ -198,7 +198,11 @@ def _build_violations(rows) -> list[ComplianceViolationResponse]:
     for r in rows:
         if not r.date_of_trade or not r.date_lodged:
             continue
+        # Only flag trades where BOTH the trade AND lodging happened in 2026
+        # This filters out seed JSON data where old trades were announced in 2026
         if r.date_lodged < VERIFIED_CUTOFF:
+            continue
+        if r.date_of_trade < VERIFIED_CUTOFF:
             continue
         cal = (r.date_lodged - r.date_of_trade).days
         if cal < 0 or cal > 365:
@@ -248,7 +252,8 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.date_lodged >= VERIFIED_CUTOFF,  # Only verified 3Y PDF data
+            Trade.date_lodged >= VERIFIED_CUTOFF,   # Only verified 3Y PDF data
+            Trade.date_of_trade >= VERIFIED_CUTOFF, # Trade must also be in 2026
         )
     )
     violations_data = violations_result.all()
@@ -333,7 +338,8 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.date_lodged >= VERIFIED_CUTOFF,  # Only verified data
+            Trade.date_lodged >= VERIFIED_CUTOFF,   # Only verified data
+            Trade.date_of_trade >= VERIFIED_CUTOFF, # Trade must also be in 2026
         )
         .order_by(Trade.date_lodged.desc())
     )
