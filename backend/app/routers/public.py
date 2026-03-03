@@ -9,7 +9,7 @@ Endpoints:
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 import numpy as np
@@ -193,16 +193,13 @@ def _build_trade_response(r) -> TradeResponse:
 
 
 def _build_violations(rows) -> list[ComplianceViolationResponse]:
-    VERIFIED_CUTOFF = date(2026, 1, 1)
     violations = []
     for r in rows:
         if not r.date_of_trade or not r.date_lodged:
             continue
-        # Only flag trades where BOTH the trade AND lodging happened in 2026
-        # This filters out seed JSON data where old trades were announced in 2026
-        if r.date_lodged < VERIFIED_CUTOFF:
-            continue
-        if r.date_of_trade < VERIFIED_CUTOFF:
+        # Only use PDF-parsed trades — these have verified ASX filing dates
+        # Seed JSON trades use dateReadable (data export timestamp), not real lodgement dates
+        if r.source != "pdf_parser":
             continue
         cal = (r.date_lodged - r.date_of_trade).days
         if cal < 0 or cal > 365:
@@ -241,8 +238,7 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     total_companies_result = await db.execute(select(func.count(func.distinct(Company.id))))
     total_companies = total_companies_result.scalar() or 0
 
-    # Late filings (violations) - VERIFIED DATA ONLY (from 2026-01-01 onwards)
-    VERIFIED_CUTOFF = date(2026, 1, 1)
+    # Late filings (violations) - PDF-parsed trades only (verified ASX filing dates)
     violations_result = await db.execute(
         select(
             Trade.id,
@@ -252,8 +248,7 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.date_lodged >= VERIFIED_CUTOFF,   # Only verified 3Y PDF data
-            Trade.date_of_trade >= VERIFIED_CUTOFF, # Trade must also be in 2026
+            Trade.source == "pdf_parser",  # Only verified 3Y PDF data
         )
     )
     violations_data = violations_result.all()
@@ -264,9 +259,9 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         if classify_severity(bd) != "compliant":
             late_count += 1
 
-    # Calculate compliance rate for verified trades only
+    # Calculate compliance rate for PDF-parsed trades only
     verified_trades_result = await db.execute(
-        select(func.count(Trade.id)).where(Trade.date_lodged >= VERIFIED_CUTOFF)
+        select(func.count(Trade.id)).where(Trade.source == "pdf_parser")
     )
     verified_total = verified_trades_result.scalar() or 1
 
@@ -321,14 +316,12 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
 
     Historical seed JSON data is excluded due to data quality issues.
     """
-    # Only show violations from verified 3Y PDF data (date_lodged >= 2026-01-01)
-    VERIFIED_CUTOFF = date(2026, 1, 1)
-
     result = await db.execute(
         select(
             Trade.id,
             Trade.date_of_trade,
             Trade.date_lodged,
+            Trade.source,
             Company.ticker,
             Company.name.label("company_name"),
             Director.full_name.label("director_name"),
@@ -338,8 +331,7 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.date_lodged >= VERIFIED_CUTOFF,   # Only verified data
-            Trade.date_of_trade >= VERIFIED_CUTOFF, # Trade must also be in 2026
+            Trade.source == "pdf_parser",  # Only verified 3Y PDF data
         )
         .order_by(Trade.date_lodged.desc())
     )
@@ -433,7 +425,7 @@ async def get_company_profile(ticker: str, db: AsyncSession = Depends(get_db)):
     # Violations — all trade types for this company
     all_rows = (await db.execute(
         select(
-            Trade.id, Trade.date_of_trade, Trade.date_lodged,
+            Trade.id, Trade.date_of_trade, Trade.date_lodged, Trade.source,
             Company.ticker, Company.name.label("company_name"),
             Director.full_name.label("director_name"),
         )
@@ -509,7 +501,7 @@ async def get_director_profile(director_id: str, db: AsyncSession = Depends(get_
     # Violations — all trade types for this director
     all_rows = (await db.execute(
         select(
-            Trade.id, Trade.date_of_trade, Trade.date_lodged,
+            Trade.id, Trade.date_of_trade, Trade.date_lodged, Trade.source,
             Company.ticker, Company.name.label("company_name"),
             Director.full_name.label("director_name"),
         )

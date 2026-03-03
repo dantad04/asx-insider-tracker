@@ -293,6 +293,7 @@ async def process_record(
         trade_type=trade_type,
         quantity=quantity,
         price_per_share=float(per_share) if per_share else None,
+        source="seed_json",  # dateReadable is unreliable — exclude from compliance checks
     )
     session.add(trade)
     stats["trades_inserted"] += 1

@@ -512,7 +512,8 @@ async def parse_pdf(
         date_lodged=record.document_date,  # Date the 3Y form was lodged
         quantity=quantity,
         price_per_share=float(price_per_share) if price_per_share else None,
-        trade_type=trade_type
+        trade_type=trade_type,
+        source="pdf_parser",  # Verified ASX filing date — use for compliance checks
     )
 
     session.add(trade)

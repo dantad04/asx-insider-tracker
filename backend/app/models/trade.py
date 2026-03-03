@@ -45,5 +45,7 @@ class Trade(Base):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     price_per_share: Mapped[float] = mapped_column(Numeric(12, 4), nullable=True)
+    source: Mapped[str] = mapped_column(String(20), nullable=False, default="seed_json")
+    # source values: "seed_json" (unreliable dates) | "pdf_parser" (verified ASX dates)
 
     __table_args__ = (Index("idx_date_of_trade", "date_of_trade"),)
