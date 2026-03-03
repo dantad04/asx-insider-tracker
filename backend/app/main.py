@@ -18,6 +18,30 @@ from app.scheduler import setup_scheduler
 async def lifespan(app: FastAPI):
     """Application lifespan context manager for startup/shutdown events"""
     # Startup
+    import subprocess
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Run Alembic migrations
+    logger.info("Running database migrations...")
+    try:
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd="/app",
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        if result.returncode != 0:
+            logger.warning(f"Alembic migrations warning: {result.stderr}")
+        else:
+            logger.info("✓ Database migrations completed")
+    except Exception as e:
+        logger.error(f"Failed to run migrations: {e}")
+        # Continue anyway - DB might already be up to date
+
+    # Verify database connection
     await init_db()
 
     # Start the background scheduler for daily ASX updates
