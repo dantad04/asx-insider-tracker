@@ -114,7 +114,8 @@ def extract_dates_from_text(text: str) -> list[datetime.date]:
 def parse_date_of_change(text: str) -> datetime.date | None:
     """Extract date of change from PDF text with OCR error tolerance."""
     # First try: strict pattern with "Date of change" label
-    pattern = r"Date of change\s+(\d{1,2}\s+\w+\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
+    # Allow optional colon after label (e.g. "Date of change: 24 February 2026")
+    pattern = r"Date of change\s*:?\s*(\d{1,2}\s+\w+\s+\d{4}|\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
@@ -125,7 +126,7 @@ def parse_date_of_change(text: str) -> datetime.date | None:
 
     # Second try: "Date of change" followed by more flexible text
     # Capture text up to next field or newline, handle corrupted values
-    pattern = r"Date of change\s+([\w\s/\-\.]+?)(?:\n|No\.|Part\s+[0-9]|$)"
+    pattern = r"Date of change\s*:?\s*([\w\s/\-\.]+?)(?:\n|No\.|Part\s+[0-9]|$)"
     match = re.search(pattern, text, re.IGNORECASE)
 
     if match:
@@ -217,8 +218,10 @@ def parse_price_per_share(text: str) -> Decimal | None:
     or "per unit" appears immediately after the dollar figure.  Otherwise use
     parse_total_consideration() and divide by quantity.
     """
-    pattern = r"Value/Consideration\s+\$?([\d,]+\.?\d*)\s*per\s*(?:share|security|unit)"
-    match = re.search(pattern, text, re.IGNORECASE)
+    # Allow optional currency prefix: $, A$, NZ$, AU$, etc.
+    # re.DOTALL allows \s* to match newlines (value sometimes on next line)
+    pattern = r"Value/Consideration\s*:?\s*(?:[A-Z]{0,2}\$)?([\d,]+\.?\d*)\s*per\s*(?:share|security|unit)"
+    match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
     if match:
         try:
             return Decimal(match.group(1).replace(",", ""))
@@ -233,15 +236,21 @@ def parse_total_consideration(text: str) -> Decimal | None:
     This is the TOTAL amount paid for the transaction, not the per-share price.
     Divide by the number of securities to derive price_per_share.
     Returns None for N/A, Nil, non-cash, or when no dollar amount is present.
+    Handles currency prefixes: $, A$, NZ$, AU$
+    Handles asterisks and footnote markers after amounts.
     """
+    # re.DOTALL allows \s* to match newlines (value sometimes on next line after label)
+    FLAGS = re.IGNORECASE | re.DOTALL
+
     # Skip N/A / Nil entries
-    if re.search(r"Value/Consideration\s+(?:N/?A|Nil|Not applicable|Non-?cash)", text, re.IGNORECASE):
+    if re.search(r"Value/Consideration\s*:?\s*(?:N/?A|Nil|Not applicable|Non-?cash)", text, FLAGS):
         return None
     # Skip if it's already a per-share figure (handled by parse_price_per_share)
-    if re.search(r"Value/Consideration\s+\$?[\d,]+\.?\d*\s*per\s*(?:share|security|unit)", text, re.IGNORECASE):
+    if re.search(r"Value/Consideration\s*:?\s*(?:[A-Z]{0,2}\$)?[\d,]+\.?\d*\s*per\s*(?:share|security|unit)", text, FLAGS):
         return None
-    pattern = r"Value/Consideration\s+\$?([\d,]+\.?\d*)"
-    match = re.search(pattern, text, re.IGNORECASE)
+    # Match value with optional currency prefix and trailing asterisk/footnote marker
+    pattern = r"Value/Consideration\s*:?\s*(?:[A-Z]{0,2}\$)?([\d,]+\.?\d*)\*?"
+    match = re.search(pattern, text, FLAGS)
     if match:
         try:
             val = Decimal(match.group(1).replace(",", ""))
