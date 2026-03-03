@@ -44,7 +44,7 @@ COPY data/asx_director_transactions.json /app/data/asx_director_transactions.jso
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Expose port
+# Expose port (Railway uses $PORT env var)
 EXPOSE 8000
 
 CMD ["/app/start.sh"]
