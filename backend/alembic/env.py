@@ -31,8 +31,10 @@ if config.config_file_name is not None:
 # Set target metadata for autogenerate
 target_metadata = Base.metadata
 
-# Load database URL from environment
+# Load database URL from environment, ensuring async driver is used
 database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/asx_db")
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
