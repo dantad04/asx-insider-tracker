@@ -37,8 +37,14 @@ RUN playwright install chromium
 # Copy backend application code
 COPY backend/ .
 
+# Copy seed data
+COPY data/asx_director_transactions.json /app/data/asx_director_transactions.json
+
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Expose port
 EXPOSE 8000
 
-# Run application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/start.sh"]

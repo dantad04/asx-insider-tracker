@@ -1,6 +1,9 @@
 # Ignore all JSON files (data files should not be committed)
 *.json
 
+# But allow the seed data file
+!asx_director_transactions.json
+
 # Ignore all CSV files
 *.csv
 
