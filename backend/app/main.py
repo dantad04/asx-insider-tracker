@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
@@ -85,13 +86,9 @@ if static_dir.exists():
 
 
 @app.get("/")
-async def root() -> dict[str, str]:
-    """Root endpoint - API info"""
-    return {
-        "message": "ASX Insider Tracker API",
-        "version": __version__,
-        "environment": settings.app_env,
-    }
+async def root():
+    """Redirect root to the web UI"""
+    return RedirectResponse(url="/static/index.html")
 
 
 if __name__ == "__main__":
