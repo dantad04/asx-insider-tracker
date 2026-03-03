@@ -6,9 +6,14 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import settings
 
+# Ensure we use the async driver (Railway provides postgresql://, we need postgresql+asyncpg://)
+_db_url = settings.database_url
+if _db_url.startswith("postgresql://"):
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 # Create async engine for PostgreSQL
 engine = create_async_engine(
-    settings.database_url,
+    _db_url,
     echo=settings.debug,
     future=True,
 )
