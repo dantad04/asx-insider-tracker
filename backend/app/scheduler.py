@@ -51,8 +51,22 @@ async def scrape_and_parse_announcements():
             logger.info("✓ Parsing completed")
         except Exception as e:
             logger.error(f"✗ Parsing failed: {e}", exc_info=True)
-            # Don't raise - log the error but let scheduler continue
 
+        # Sync from asxinsider.com.au (GPT-parsed, fills gaps our regex misses)
+        logger.info("Step 3: Syncing from asxinsider.com.au...")
+        try:
+            from app.scripts.sync_asxinsider import main as sync_main
+            stats = await sync_main()
+            if stats:
+                logger.info(
+                    f"✓ Sync complete — "
+                    f"inserted={stats.get('inserted', 0)}, "
+                    f"upgraded={stats.get('upgraded', 0)}"
+                )
+            else:
+                logger.info("✓ Sync skipped (ASXINSIDER_URL not set or no data)")
+        except Exception as e:
+            logger.error(f"✗ Sync failed: {e}", exc_info=True)
 
         logger.info("=" * 60)
         logger.info("✓ Scheduled update completed successfully")

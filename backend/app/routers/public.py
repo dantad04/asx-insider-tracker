@@ -197,9 +197,10 @@ def _build_violations(rows) -> list[ComplianceViolationResponse]:
     for r in rows:
         if not r.date_of_trade or not r.date_lodged:
             continue
-        # Only use PDF-parsed trades — these have verified ASX filing dates
-        # Seed JSON trades use dateReadable (data export timestamp), not real lodgement dates
-        if r.source != "pdf_parser":
+        # Only use verified sources — pdf_parser and asxinsider_gpt both have
+        # reliable date_lodged values (real ASX announcement timestamps).
+        # seed_json is excluded (dateReadable = data export timestamp, not filing date).
+        if r.source not in ("pdf_parser", "asxinsider_gpt"):
             continue
         cal = (r.date_lodged - r.date_of_trade).days
         if cal < 0 or cal > 365:
@@ -248,7 +249,7 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.source == "pdf_parser",  # Only verified 3Y PDF data
+            Trade.source.in_(("pdf_parser", "asxinsider_gpt")),
         )
     )
     violations_data = violations_result.all()
@@ -259,9 +260,11 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         if classify_severity(bd) != "compliant":
             late_count += 1
 
-    # Calculate compliance rate for PDF-parsed trades only
+    # Compliance rate — verified sources only
     verified_trades_result = await db.execute(
-        select(func.count(Trade.id)).where(Trade.source == "pdf_parser")
+        select(func.count(Trade.id)).where(
+            Trade.source.in_(("pdf_parser", "asxinsider_gpt"))
+        )
     )
     verified_total = verified_trades_result.scalar() or 1
 
@@ -331,7 +334,7 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
         .where(
             Trade.date_of_trade != None,
             Trade.date_lodged != None,
-            Trade.source == "pdf_parser",  # Only verified 3Y PDF data
+            Trade.source.in_(("pdf_parser", "asxinsider_gpt")),
         )
         .order_by(Trade.date_lodged.desc())
     )
