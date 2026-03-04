@@ -83,11 +83,13 @@ async def get_or_create_company(session, ticker: str, name: str) -> Company:
     result = await session.execute(
         select(Company).where(Company.ticker == ticker.upper())
     )
-    company = result.scalar_one_or_none()
-    if not company:
-        company = Company(ticker=ticker.upper(), name=name or ticker.upper())
-        session.add(company)
-        await session.flush()
+    company = result.scalars().first()
+    if company:
+        return company
+
+    company = Company(ticker=ticker.upper(), name=name or ticker.upper())
+    session.add(company)
+    await session.flush()
     return company
 
 
@@ -97,11 +99,13 @@ async def get_or_create_director(session, full_name: str) -> Director:
             func.lower(Director.full_name) == full_name.lower().strip()
         )
     )
-    director = result.scalar_one_or_none()
-    if not director:
-        director = Director(full_name=full_name.strip())
-        session.add(director)
-        await session.flush()
+    director = result.scalars().first()
+    if director:
+        return director
+
+    director = Director(full_name=full_name.strip())
+    session.add(director)
+    await session.flush()
     return director
 
 
@@ -112,7 +116,7 @@ async def ensure_director_company(session, director_id: str, company_id: str):
             DirectorCompany.company_id == company_id,
         )
     )
-    if not result.scalar_one_or_none():
+    if not result.scalars().first():
         session.add(DirectorCompany(
             director_id=director_id,
             company_id=company_id,
@@ -138,7 +142,7 @@ async def find_existing_trade(
             )
         )
     )
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 
 # ── Per-record processor ───────────────────────────────────────────────────────
@@ -185,7 +189,9 @@ async def process_record(session, record: dict, stats: dict) -> None:
     date_lodged = date_readable or date_of_trade
 
     # Get/create company and director
-    company = await get_or_create_company(session, ticker, issuer_name)
+    # Truncate company name to 255 chars to fit VARCHAR(255) column
+    issuer_name_truncated = (issuer_name or "")[:255]
+    company = await get_or_create_company(session, ticker, issuer_name_truncated)
     director = await get_or_create_director(session, director_name)
     await ensure_director_company(session, director.id, company.id)
 
@@ -264,19 +270,20 @@ async def main(url: str | None = None) -> dict:
     }
 
     async with async_session() as session:
-        async with session.begin():
-            for i, record in enumerate(records):
-                try:
-                    await process_record(session, record, stats)
-                except Exception as e:
-                    logger.warning(f"Error on record {i}: {e}")
-                    stats["errors"] += 1
+        for i, record in enumerate(records):
+            try:
+                await process_record(session, record, stats)
+            except Exception as e:
+                logger.warning(f"Error on record {i}: {e}")
+                stats["errors"] += 1
 
-                # Commit in batches to avoid long transactions
-                if (i + 1) % 500 == 0:
-                    await session.commit()
-                    await session.begin()
-                    logger.info(f"  Processed {i + 1}/{len(records)} ...")
+            # Commit in batches to avoid long transactions
+            if (i + 1) % 500 == 0:
+                await session.commit()
+                logger.info(f"  Processed {i + 1}/{len(records)} ...")
+
+        # Final commit
+        await session.commit()
 
     logger.info("=" * 50)
     logger.info("Sync complete:")
