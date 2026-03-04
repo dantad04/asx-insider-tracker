@@ -15,65 +15,41 @@ from apscheduler.triggers.cron import CronTrigger
 logger = logging.getLogger(__name__)
 
 
-async def scrape_and_parse_announcements():
-    """Fetch new ASX announcements and parse the PDFs."""
+async def sync_asxinsider_trades():
+    """Sync trades from asxinsider.com.au (GPT-parsed data)."""
     logger.info("=" * 60)
-    logger.info("Starting scheduled ASX announcement update")
+    logger.info("Starting scheduled asxinsider.com.au sync")
     logger.info(f"Time: {datetime.now().isoformat()}")
     logger.info("=" * 60)
 
     try:
-        # Import here to avoid circular imports
-        from app.scripts.scrape_3y_announcements import main as scrape_main
-        from app.scripts.parse_3y_pdfs import main as parse_main
-        import argparse
+        from app.scripts.sync_asxinsider import main as sync_main
 
-        # Run scraper for today's announcements (recommended, no JavaScript)
-        logger.info("Step 1: Scraping today's 3Y announcements from ASX...")
+        logger.info("Syncing from asxinsider.com.au (GPT-parsed)...")
         try:
-            # Use --today mode which is recommended and doesn't need Playwright
-            scrape_args = argparse.Namespace(
-                today=True,  # Scrape today's announcements only
-                tickers=None,
-                all=False,
-                retry_from=None,
-            )
-            await scrape_main(scrape_args)
-            logger.info("✓ Scraping completed")
-        except Exception as e:
-            logger.error(f"✗ Scraping failed: {e}", exc_info=True)
-            # Don't raise - continue to parsing anyway in case PDFs exist
-
-        # Run parser on downloaded PDFs
-        logger.info("Step 2: Parsing downloaded PDFs...")
-        try:
-            await parse_main(limit=None)
-            logger.info("✓ Parsing completed")
-        except Exception as e:
-            logger.error(f"✗ Parsing failed: {e}", exc_info=True)
-
-        # Sync from asxinsider.com.au (GPT-parsed, fills gaps our regex misses)
-        logger.info("Step 3: Syncing from asxinsider.com.au...")
-        try:
-            from app.scripts.sync_asxinsider import main as sync_main
             stats = await sync_main()
             if stats:
                 logger.info(
-                    f"✓ Sync complete — "
-                    f"inserted={stats.get('inserted', 0)}, "
-                    f"upgraded={stats.get('upgraded', 0)}"
+                    f"✓ Sync complete:\n"
+                    f"  Inserted: {stats.get('inserted', 0)} new trades\n"
+                    f"  Upgraded: {stats.get('upgraded', 0)} seed→GPT\n"
+                    f"  Skipped: {stats.get('skipped_already_good', 0)} (already good)\n"
+                    f"  Errors: {stats.get('errors', 0)}"
                 )
             else:
-                logger.info("✓ Sync skipped (ASXINSIDER_URL not set or no data)")
+                logger.warning(
+                    "Sync returned no stats. "
+                    "Check ASXINSIDER_URL environment variable is set."
+                )
         except Exception as e:
             logger.error(f"✗ Sync failed: {e}", exc_info=True)
 
         logger.info("=" * 60)
-        logger.info("✓ Scheduled update completed successfully")
+        logger.info("✓ Scheduled sync completed")
         logger.info("=" * 60)
 
     except Exception as e:
-        logger.error(f"✗ Scheduled update FAILED: {e}", exc_info=True)
+        logger.error(f"✗ Scheduled sync FAILED: {e}", exc_info=True)
 
 
 def setup_scheduler():
@@ -90,16 +66,16 @@ def setup_scheduler():
     )
 
     scheduler.add_job(
-        scrape_and_parse_announcements,
+        sync_asxinsider_trades,
         trigger=trigger,
-        id="asx_daily_update",
-        name="Daily ASX announcement scrape & parse",
+        id="asxinsider_daily_sync",
+        name="Daily asxinsider.com.au GPT-parsed trades sync",
         replace_existing=True,
         coalesce=True,  # Only run once if missed
         max_instances=1,  # Never run concurrently
     )
 
-    msg = "✓ Scheduler started: Daily ASX update at 7 PM Sydney time (19:00 AEDT/AEST)"
+    msg = "✓ Scheduler started: Daily asxinsider sync at 7 PM Sydney time (19:00 AEDT/AEST)"
     logger.info(msg)
     print(msg)  # Ensure it shows in logs
     return scheduler
