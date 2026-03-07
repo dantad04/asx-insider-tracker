@@ -523,3 +523,53 @@ async def get_director_profile(director_id: str, db: AsyncSession = Depends(get_
         total_sell_value=round(total_sell, 2),
         violations=_build_violations(all_rows),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Manual sync trigger
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class SyncResponse(BaseModel):
+    status: str
+    message: str
+    inserted: int = 0
+    upgraded: int = 0
+    skipped: int = 0
+    errors: int = 0
+
+
+@router.post("/admin/sync", response_model=SyncResponse)
+async def trigger_sync():
+    """
+    Manually trigger a sync from asxinsider.com.au.
+    Returns sync statistics.
+    """
+    import logging
+    from app.scripts.sync_asxinsider import main as sync_main
+
+    logger = logging.getLogger(__name__)
+    logger.info("Manual sync triggered via API")
+
+    try:
+        stats = await sync_main()
+        if stats:
+            return SyncResponse(
+                status="success",
+                message=f"Sync completed: {stats.get('inserted', 0)} inserted, {stats.get('upgraded', 0)} upgraded",
+                inserted=stats.get("inserted", 0),
+                upgraded=stats.get("upgraded", 0),
+                skipped=stats.get("skipped_already_good", 0),
+                errors=stats.get("errors", 0),
+            )
+        else:
+            return SyncResponse(
+                status="error",
+                message="Sync returned no stats. Check ASXINSIDER_URL environment variable.",
+            )
+    except Exception as e:
+        logger.error(f"Manual sync failed: {e}", exc_info=True)
+        return SyncResponse(
+            status="error",
+            message=f"Sync failed: {str(e)}",
+        )
