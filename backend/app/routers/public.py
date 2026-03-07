@@ -312,12 +312,16 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
 @router.get("/compliance/violations", response_model=list[ComplianceViolationResponse])
 async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
     """
-    Return verified late filings (violations) from the 3Y PDF scraper only.
+    Return verified late filings (violations).
 
-    Only includes trades where date_lodged >= 2026-01-01 (verified data from
-    3Y announcement scraper with correct date extraction).
+    Design: One Appendix 3Y filing = one compliance record.
+    A filing is identified by (ticker, director_id, date_lodged).
 
-    Historical seed JSON data is excluded due to data quality issues.
+    For each filing group:
+    - Find the LATEST date_of_trade from pdf_parser records (most accurate),
+      falling back to asxinsider_gpt if no PDF records exist.
+    - Compliance is measured from that latest trade date to the filing date.
+    - This correctly handles PDFs with multiple transactions.
     """
     result = await db.execute(
         select(
@@ -327,6 +331,7 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
             Trade.source,
             Company.ticker,
             Company.name.label("company_name"),
+            Director.id.label("director_id"),
             Director.full_name.label("director_name"),
         )
         .join(Company, Company.id == Trade.company_id)
@@ -340,34 +345,57 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
     )
     rows = result.all()
 
-    violations = []
+    # Group by filing: (ticker, director_id, date_lodged) = one Appendix 3Y
+    # Within each filing, collect all trade records
+    from collections import defaultdict
+    filings: dict[tuple, list] = defaultdict(list)
     for r in rows:
-        cal_days = (r.date_lodged - r.date_of_trade).days
+        filing_key = (r.ticker, r.director_id, str(r.date_lodged))
+        filings[filing_key].append(r)
 
-        # Simple sanity check: skip impossible dates
+    violations = []
+    for filing_key, records in filings.items():
+        ticker, director_id, date_lodged_str = filing_key
+
+        # Use a representative record for company_name, director_name
+        rep = records[0]
+
+        # Find the best (latest) date_of_trade:
+        # 1. Prefer pdf_parser records — directly extracted from the ASX form
+        # 2. Fall back to asxinsider_gpt if no PDF record exists
+        pdf_records = [r for r in records if r.source == "pdf_parser"]
+        source_records = pdf_records if pdf_records else records
+
+        # Latest date_of_trade across these records = most recent transaction in filing
+        best_record = max(source_records, key=lambda r: r.date_of_trade)
+        trade_date = best_record.date_of_trade
+        date_lodged = rep.date_lodged
+
+        # Sanity check: skip impossible date ranges
+        cal_days = (date_lodged - trade_date).days
         if cal_days < 0 or cal_days > 365:
             continue
 
-        bd = business_days(r.date_of_trade, r.date_lodged)
+        bd = business_days(trade_date, date_lodged)
         severity = classify_severity(bd)
 
-        # Only include actual violations (not compliant)
         if severity == "compliant":
             continue
 
         violations.append(
             ComplianceViolationResponse(
-                trade_id=r.id,
-                ticker=r.ticker,
-                company_name=r.company_name,
-                director_name=r.director_name,
-                date_of_trade=r.date_of_trade,
-                date_lodged=r.date_lodged,
-                days_late=bd - COMPLIANCE_WINDOW,  # days PAST the 5-day deadline
+                trade_id=best_record.id,
+                ticker=rep.ticker,
+                company_name=rep.company_name,
+                director_name=rep.director_name,
+                date_of_trade=trade_date,
+                date_lodged=date_lodged,
+                days_late=bd - COMPLIANCE_WINDOW,
                 severity=severity,
             )
         )
 
+    violations.sort(key=lambda v: v.date_lodged, reverse=True)
     return violations
 
 
