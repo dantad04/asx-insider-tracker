@@ -1,15 +1,19 @@
 """
 Sync trades from asxinsider.com.au (GPT-parsed) into our database.
 
-The API returns trades sorted newest-first by dateReadable. We exploit this
-to stop early as soon as we hit a record already in the DB as asxinsider_gpt,
-meaning everything after it is already imported.
+The API returns trades sorted newest-first by dateReadable.
+
+Early-exit strategy: after seeing EARLY_EXIT_CONSECUTIVE consecutive
+asxinsider_gpt records in a row, we assume everything after is already
+imported and stop. This is safe once the DB has been fully synced at
+least once — until then the full list is processed.
 
 Strategy per record:
-  - No match        → insert as asxinsider_gpt
-  - Match source=pdf_parser → replace with complete asxinsider_gpt record
-  - Match source=asxinsider_gpt → STOP (early exit, rest already imported)
-  - Match source=seed_json → upgrade with GPT data
+  - No match                → insert as asxinsider_gpt
+  - Match source=pdf_parser → delete old, insert new complete record
+  - Match source=seed_json  → upgrade in-place with GPT data
+  - Match source=asxinsider_gpt → increment consecutive counter;
+                                  exit if counter >= EARLY_EXIT_CONSECUTIVE
 
 Usage:
     docker-compose exec backend python -m app.scripts.sync_from_asxinsider
@@ -39,6 +43,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 ASXINSIDER_URL = os.getenv("ASXINSIDER_URL", "")
+
+# Stop after this many consecutive already-imported asxinsider_gpt records.
+# Low enough to exit quickly on normal syncs, high enough to skip gaps
+# left by the old partial sync.
+EARLY_EXIT_CONSECUTIVE = 50
 
 
 # ── Schema mapping ─────────────────────────────────────────────────────────────
@@ -156,14 +165,17 @@ async def main(url: str | None = None) -> dict:
         logger.error(f"Expected a JSON array, got {type(records)}")
         return {}
 
-    logger.info(f"Fetched {len(records)} records (newest-first). Processing until early exit ...")
+    logger.info(f"Fetched {len(records)} records (newest-first). Processing ...")
 
     stats = {
         "inserted": 0,
         "replaced": 0,
         "upgraded": 0,
         "checks": 0,
+        "early_exit": False,
     }
+
+    consecutive_existing = 0  # consecutive asxinsider_gpt hits in a row
 
     async with async_session() as session:
         for i, record in enumerate(records):
@@ -178,7 +190,6 @@ async def main(url: str | None = None) -> dict:
             transaction_type = record.get("transaction_type", "Other")
             nature = record.get("nature_of_change", "")
 
-            # Skip records missing critical fields
             if not ticker or not director_name or not date_of_trade or quantity_raw is None:
                 continue
             quantity = int(quantity_raw)
@@ -205,16 +216,20 @@ async def main(url: str | None = None) -> dict:
 
                 if existing:
                     if existing.source == "asxinsider_gpt":
-                        # Early exit — everything after this is already imported
-                        await session.commit()
-                        logger.info(
-                            f"Early exit at record {i}: {ticker} {director_name} "
-                            f"{date_of_trade} already in DB as asxinsider_gpt"
-                        )
-                        break
+                        consecutive_existing += 1
+                        if consecutive_existing >= EARLY_EXIT_CONSECUTIVE:
+                            await session.commit()
+                            logger.info(
+                                f"Early exit after {stats['checks']} checks "
+                                f"({EARLY_EXIT_CONSECUTIVE} consecutive existing records)"
+                            )
+                            stats["early_exit"] = True
+                            break
+                        # Don't count this as a processed record — just skip
+                        continue
 
                     elif existing.source == "pdf_parser":
-                        # Replace incomplete record with complete GPT data
+                        # Replace incomplete record with full GPT data
                         await session.execute(
                             delete(Trade).where(Trade.id == existing.id)
                         )
@@ -230,16 +245,18 @@ async def main(url: str | None = None) -> dict:
                         ))
                         stats["replaced"] += 1
                         logger.info(
-                            f"Replaced incomplete record for {ticker} {director_name} {date_of_trade}"
+                            f"Replaced pdf_parser record: {ticker} {director_name} {date_of_trade}"
                         )
+                        consecutive_existing = 0
 
                     elif existing.source == "seed_json":
-                        # Upgrade seed record with better GPT data
+                        # Upgrade with better GPT data
                         existing.price_per_share = price
                         existing.date_lodged = date_lodged
                         existing.trade_type = trade_type
                         existing.source = "asxinsider_gpt"
                         stats["upgraded"] += 1
+                        consecutive_existing = 0
 
                 else:
                     # New record — insert
@@ -254,22 +271,31 @@ async def main(url: str | None = None) -> dict:
                         source="asxinsider_gpt",
                     ))
                     stats["inserted"] += 1
+                    consecutive_existing = 0
 
             except Exception as e:
                 logger.warning(f"Error processing record {i} ({ticker}): {e}")
+                consecutive_existing = 0
                 continue
 
-            # Batch commit every 100 records to avoid long transactions
+            # Batch commit every 100 records
             if (i + 1) % 100 == 0:
                 await session.commit()
+                logger.info(
+                    f"  {i + 1} processed — "
+                    f"{stats['inserted']} inserted, "
+                    f"{stats['replaced']} replaced, "
+                    f"{stats['upgraded']} upgraded ..."
+                )
 
         await session.commit()
 
     logger.info(
-        f"Synced {stats['inserted']} new trades, "
-        f"replaced {stats['replaced']} incomplete records, "
-        f"upgraded {stats['upgraded']} seed records, "
-        f"stopped after {stats['checks']} checks"
+        f"Sync complete: {stats['inserted']} new, "
+        f"{stats['replaced']} replaced, "
+        f"{stats['upgraded']} upgraded, "
+        f"{stats['checks']} checks"
+        + (" [early exit]" if stats["early_exit"] else " [full scan]")
     )
     return stats
 

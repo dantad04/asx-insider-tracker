@@ -721,28 +721,12 @@
         let allViolations = [];
         let currentPage = 1;
         const TRADES_PER_PAGE = 50;
-        let currentSort = { field: null, asc: true };
+        let currentSort = { field: 'date_of_trade', asc: false };
         let stats = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await loadData();
-            applyFilters();
-            // Default sort by latest trades (date descending)
-            currentSort = { field: 'date_of_trade', asc: false };
-            filteredTrades.sort((a, b) => {
-                if (!a.date_of_trade || !b.date_of_trade) return 0;
-                return b.date_of_trade.localeCompare(a.date_of_trade);
-            });
-            currentPage = 1;
-            renderTrades();
-            // Update sort indicator
-            document.querySelectorAll('th.sortable').forEach(th => {
-                if (th.textContent.includes('Date')) {
-                    th.classList.add('sorted-desc');
-                }
-            });
-
             // Poll for new data every 2 minutes
             setInterval(refreshData, 120000);
         });
@@ -763,6 +747,7 @@
                 renderStats();
                 renderComplianceTable();
                 applyFilters();
+                updateSortIndicators();
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML = `
@@ -936,7 +921,7 @@
             applyFilters();
         }
 
-        // Apply trade filters
+        // Apply trade filters (always re-applies current sort)
         function applyFilters() {
             const ticker = document.getElementById('tickerFilter').value.toUpperCase();
             const director = document.getElementById('directorFilter').value.toLowerCase();
@@ -956,9 +941,29 @@
                 return true;
             });
 
+            // Always apply current sort
+            applySortToFiltered();
+
             currentPage = 1;
             renderTrades();
             updateTradeCount();
+        }
+
+        function applySortToFiltered() {
+            const { field, asc } = currentSort;
+            filteredTrades.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                if (aVal == null && bVal == null) return 0;
+                if (aVal == null) return 1;
+                if (bVal == null) return -1;
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return asc ? aVal - bVal : bVal - aVal;
+                }
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+                return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
         }
 
         // Apply compliance filters
@@ -1077,35 +1082,23 @@
                 currentSort.field = field;
                 currentSort.asc = true;
             }
+            applySortToFiltered();
+            updateSortIndicators();
+            currentPage = 1;
+            renderTrades();
+        }
 
-            filteredTrades.sort((a, b) => {
-                let aVal = a[field];
-                let bVal = b[field];
-
-                // Handle null values
-                if (aVal == null && bVal == null) return 0;
-                if (aVal == null) return 1;
-                if (bVal == null) return -1;
-
-                // Numeric sort
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    return currentSort.asc ? aVal - bVal : bVal - aVal;
-                }
-
-                // String sort
-                aVal = String(aVal).toLowerCase();
-                bVal = String(bVal).toLowerCase();
-                return currentSort.asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-            });
-
-            // Update sort indicators
+        function updateSortIndicators() {
             document.querySelectorAll('th.sortable').forEach(th => {
                 th.classList.remove('sorted-asc', 'sorted-desc');
             });
-            event.target.closest('th').classList.add(currentSort.asc ? 'sorted-asc' : 'sorted-desc');
-
-            currentPage = 1;
-            renderTrades();
+            // Find the th whose onclick matches the current sort field
+            document.querySelectorAll('th.sortable').forEach(th => {
+                const onclick = th.getAttribute('onclick') || '';
+                if (onclick.includes(`'${currentSort.field}'`)) {
+                    th.classList.add(currentSort.asc ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
         }
 
         // Dark mode toggle
