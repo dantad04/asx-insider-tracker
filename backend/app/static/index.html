@@ -700,6 +700,7 @@
                         <th>Director</th>
                         <th title="Business days past the 5-day deadline">Days Late</th>
                         <th>Severity</th>
+                        <th title="Confirmed against original ASX PDF">Verified</th>
                     </tr>
                 </thead>
                 <tbody id="complianceBody">
@@ -1033,6 +1034,7 @@
                         <td>${v.director_name}</td>
                         <td class="text-right"><strong>${v.days_late}</strong></td>
                         <td><span class="severity ${v.severity}">${v.severity.toUpperCase()}</span></td>
+                        <td>${v.verified ? '✓' : '<span title="asxinsider estimate only — original PDF unavailable for cross-check" style="color:var(--text-secondary);cursor:help">~</span>'}</td>
                     </tr>
                 `).join('');
             }

@@ -9,10 +9,15 @@ Endpoints:
 
 from __future__ import annotations
 
-from datetime import date
+import io
+import logging
+from collections import defaultdict
+from datetime import date, timedelta
 from typing import Any
 
+import httpx
 import numpy as np
+import pdfplumber
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func, select
@@ -21,7 +26,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.company import Company
 from app.models.director import Director
+from app.models.pending_3y_parse import Pending3YParse, ParseStatus
 from app.models.trade import Trade, TradeType
+
+logger = logging.getLogger(__name__)
+
+# Cache: pdf_url -> verified date_of_change (or None if verification failed).
+# Persists for the life of the process; avoids re-fetching the same PDF.
+_pdf_verification_cache: dict[str, date | None] = {}
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -62,6 +74,7 @@ class ComplianceViolationResponse(BaseModel):
     date_lodged: date
     days_late: int    # business days PAST the 5-day deadline (business_days_total - 5)
     severity: str
+    verified: bool = False  # True = confirmed against ASX PDF; False = asxinsider estimate only
 
 
 class DirectorSummary(BaseModel):
@@ -309,19 +322,87 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     )
 
 
+async def _get_pdf_url_for_filing(
+    db: AsyncSession, ticker: str, date_lodged: date
+) -> str | None:
+    """Look up the PDF URL from pending_3y_parses for a given filing date ±1 day."""
+    result = await db.execute(
+        select(Pending3YParse.pdf_url)
+        .where(
+            Pending3YParse.ticker == ticker,
+            Pending3YParse.document_date >= date_lodged - timedelta(days=1),
+            Pending3YParse.document_date <= date_lodged + timedelta(days=1),
+            Pending3YParse.status == ParseStatus.PARSED,
+        )
+        .limit(1)
+    )
+    row = result.first()
+    return row[0] if row else None
+
+
+async def _verify_trade_date_from_pdf(pdf_url: str) -> date | None:
+    """
+    Fetch PDF from URL and extract the true date_of_change field.
+
+    Returns None if the URL is expired, unreachable, or the date can't be parsed.
+    Results are cached in _pdf_verification_cache to avoid re-fetching.
+    """
+    if pdf_url in _pdf_verification_cache:
+        return _pdf_verification_cache[pdf_url]
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(pdf_url)
+            response.raise_for_status()
+
+        text = ""
+        with pdfplumber.open(io.BytesIO(response.content)) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() or ""
+
+        # Import parse_date_of_change from the PDF parser (avoids code duplication)
+        from app.scripts.parse_3y_pdfs import parse_date_of_change
+        verified_date = parse_date_of_change(text)
+
+        _pdf_verification_cache[pdf_url] = verified_date
+        logger.info(f"PDF verified: {pdf_url} → date_of_change={verified_date}")
+        return verified_date
+
+    except Exception as e:
+        logger.warning(f"PDF verification failed ({pdf_url}): {e}")
+        _pdf_verification_cache[pdf_url] = None
+        return None
+
+
 @router.get("/compliance/violations", response_model=list[ComplianceViolationResponse])
 async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
     """
     Return verified late filings (violations).
 
-    Design: One Appendix 3Y filing = one compliance record.
-    A filing is identified by (ticker, director_id, date_lodged).
+    Two-tier verification:
 
-    For each filing group:
-    - Find the LATEST date_of_trade from pdf_parser records (most accurate),
-      falling back to asxinsider_gpt if no PDF records exist.
-    - Compliance is measured from that latest trade date to the filing date.
-    - This correctly handles PDFs with multiple transactions.
+    Tier 1 — pdf_parser records (always correct):
+      Dates extracted directly from the ASX PDF. The parser explicitly avoids
+      using date_of_last_notice as a fallback, so these dates are reliable.
+      → verified=True, used as-is.
+
+    Tier 2 — asxinsider_gpt records (usually correct, sometimes wrong):
+      asxinsider.com.au occasionally stores date_of_last_notice in their
+      date_of_change field, causing false MODERATE/SEVERE violations (e.g.
+      a previous filing date from months ago instead of the actual trade date).
+
+      For MINOR violations (small gaps): included as verified=False.
+
+      For MODERATE/SEVERE violations: we attempt to re-fetch and re-parse
+      the original ASX PDF via pending_3y_parses.pdf_url to extract the true
+      date_of_change. If re-parsing succeeds:
+        - If actually compliant → discarded.
+        - If still violating → included with verified=True and corrected date.
+      If re-parsing fails (URL expired, etc.): included with verified=False.
+
+    Design: one Appendix 3Y filing = one compliance record, identified by
+    (ticker, director_id, date_lodged). Multiple transactions in one PDF are
+    grouped; compliance is measured from the latest trade date in the filing.
     """
     result = await db.execute(
         select(
@@ -346,45 +427,31 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
     rows = result.all()
 
     # Group by filing: (ticker, director_id, date_lodged) = one Appendix 3Y
-    # Within each filing, collect all trade records
-    from collections import defaultdict
     filings: dict[tuple, list] = defaultdict(list)
     for r in rows:
-        filing_key = (r.ticker, r.director_id, str(r.date_lodged))
-        filings[filing_key].append(r)
+        filings[(r.ticker, r.director_id, str(r.date_lodged))].append(r)
 
     violations = []
-    for filing_key, records in filings.items():
-        ticker, director_id, date_lodged_str = filing_key
 
-        # Use a representative record for company_name, director_name
+    for (ticker, director_id, date_lodged_str), records in filings.items():
         rep = records[0]
-
-        # Find the best (latest) date_of_trade:
-        # 1. Prefer pdf_parser records — directly extracted from the ASX form
-        # 2. Fall back to asxinsider_gpt if no PDF record exists
-        pdf_records = [r for r in records if r.source == "pdf_parser"]
-        source_records = pdf_records if pdf_records else records
-
-        # Latest date_of_trade across these records = most recent transaction in filing
-        best_record = max(source_records, key=lambda r: r.date_of_trade)
-        trade_date = best_record.date_of_trade
         date_lodged = rep.date_lodged
 
-        # Sanity check: skip impossible date ranges
-        cal_days = (date_lodged - trade_date).days
-        if cal_days < 0 or cal_days > 365:
-            continue
-
-        bd = business_days(trade_date, date_lodged)
-        severity = classify_severity(bd)
-
-        if severity == "compliant":
-            continue
-
-        violations.append(
-            ComplianceViolationResponse(
-                trade_id=best_record.id,
+        # ── Tier 1: prefer pdf_parser records ──────────────────────────────
+        pdf_records = [r for r in records if r.source == "pdf_parser"]
+        if pdf_records:
+            # Use the latest date_of_trade from PDF-verified records
+            best = max(pdf_records, key=lambda r: r.date_of_trade)
+            trade_date = best.date_of_trade
+            cal_days = (date_lodged - trade_date).days
+            if cal_days < 0 or cal_days > 365:
+                continue
+            bd = business_days(trade_date, date_lodged)
+            severity = classify_severity(bd)
+            if severity == "compliant":
+                continue
+            violations.append(ComplianceViolationResponse(
+                trade_id=best.id,
                 ticker=rep.ticker,
                 company_name=rep.company_name,
                 director_name=rep.director_name,
@@ -392,8 +459,84 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
                 date_lodged=date_lodged,
                 days_late=bd - COMPLIANCE_WINDOW,
                 severity=severity,
-            )
-        )
+                verified=True,
+            ))
+            continue
+
+        # ── Tier 2: asxinsider_gpt only ────────────────────────────────────
+        gpt_records = [r for r in records if r.source == "asxinsider_gpt"]
+        if not gpt_records:
+            continue
+
+        best = max(gpt_records, key=lambda r: r.date_of_trade)
+        trade_date = best.date_of_trade
+        cal_days = (date_lodged - trade_date).days
+        if cal_days < 0 or cal_days > 365:
+            continue
+        bd = business_days(trade_date, date_lodged)
+        severity = classify_severity(bd)
+        if severity == "compliant":
+            continue
+
+        # MODERATE or SEVERE from asxinsider only → attempt PDF verification
+        if severity in ("moderate", "severe"):
+            pdf_url = await _get_pdf_url_for_filing(db, ticker, date_lodged)
+            if pdf_url:
+                verified_date = await _verify_trade_date_from_pdf(pdf_url)
+                if verified_date is not None:
+                    # Recalculate with the verified date
+                    v_cal = (date_lodged - verified_date).days
+                    if v_cal < 0 or v_cal > 365:
+                        # Nonsensical verified date — skip
+                        continue
+                    bd = business_days(verified_date, date_lodged)
+                    severity = classify_severity(bd)
+                    if severity == "compliant":
+                        # Was a false alarm — discard
+                        logger.info(
+                            f"False violation discarded after PDF check: "
+                            f"{ticker} {rep.director_name} "
+                            f"asxinsider={trade_date} verified={verified_date}"
+                        )
+                        continue
+                    # Genuine violation with verified date
+                    violations.append(ComplianceViolationResponse(
+                        trade_id=best.id,
+                        ticker=rep.ticker,
+                        company_name=rep.company_name,
+                        director_name=rep.director_name,
+                        date_of_trade=verified_date,
+                        date_lodged=date_lodged,
+                        days_late=bd - COMPLIANCE_WINDOW,
+                        severity=severity,
+                        verified=True,
+                    ))
+                    continue
+            # PDF URL not found or fetch failed — include as unverified
+            violations.append(ComplianceViolationResponse(
+                trade_id=best.id,
+                ticker=rep.ticker,
+                company_name=rep.company_name,
+                director_name=rep.director_name,
+                date_of_trade=trade_date,
+                date_lodged=date_lodged,
+                days_late=bd - COMPLIANCE_WINDOW,
+                severity=severity,
+                verified=False,
+            ))
+        else:
+            # MINOR violation from asxinsider — include unverified (small gaps are real)
+            violations.append(ComplianceViolationResponse(
+                trade_id=best.id,
+                ticker=rep.ticker,
+                company_name=rep.company_name,
+                director_name=rep.director_name,
+                date_of_trade=trade_date,
+                date_lodged=date_lodged,
+                days_late=bd - COMPLIANCE_WINDOW,
+                severity=severity,
+                verified=False,
+            ))
 
     violations.sort(key=lambda v: v.date_lodged, reverse=True)
     return violations
