@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: asx_tracker_db
+    env_file: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -21,6 +22,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: asx_tracker_api
+    env_file: .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
       POSTGRES_USER: ${POSTGRES_USER}
