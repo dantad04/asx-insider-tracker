@@ -687,6 +687,12 @@
                     <option value="minor">Minor (6-10 days)</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label>
+                    <input type="checkbox" id="verifiedOnlyFilter" onchange="applyComplianceFilters()">
+                    Show verified only
+                </label>
+            </div>
         </div>
 
         <div class="table-container" id="complianceTableContainer">
@@ -970,10 +976,15 @@
         // Apply compliance filters
         function applyComplianceFilters() {
             const severity = document.getElementById('severityFilter').value;
+            const verifiedOnly = document.getElementById('verifiedOnlyFilter').checked;
             let filtered = allViolations;
 
             if (severity) {
                 filtered = filtered.filter(v => v.severity === severity);
+            }
+
+            if (verifiedOnly) {
+                filtered = filtered.filter(v => v.verified === true);
             }
 
             renderComplianceTable(filtered);
