@@ -724,3 +724,45 @@ async def trigger_sync():
             status="error",
             message=f"Sync failed: {str(e)}",
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Verify all violations (one-time migration)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+class VerifyViolationsResponse(BaseModel):
+    status: str
+    message: str
+
+
+@router.post("/admin/verify-violations", response_model=VerifyViolationsResponse)
+async def trigger_verify_violations():
+    """
+    Manually trigger the verify_all_violations migration script.
+
+    This one-time script:
+    - Finds all trades with (date_lodged - date_of_trade) >= 7 calendar days
+    - Fetches original PDFs and extracts verified dates
+    - Updates Trade.date_of_trade where verified date differs
+    - Batch commits every 50 records
+
+    Warning: This is a long-running operation (fetches ~200+ PDFs).
+    """
+    import asyncio
+    from app.scripts.verify_all_violations import main as verify_main
+
+    logger.info("Verify all violations triggered via API")
+
+    try:
+        await verify_main(dry_run=False, limit=None)
+        return VerifyViolationsResponse(
+            status="success",
+            message="Verification complete. Check logs for summary.",
+        )
+    except Exception as e:
+        logger.error(f"Verify violations failed: {e}", exc_info=True)
+        return VerifyViolationsResponse(
+            status="error",
+            message=f"Verification failed: {str(e)}",
+        )
