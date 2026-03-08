@@ -605,11 +605,19 @@
             </div>
             <div class="filter-group">
                 <label>Trade Type</label>
-                <div class="type-btn-group" id="typeFilter">
-                    <button class="type-btn active" data-val="" onclick="setTypeFilter(this, '')">All</button>
-                    <button class="type-btn" data-val="on_market_buy" onclick="setTypeFilter(this, 'on_market_buy')">Buy</button>
-                    <button class="type-btn" data-val="on_market_sell" onclick="setTypeFilter(this, 'on_market_sell')">Sell</button>
-                    <button class="type-btn" data-val="off_market" onclick="setTypeFilter(this, 'off_market')">Off-Market</button>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <label>
+                        <input type="checkbox" class="typeCheckbox" value="on_market_buy" onchange="applyFilters()">
+                        Buy
+                    </label>
+                    <label>
+                        <input type="checkbox" class="typeCheckbox" value="on_market_sell" onchange="applyFilters()">
+                        Sell
+                    </label>
+                    <label>
+                        <input type="checkbox" class="typeCheckbox" value="off_market" onchange="applyFilters()">
+                        Off-Market
+                    </label>
                 </div>
             </div>
             <div class="filter-group">
@@ -690,8 +698,8 @@
             </div>
             <div class="filter-group">
                 <label>
-                    <input type="checkbox" id="verifiedOnlyFilter" onchange="applyComplianceFilters()">
-                    Show verified only
+                    <input type="checkbox" id="showUnverifiedFilter" onchange="applyComplianceFilters()">
+                    Include unverified
                 </label>
             </div>
         </div>
@@ -754,6 +762,7 @@
 
                 renderStats();
                 renderComplianceTable();
+                applyComplianceFilters();
                 applyFilters();
                 updateSortIndicators();
             } catch (error) {
@@ -787,6 +796,7 @@
                     allViolations = newViolations;
                     renderStats();
                     renderComplianceTable();
+                    applyComplianceFilters();
                     applyFilters();
                     console.log('✓ Data refreshed - new trades found');
                 }
@@ -915,18 +925,10 @@
             return labels[type] || type;
         }
 
-        // Type filter button group
-        let activeType = '';
-        function setTypeFilter(btn, val) {
-            activeType = val;
-            document.querySelectorAll('#typeFilter .type-btn').forEach(b => {
-                b.classList.remove('active', 'active-buy', 'active-sell', 'active-off');
-            });
-            if (val === 'on_market_buy') btn.classList.add('active-buy');
-            else if (val === 'on_market_sell') btn.classList.add('active-sell');
-            else if (val === 'off_market') btn.classList.add('active-off');
-            else btn.classList.add('active');
-            applyFilters();
+        // Type filter checkboxes
+        function getSelectedTradeTypes() {
+            const checkboxes = document.querySelectorAll('.typeCheckbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
         }
 
         // Apply trade filters (always re-applies current sort)
@@ -937,11 +939,12 @@
             const dateTo = document.getElementById('dateToFilter').value;
             const lateOnly = document.getElementById('lateFilingsFilter').checked;
             const includeIncomplete = document.getElementById('incompleteFilter').checked;
+            const selectedTypes = getSelectedTradeTypes();
 
             filteredTrades = allTrades.filter(trade => {
                 if (ticker && !trade.ticker.includes(ticker)) return false;
                 if (director && !trade.director_name.toLowerCase().includes(director)) return false;
-                if (activeType && trade.trade_type !== activeType) return false;
+                if (selectedTypes.length > 0 && !selectedTypes.includes(trade.trade_type)) return false;
                 if (dateFrom && trade.date_of_trade < dateFrom) return false;
                 if (dateTo && trade.date_of_trade > dateTo) return false;
                 if (lateOnly && (!trade.days_to_report || trade.days_to_report <= 5)) return false;
@@ -977,15 +980,16 @@
         // Apply compliance filters
         function applyComplianceFilters() {
             const severity = document.getElementById('severityFilter').value;
-            const verifiedOnly = document.getElementById('verifiedOnlyFilter').checked;
+            const showUnverified = document.getElementById('showUnverifiedFilter').checked;
             let filtered = allViolations;
+
+            // Default: show only verified. If checkbox is checked, include unverified too.
+            if (!showUnverified) {
+                filtered = filtered.filter(v => v.verified === true);
+            }
 
             if (severity) {
                 filtered = filtered.filter(v => v.severity === severity);
-            }
-
-            if (verifiedOnly) {
-                filtered = filtered.filter(v => v.verified === true);
             }
 
             renderComplianceTable(filtered);
