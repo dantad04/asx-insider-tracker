@@ -201,8 +201,8 @@
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1rem;
         }
 
@@ -254,34 +254,58 @@
             margin-top: 0.8rem;
         }
 
-        /* Type button group */
-        .type-btn-group {
-            display: flex;
-            gap: 0;
-            margin-top: 0.1rem;
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
+        /* Smart money badge */
+        .smart-money-badge {
+            font-size: 0.75rem;
+            margin-left: 0.3rem;
+            cursor: help;
+            vertical-align: middle;
         }
-        .type-btn {
-            flex: 1;
-            padding: 0.55rem 0.5rem;
-            font-size: 0.82rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 0;
-            background: var(--bg-primary);
+
+        /* Pagination page number input */
+        .page-input {
+            width: 52px;
+            padding: 0.3rem 0.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .page-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.1);
+        }
+
+        /* Clear filters button */
+        .btn-clear-filters {
+            background-color: transparent;
             color: var(--text-secondary);
-            cursor: pointer;
-            transition: background .15s, color .15s;
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
             white-space: nowrap;
         }
-        .type-btn + .type-btn { border-left: 1px solid var(--border-color); }
-        .type-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-        .type-btn.active { background: var(--accent); color: #fff; }
-        .type-btn.active-buy  { background: #28a745; color: #fff; }
-        .type-btn.active-sell { background: #dc3545; color: #fff; }
-        .type-btn.active-off  { background: #6c757d; color: #fff; }
+        .btn-clear-filters:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Two-row filter layout */
+        .filter-row {
+            display: grid;
+            gap: 1rem;
+        }
+        .filter-row-primary {
+            grid-template-columns: 1fr 1fr auto;
+            align-items: end;
+        }
+        .filter-row-secondary {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
 
         /* Table Styles */
         .table-container {
@@ -468,7 +492,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .filter-bar {
+            .filter-row-primary,
+            .filter-row-secondary {
                 grid-template-columns: 1fr;
             }
 
@@ -595,51 +620,58 @@
 
         <!-- Filters -->
         <div class="filter-bar">
-            <div class="filter-group">
-                <label for="tickerFilter">Company (Ticker)</label>
-                <input type="text" id="tickerFilter" placeholder="e.g., BHP, CBA" onkeyup="applyFilters()">
-            </div>
-            <div class="filter-group">
-                <label for="directorFilter">Director Name</label>
-                <input type="text" id="directorFilter" placeholder="Director name" onkeyup="applyFilters()">
-            </div>
-            <div class="filter-group">
-                <label>Trade Type</label>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <label>
-                        <input type="checkbox" class="typeCheckbox" value="on_market_buy" onchange="applyFilters()">
-                        Buy
-                    </label>
-                    <label>
-                        <input type="checkbox" class="typeCheckbox" value="on_market_sell" onchange="applyFilters()">
-                        Sell
-                    </label>
-                    <label>
-                        <input type="checkbox" class="typeCheckbox" value="off_market" onchange="applyFilters()">
-                        Off-Market
-                    </label>
+            <!-- Row 1: Search fields + clear button -->
+            <div class="filter-row filter-row-primary">
+                <div class="filter-group">
+                    <label for="tickerFilter">Company (Ticker)</label>
+                    <input type="text" id="tickerFilter" placeholder="e.g., BHP, CBA" onkeyup="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label for="directorFilter">Director Name</label>
+                    <input type="text" id="directorFilter" placeholder="Director name" onkeyup="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn-clear-filters" onclick="clearFilters()">✕ Clear</button>
                 </div>
             </div>
-            <div class="filter-group">
-                <label for="dateFromFilter">Trade Date From</label>
-                <input type="date" id="dateFromFilter" onchange="applyFilters()">
-            </div>
-            <div class="filter-group">
-                <label for="dateToFilter">Trade Date To</label>
-                <input type="date" id="dateToFilter" onchange="applyFilters()">
-            </div>
-            <div class="filter-group">
-                <label for="lateFilingsFilter">Late Filings Only</label>
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()">
-                    <label for="lateFilingsFilter" style="margin: 0; font-weight: normal; text-transform: none;">Show only violations</label>
+            <!-- Row 2: Date range + type + more filters -->
+            <div class="filter-row filter-row-secondary">
+                <div class="filter-group">
+                    <label for="dateFromFilter">Date From</label>
+                    <input type="date" id="dateFromFilter" onchange="applyFilters()">
                 </div>
-            </div>
-            <div class="filter-group">
-                <label for="incompleteFilter">Data Completeness</label>
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" id="incompleteFilter" onchange="applyFilters()">
-                    <label for="incompleteFilter" style="margin: 0; font-weight: normal; text-transform: none;">Include trades without price data</label>
+                <div class="filter-group">
+                    <label for="dateToFilter">Date To</label>
+                    <input type="date" id="dateToFilter" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>Trade Type</label>
+                    <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:0.4rem;">
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" class="typeCheckbox" value="on_market_buy" onchange="applyFilters()"> Buy
+                        </label>
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" class="typeCheckbox" value="on_market_sell" onchange="applyFilters()"> Sell
+                        </label>
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" class="typeCheckbox" value="off_market" onchange="applyFilters()"> Off-Market
+                        </label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>More Filters</label>
+                    <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem;">
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" id="smartMoneyFilter" onchange="applyFilters()"> 🧠 Smart Money
+                        </label>
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()"> Late Filings Only
+                        </label>
+                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
+                            <input type="checkbox" id="incompleteFilter" onchange="applyFilters()"> Include no-price trades
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -670,11 +702,17 @@
                 </div>
             </div>
             <div class="pagination" id="pagination">
-                <button onclick="previousPage()">← Previous</button>
+                <button onclick="firstPage()" title="First page">⏮</button>
+                <button onclick="previousPage()">← Prev</button>
                 <div class="page-info">
-                    <span id="pageInfo">Page 1 of 1</span>
+                    Page
+                    <input type="number" class="page-input" id="pageInput" min="1" value="1"
+                           onchange="goToPage(parseInt(this.value))"
+                           onkeydown="if(event.key==='Enter') goToPage(parseInt(this.value))">
+                    of <span id="totalPages">1</span>
                 </div>
                 <button onclick="nextPage()">Next →</button>
+                <button onclick="lastPage()" title="Last page">⏭</button>
             </div>
         </div>
 
@@ -735,6 +773,7 @@
         let allTrades = [];
         let filteredTrades = [];
         let allViolations = [];
+        let smartMoneyTickers = new Set();
         let currentPage = 1;
         const TRADES_PER_PAGE = 50;
         let currentSort = { field: 'date_of_trade', asc: false };
@@ -750,15 +789,17 @@
         // Load data from API
         async function loadData() {
             try {
-                const [tradesRes, statsRes, violationsRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
-                    fetch('/api/compliance/violations')
+                    fetch('/api/compliance/violations'),
+                    fetch('/api/trades/smart-money'),
                 ]);
 
                 allTrades = await tradesRes.json();
                 stats = await statsRes.json();
                 allViolations = await violationsRes.json();
+                smartMoneyTickers = new Set((await smartMoneyRes.json()).map(s => s.ticker));
 
                 renderStats();
                 renderComplianceTable();
@@ -779,21 +820,24 @@
         // Refresh data (for polling)
         async function refreshData() {
             try {
-                const [tradesRes, statsRes, violationsRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
-                    fetch('/api/compliance/violations')
+                    fetch('/api/compliance/violations'),
+                    fetch('/api/trades/smart-money'),
                 ]);
 
                 const newTrades = await tradesRes.json();
                 const newStats = await statsRes.json();
                 const newViolations = await violationsRes.json();
+                const newSmartMoney = await smartMoneyRes.json();
 
                 // Only re-render if data actually changed
                 if (JSON.stringify(newTrades) !== JSON.stringify(allTrades)) {
                     allTrades = newTrades;
                     stats = newStats;
                     allViolations = newViolations;
+                    smartMoneyTickers = new Set(newSmartMoney.map(s => s.ticker));
                     renderStats();
                     renderComplianceTable();
                     applyComplianceFilters();
@@ -939,6 +983,7 @@
             const dateTo = document.getElementById('dateToFilter').value;
             const lateOnly = document.getElementById('lateFilingsFilter').checked;
             const includeIncomplete = document.getElementById('incompleteFilter').checked;
+            const smartMoneyOnly = document.getElementById('smartMoneyFilter').checked;
             const selectedTypes = getSelectedTradeTypes();
 
             filteredTrades = allTrades.filter(trade => {
@@ -949,6 +994,7 @@
                 if (dateTo && trade.date_of_trade > dateTo) return false;
                 if (lateOnly && (!trade.days_to_report || trade.days_to_report <= 5)) return false;
                 if (!includeIncomplete && !trade.price_per_share) return false;
+                if (smartMoneyOnly && !smartMoneyTickers.has(trade.ticker)) return false;
                 return true;
             });
 
@@ -1015,7 +1061,7 @@
                 tbody.innerHTML = pageData.map(trade => `
                         <tr>
                             <td>${formatDate(trade.date_of_trade)}</td>
-                            <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a></td>
+                            <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a>${smartMoneyTickers.has(trade.ticker) ? '<span class="smart-money-badge" title="Smart money: 2+ directors bought within 7 days in last 90 days">🧠</span>' : ''}</td>
                             <td>${trade.company_name}</td>
                             <td><a href="/static/director.html?id=${trade.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${trade.director_name}</a></td>
                             <td><span class="trade-type ${getTradeTypeClass(trade.trade_type)}">${getTradeTypeLabel(trade.trade_type)}</span></td>
@@ -1065,31 +1111,54 @@
 
         // Pagination
         function updatePagination() {
-            const totalPages = Math.ceil(filteredTrades.length / TRADES_PER_PAGE);
-            const pageInfo = document.getElementById('pageInfo');
-            const prevBtn = document.querySelector('#pagination button:first-of-type');
-            const nextBtn = document.querySelector('#pagination button:last-of-type');
-
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-            prevBtn.disabled = currentPage === 1;
-            nextBtn.disabled = currentPage === totalPages;
+            const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
+            const pageInput = document.getElementById('pageInput');
+            pageInput.value = currentPage;
+            pageInput.max = totalPages;
+            document.getElementById('totalPages').textContent = totalPages;
+            const btns = document.querySelectorAll('#pagination button');
+            // btns[0]=⏮ btns[1]=← btns[2]=→ btns[3]=⏭
+            btns[0].disabled = currentPage === 1;
+            btns[1].disabled = currentPage === 1;
+            btns[2].disabled = currentPage === totalPages;
+            btns[3].disabled = currentPage === totalPages;
         }
 
         function nextPage() {
             const totalPages = Math.ceil(filteredTrades.length / TRADES_PER_PAGE);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderTrades();
-                window.scrollTo(0, 0);
-            }
+            if (currentPage < totalPages) { currentPage++; renderTrades(); window.scrollTo(0, 0); }
         }
 
         function previousPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderTrades();
-                window.scrollTo(0, 0);
-            }
+            if (currentPage > 1) { currentPage--; renderTrades(); window.scrollTo(0, 0); }
+        }
+
+        function firstPage() {
+            if (currentPage !== 1) { currentPage = 1; renderTrades(); window.scrollTo(0, 0); }
+        }
+
+        function lastPage() {
+            const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
+            if (currentPage !== totalPages) { currentPage = totalPages; renderTrades(); window.scrollTo(0, 0); }
+        }
+
+        function goToPage(n) {
+            const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
+            const page = Math.max(1, Math.min(isNaN(n) ? 1 : n, totalPages));
+            if (page !== currentPage) { currentPage = page; renderTrades(); window.scrollTo(0, 0); }
+            else document.getElementById('pageInput').value = currentPage;
+        }
+
+        function clearFilters() {
+            document.getElementById('tickerFilter').value = '';
+            document.getElementById('directorFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+            document.querySelectorAll('.typeCheckbox').forEach(cb => cb.checked = false);
+            document.getElementById('smartMoneyFilter').checked = false;
+            document.getElementById('lateFilingsFilter').checked = false;
+            document.getElementById('incompleteFilter').checked = false;
+            applyFilters();
         }
 
         // Sorting

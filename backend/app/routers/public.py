@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import io
 import logging
+import time as _time
 from collections import defaultdict
 from datetime import date, timedelta
 from typing import Any
@@ -34,6 +35,10 @@ logger = logging.getLogger(__name__)
 # Cache: pdf_url -> verified date_of_change (or None if verification failed).
 # Persists for the life of the process; avoids re-fetching the same PDF.
 _pdf_verification_cache: dict[str, date | None] = {}
+
+# Cache: smart money tickers (result, computed_at). TTL = 10 minutes.
+_smart_money_cache: tuple[list, float] | None = None
+_SMART_MONEY_TTL = 600
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -120,6 +125,14 @@ class StatsResponse(BaseModel):
     most_traded_company: str | None
     most_traded_company_trades: int
     compliance_rate_pct: float
+
+
+class SmartMoneyTicker(BaseModel):
+    ticker: str
+    company_name: str
+    director_count: int
+    directors: list[str]
+    latest_trade_date: date
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -320,6 +333,82 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         most_traded_company_trades=most_traded_company_trades,
         compliance_rate_pct=round(compliance_rate, 1),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Smart Money endpoint
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/trades/smart-money", response_model=list[SmartMoneyTicker])
+async def get_smart_money_tickers(db: AsyncSession = Depends(get_db)):
+    """
+    Return tickers where 2+ distinct directors bought on the open market
+    within any rolling 7-day window in the last 90 days.
+    Result is cached for 10 minutes.
+    """
+    global _smart_money_cache
+
+    if _smart_money_cache is not None:
+        cached_result, cached_at = _smart_money_cache
+        if _time.monotonic() - cached_at < _SMART_MONEY_TTL:
+            return cached_result
+
+    cutoff = date.today() - timedelta(days=90)
+
+    result = await db.execute(
+        select(
+            Trade.director_id,
+            Trade.date_of_trade,
+            Company.ticker,
+            Company.name.label("company_name"),
+            Director.full_name.label("director_name"),
+        )
+        .join(Company, Company.id == Trade.company_id)
+        .join(Director, Director.id == Trade.director_id)
+        .where(
+            Trade.trade_type == TradeType.ON_MARKET_BUY,
+            Trade.date_of_trade >= cutoff,
+        )
+        .order_by(Company.ticker, Trade.date_of_trade)
+    )
+    rows = result.all()
+
+    ticker_rows: dict[str, list] = defaultdict(list)
+    for r in rows:
+        ticker_rows[r.ticker].append(r)
+
+    smart_money: list[SmartMoneyTicker] = []
+
+    for ticker, trades in ticker_rows.items():
+        trades_sorted = sorted(trades, key=lambda r: r.date_of_trade)
+        company_name = trades_sorted[0].company_name
+
+        best_window_dirs: dict[str, str] = {}
+        latest_date = trades_sorted[-1].date_of_trade
+
+        for i, anchor in enumerate(trades_sorted):
+            window_end = anchor.date_of_trade + timedelta(days=6)
+            window_dirs: dict[str, str] = {}
+            for r in trades_sorted[i:]:
+                if r.date_of_trade > window_end:
+                    break
+                window_dirs[str(r.director_id)] = r.director_name
+            if len(window_dirs) >= 2 and len(window_dirs) > len(best_window_dirs):
+                best_window_dirs = window_dirs
+
+        if best_window_dirs:
+            smart_money.append(SmartMoneyTicker(
+                ticker=ticker,
+                company_name=company_name,
+                director_count=len(best_window_dirs),
+                directors=list(best_window_dirs.values()),
+                latest_trade_date=latest_date,
+            ))
+
+    smart_money.sort(key=lambda s: s.latest_trade_date, reverse=True)
+    _smart_money_cache = (smart_money, _time.monotonic())
+    return smart_money
 
 
 async def _get_pdf_url_for_filing(
@@ -701,6 +790,9 @@ async def trigger_sync():
 
     logger = logging.getLogger(__name__)
     logger.info("Manual sync triggered via API")
+
+    global _smart_money_cache
+    _smart_money_cache = None  # Invalidate so next request recomputes
 
     try:
         stats = await sync_main()
