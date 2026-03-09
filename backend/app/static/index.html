@@ -887,8 +887,8 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await loadData();
-            // Poll for new data every 2 minutes
-            setInterval(refreshData, 120000);
+            // Lazy sync: trigger on page load if >1 hour since last sync
+            checkAndLazySync();
         });
 
         // Load data from API
@@ -974,6 +974,7 @@
 
                 if (data.status === 'success') {
                     btn.textContent = '✓ Sync complete!';
+                    localStorage.setItem('lastSyncTime', Date.now().toString());
                     console.log(`Sync results: ${data.inserted} inserted, ${data.upgraded} upgraded, ${data.skipped} skipped`);
 
                     // Refresh data after sync
@@ -998,6 +999,40 @@
                 setTimeout(() => {
                     btn.textContent = originalText;
                 }, 3000);
+            }
+        }
+
+        // Lazy sync: trigger sync on page load if >1 hour since last sync
+        function checkAndLazySync() {
+            const SYNC_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+            const lastSyncTime = localStorage.getItem('lastSyncTime');
+            const now = Date.now();
+
+            if (!lastSyncTime || now - parseInt(lastSyncTime) > SYNC_INTERVAL_MS) {
+                console.log('Lazy sync: triggering auto-sync (>1 hour since last)');
+                lazyTriggerSync();
+            } else {
+                const minutesUntilNextSync = Math.round((SYNC_INTERVAL_MS - (now - parseInt(lastSyncTime))) / 60000);
+                console.log(`Lazy sync: skipped (next sync in ${minutesUntilNextSync} minutes)`);
+            }
+        }
+
+        // Trigger sync without UI feedback (runs silently in background)
+        async function lazyTriggerSync() {
+            try {
+                const res = await fetch('/api/admin/sync', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    localStorage.setItem('lastSyncTime', Date.now().toString());
+                    console.log(`✓ Lazy sync complete: ${data.inserted} inserted, ${data.upgraded} upgraded`);
+                    // Reload data silently
+                    await loadData();
+                } else {
+                    console.warn('Lazy sync error:', data.message);
+                }
+            } catch (error) {
+                console.error('Lazy sync failed:', error);
+                // Silently fail — user can manually refresh if needed
             }
         }
 

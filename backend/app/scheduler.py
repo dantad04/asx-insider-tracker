@@ -1,8 +1,8 @@
 """
-Background scheduler for syncing ASX insider trades.
+Background scheduler setup (currently minimal).
 
-Runs sync_from_asxinsider every 2 minutes — fast due to early exit once
-the newest already-imported record is hit (only new trades are processed).
+Syncing is now lazy: triggered on page load if >1 hour since last sync,
+plus manual refresh button. No background scheduled jobs.
 
 Usage: Wire into FastAPI lifespan context in main.py
 """
@@ -39,20 +39,12 @@ async def sync_asxinsider_trades():
 
 
 def setup_scheduler():
-    """Initialize and return the APScheduler instance."""
+    """Initialize and return the APScheduler instance.
+
+    Currently disabled — syncing now happens on-demand via lazy sync
+    (page load if >1 hour since last sync) + manual refresh button.
+    """
     scheduler = AsyncIOScheduler()
-
-    scheduler.add_job(
-        sync_asxinsider_trades,
-        trigger=IntervalTrigger(minutes=2),
-        id="asxinsider_sync",
-        name="asxinsider.com.au sync every 2 minutes",
-        replace_existing=True,
-        coalesce=True,      # skip missed runs instead of stacking
-        max_instances=1,    # never run concurrently
-    )
-
-    msg = "✓ Scheduler started: asxinsider sync every 2 minutes"
-    logger.info(msg)
-    print(msg)
+    # No scheduled jobs — sync is triggered by frontend lazy load
+    logger.info("✓ Scheduler started (no jobs — using lazy sync on page load)")
     return scheduler
