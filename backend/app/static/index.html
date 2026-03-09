@@ -1086,6 +1086,11 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
+            // Default Smart Money Scores to last 90 days
+            const d90 = new Date();
+            d90.setDate(d90.getDate() - 90);
+            document.getElementById('smFrom').value = d90.toISOString().slice(0, 10);
+
             await loadData();
             // Lazy sync: trigger on page load if >1 hour since last sync
             checkAndLazySync();
@@ -1605,7 +1610,7 @@
                 return `<span class="score-badge ${cls}" style="margin-left:0.3rem;font-size:0.7rem">${sm.score.toFixed(1)}</span>`;
             }
             if (smartMoneyTickers.has(ticker)) {
-                return '<span class="sm-badge">SM</span>';
+                return '<span class="sm-badge">🔥</span>';
             }
             return '';
         }
