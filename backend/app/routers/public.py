@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import io
 import logging
+import math
 import time as _time
 from collections import defaultdict
 from datetime import date, timedelta
@@ -19,7 +20,7 @@ from typing import Any
 import httpx
 import numpy as np
 import pdfplumber
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +29,7 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.director import Director
 from app.models.pending_3y_parse import Pending3YParse, ParseStatus
+from app.models.price_snapshot import PriceSnapshot
 from app.models.trade import Trade, TradeType
 
 logger = logging.getLogger(__name__)
@@ -135,6 +137,28 @@ class SmartMoneyTicker(BaseModel):
     latest_trade_date: date
 
 
+class SmartMoneyV2Item(BaseModel):
+    director_id: str
+    director_name: str
+    ticker: str
+    company_name: str
+    score: float | None
+    score_all_time: float | None
+    score_label: str | None
+    total_scored_trades: int
+    last_accurate_trade: date | None
+    recency_tag: str | None
+    latest_trade_date: date
+
+
+class SectorHeatmapCompany(BaseModel):
+    ticker: str
+    company_name: str
+    buy_count: int
+    sell_count: int
+    trade_count: int
+
+
 class SectorHeatmap(BaseModel):
     sector: str
     buy_count: int
@@ -143,6 +167,44 @@ class SectorHeatmap(BaseModel):
     sell_value: float
     net_sentiment: str  # "bullish", "bearish", "neutral"
     trade_count: int
+    top_companies: list[SectorHeatmapCompany]
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Smart money v2 scoring helpers
+# ─────────────────────────────────────────────────────────────────────────
+
+_HALF_LIFE_DAYS = 547  # ~18 months
+_K = math.log(2) / _HALF_LIFE_DAYS
+
+
+def _decay_weight(trade_date: date, today: date) -> float:
+    return math.exp(-_K * max(0, (today - trade_date).days))
+
+
+def _score_label(score: float | None) -> str | None:
+    if score is None:
+        return None
+    if score >= 8.0:
+        return "Strong"
+    if score >= 6.0:
+        return "Good"
+    if score >= 4.0:
+        return "Neutral"
+    if score >= 2.0:
+        return "Weak"
+    return "Poor"
+
+
+def _recency_str(d: date, ref: date) -> str:
+    days = (ref - d).days
+    if days < 30:
+        return f"{days} day{'s' if days != 1 else ''} ago"
+    if days < 365:
+        months = round(days / 30)
+        return f"{months} month{'s' if months != 1 else ''} ago"
+    years = round(days / 365, 1)
+    return f"{years} year{'s' if years != 1.0 else ''} ago"
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -422,6 +484,141 @@ async def get_smart_money_tickers(db: AsyncSession = Depends(get_db)):
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# Smart Money v2 endpoint — price-accuracy scored
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/trades/smart-money/v2", response_model=list[SmartMoneyV2Item])
+async def get_smart_money_v2(
+    from_date: date | None = Query(None, alias="from"),
+    to_date: date | None = Query(None, alias="to"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Score each director-company pair by trade accuracy:
+    - Buy trade = accurate if price rose within 90 days
+    - Sell trade = accurate if price fell within 90 days
+    - Weighted by recency (exponential decay, 18-month half-life)
+    - Score 0–10; optional date-range filter returns period + all-time score
+    Requires price data in price_snapshots table.
+    """
+    today = date.today()
+    three_years_ago = today - timedelta(days=365 * 3)
+
+    trade_result = await db.execute(
+        select(
+            Trade.director_id,
+            Trade.date_of_trade,
+            Trade.price_per_share,
+            Trade.trade_type,
+            Company.ticker,
+            Company.name.label("company_name"),
+            Director.full_name.label("director_name"),
+        )
+        .join(Company, Company.id == Trade.company_id)
+        .join(Director, Director.id == Trade.director_id)
+        .where(
+            Trade.trade_type.in_([TradeType.ON_MARKET_BUY, TradeType.ON_MARKET_SELL]),
+            Trade.price_per_share.is_not(None),
+            Trade.quantity.is_not(None),
+            Trade.date_of_trade >= three_years_ago,
+        )
+        .order_by(Trade.date_of_trade)
+    )
+    all_trades = trade_result.all()
+
+    if not all_trades:
+        return []
+
+    tickers = list({r.ticker for r in all_trades})
+    price_result = await db.execute(
+        select(PriceSnapshot.ticker, PriceSnapshot.date, PriceSnapshot.close)
+        .where(PriceSnapshot.ticker.in_(tickers))
+        .order_by(PriceSnapshot.ticker, PriceSnapshot.date)
+    )
+
+    prices: dict[str, list] = defaultdict(list)
+    for p in price_result.all():
+        prices[p.ticker].append((p.date, float(p.close)))
+
+    def get_future_close(ticker: str, trade_date: date) -> float | None:
+        target = trade_date + timedelta(days=90)
+        best: float | None = None
+        best_gap = 999
+        for d, c in prices.get(ticker, []):
+            gap = abs((d - target).days)
+            if gap <= 10 and gap < best_gap:
+                best, best_gap = c, gap
+        return best
+
+    def compute_score(trade_list) -> tuple[float | None, int, date | None]:
+        weighted_acc = 0.0
+        weighted_total = 0.0
+        last_acc: date | None = None
+        scored = 0
+        for t in trade_list:
+            future = get_future_close(t.ticker, t.date_of_trade)
+            if future is None:
+                continue
+            w = _decay_weight(t.date_of_trade, today)
+            is_buy = t.trade_type == TradeType.ON_MARKET_BUY
+            accurate = (is_buy and future > float(t.price_per_share)) or \
+                       (not is_buy and future < float(t.price_per_share))
+            weighted_total += w
+            if accurate:
+                weighted_acc += w
+                if last_acc is None or t.date_of_trade > last_acc:
+                    last_acc = t.date_of_trade
+            scored += 1
+        if weighted_total == 0:
+            return None, scored, last_acc
+        return round(weighted_acc / weighted_total * 10, 1), scored, last_acc
+
+    groups: dict[tuple, list] = defaultdict(list)
+    for r in all_trades:
+        groups[(str(r.director_id), r.ticker)].append(r)
+
+    results = []
+    for (director_id, ticker), group in groups.items():
+        rep = group[0]
+
+        score_all, count_all, last_acc_all = compute_score(group)
+
+        if from_date or to_date:
+            filtered = [
+                t for t in group
+                if (from_date is None or t.date_of_trade >= from_date)
+                and (to_date is None or t.date_of_trade <= to_date)
+            ]
+            score_period, count_period, last_acc_period = compute_score(filtered)
+        else:
+            score_period, count_period, last_acc_period = score_all, count_all, last_acc_all
+
+        if count_all == 0:
+            continue
+
+        display_score = score_period if score_period is not None else score_all
+        last_acc = last_acc_period or last_acc_all
+
+        results.append(SmartMoneyV2Item(
+            director_id=director_id,
+            director_name=rep.director_name,
+            ticker=rep.ticker,
+            company_name=rep.company_name,
+            score=score_period,
+            score_all_time=score_all,
+            score_label=_score_label(display_score),
+            total_scored_trades=count_period if (from_date or to_date) else count_all,
+            last_accurate_trade=last_acc,
+            recency_tag=_recency_str(last_acc, today) if last_acc else None,
+            latest_trade_date=max(t.date_of_trade for t in group),
+        ))
+
+    results.sort(key=lambda r: (r.score or -1), reverse=True)
+    return results
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # Sector heatmap endpoint
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -465,6 +662,14 @@ async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
         0,
     )
 
+    _base_where = [
+        Trade.trade_type.in_((TradeType.ON_MARKET_BUY, TradeType.ON_MARKET_SELL)),
+        Trade.date_of_trade >= cutoff,
+        Company.sector.is_not(None),
+        Trade.price_per_share.is_not(None),
+        Trade.quantity.is_not(None),
+    ]
+
     result = await db.execute(
         select(
             Company.sector,
@@ -475,17 +680,36 @@ async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
             sell_value_expr.label("sell_value"),
         )
         .join(Company, Company.id == Trade.company_id)
-        .where(
-            Trade.trade_type.in_((TradeType.ON_MARKET_BUY, TradeType.ON_MARKET_SELL)),
-            Trade.date_of_trade >= cutoff,
-            Company.sector.is_not(None),
-            Trade.price_per_share.is_not(None),
-            Trade.quantity.is_not(None),
-        )
+        .where(*_base_where)
         .group_by(Company.sector)
         .order_by(func.count(Trade.id).desc())
     )
     rows = result.all()
+
+    # Company-level breakdown for modal detail
+    company_result = await db.execute(
+        select(
+            Company.sector,
+            Company.ticker,
+            Company.name.label("company_name"),
+            func.count(Trade.id).label("trade_count"),
+            buy_count_expr.label("buy_count"),
+            sell_count_expr.label("sell_count"),
+        )
+        .join(Company, Company.id == Trade.company_id)
+        .where(*_base_where)
+        .group_by(Company.sector, Company.ticker, Company.name)
+        .order_by(Company.sector, func.count(Trade.id).desc())
+    )
+    sector_companies: dict[str, list[SectorHeatmapCompany]] = defaultdict(list)
+    for cr in company_result.all():
+        sector_companies[cr.sector].append(SectorHeatmapCompany(
+            ticker=cr.ticker,
+            company_name=cr.company_name,
+            buy_count=cr.buy_count or 0,
+            sell_count=cr.sell_count or 0,
+            trade_count=cr.trade_count or 0,
+        ))
 
     output = []
     for r in rows:
@@ -505,6 +729,7 @@ async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
             sell_value=round(sell_v, 2),
             net_sentiment=sentiment,
             trade_count=r.trade_count or 0,
+            top_companies=sector_companies.get(r.sector, [])[:5],
         ))
 
     return output
