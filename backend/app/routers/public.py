@@ -21,7 +21,7 @@ import numpy as np
 import pdfplumber
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -133,6 +133,16 @@ class SmartMoneyTicker(BaseModel):
     director_count: int
     directors: list[str]
     latest_trade_date: date
+
+
+class SectorHeatmap(BaseModel):
+    sector: str
+    buy_count: int
+    sell_count: int
+    buy_value: float
+    sell_value: float
+    net_sentiment: str  # "bullish", "bearish", "neutral"
+    trade_count: int
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -409,6 +419,95 @@ async def get_smart_money_tickers(db: AsyncSession = Depends(get_db)):
     smart_money.sort(key=lambda s: s.latest_trade_date, reverse=True)
     _smart_money_cache = (smart_money, _time.monotonic())
     return smart_money
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Sector heatmap endpoint
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/stats/sector-heatmap", response_model=list[SectorHeatmap])
+async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
+    """
+    Return sector-level buy/sell activity for the last 90 days.
+    Groups on-market trades by company sector and calculates sentiment.
+    """
+    cutoff = date.today() - timedelta(days=90)
+
+    buy_count_expr = func.count(
+        case((Trade.trade_type == TradeType.ON_MARKET_BUY, Trade.id), else_=None)
+    )
+    sell_count_expr = func.count(
+        case((Trade.trade_type == TradeType.ON_MARKET_SELL, Trade.id), else_=None)
+    )
+    buy_value_expr = func.coalesce(
+        func.sum(
+            case(
+                (
+                    Trade.trade_type == TradeType.ON_MARKET_BUY,
+                    func.abs(Trade.quantity) * Trade.price_per_share,
+                ),
+                else_=None,
+            )
+        ),
+        0,
+    )
+    sell_value_expr = func.coalesce(
+        func.sum(
+            case(
+                (
+                    Trade.trade_type == TradeType.ON_MARKET_SELL,
+                    func.abs(Trade.quantity) * Trade.price_per_share,
+                ),
+                else_=None,
+            )
+        ),
+        0,
+    )
+
+    result = await db.execute(
+        select(
+            Company.sector,
+            func.count(Trade.id).label("trade_count"),
+            buy_count_expr.label("buy_count"),
+            sell_count_expr.label("sell_count"),
+            buy_value_expr.label("buy_value"),
+            sell_value_expr.label("sell_value"),
+        )
+        .join(Company, Company.id == Trade.company_id)
+        .where(
+            Trade.trade_type.in_((TradeType.ON_MARKET_BUY, TradeType.ON_MARKET_SELL)),
+            Trade.date_of_trade >= cutoff,
+            Company.sector.is_not(None),
+            Trade.price_per_share.is_not(None),
+            Trade.quantity.is_not(None),
+        )
+        .group_by(Company.sector)
+        .order_by(func.count(Trade.id).desc())
+    )
+    rows = result.all()
+
+    output = []
+    for r in rows:
+        buy_v = float(r.buy_value or 0)
+        sell_v = float(r.sell_value or 0)
+        if buy_v > sell_v * 1.5:
+            sentiment = "bullish"
+        elif sell_v > buy_v * 1.5:
+            sentiment = "bearish"
+        else:
+            sentiment = "neutral"
+        output.append(SectorHeatmap(
+            sector=r.sector,
+            buy_count=r.buy_count or 0,
+            sell_count=r.sell_count or 0,
+            buy_value=round(buy_v, 2),
+            sell_value=round(sell_v, 2),
+            net_sentiment=sentiment,
+            trade_count=r.trade_count or 0,
+        ))
+
+    return output
 
 
 async def _get_pdf_url_for_filing(

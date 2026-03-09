@@ -583,6 +583,98 @@
             .footer-inner { flex-direction: column; }
             .footer-links { text-align: left; }
         }
+
+        /* ── Sector Heatmap ──────────────────────────────────────────────── */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .heatmap-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .heatmap-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .heatmap-card.bullish { border-left-color: var(--success); }
+        .heatmap-card.bearish { border-left-color: var(--danger); }
+        .heatmap-card.neutral { border-left-color: #aaa; }
+
+        .heatmap-sector-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+        }
+
+        .heatmap-sentiment {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.55rem;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.3px;
+        }
+
+        .heatmap-sentiment.bullish { background: rgba(40,167,69,0.15); color: var(--success); }
+        .heatmap-sentiment.bearish { background: rgba(220,53,69,0.15); color: var(--danger); }
+        .heatmap-sentiment.neutral  { background: rgba(108,117,125,0.13); color: #888; }
+
+        .heatmap-bar-wrap {
+            height: 7px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 0.65rem;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .heatmap-bar-buy  { background: var(--success); height: 100%; }
+        .heatmap-bar-sell { background: var(--danger);  height: 100%; }
+
+        .heatmap-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .heatmap-meta .hm-buy  { color: var(--success); font-weight: 600; }
+        .heatmap-meta .hm-sell { color: var(--danger);  font-weight: 600; }
+
+        /* ── Smart Money info button ─────────────────────────────────────── */
+        .info-btn {
+            background: none;
+            border: 1px solid var(--text-secondary);
+            color: var(--text-secondary);
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            font-size: 0.6rem;
+            padding: 0;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .info-btn:hover {
+            background: var(--text-secondary);
+            color: var(--bg-primary);
+        }
     </style>
 </head>
 <body>
@@ -606,6 +698,17 @@
     <div class="container">
         <!-- Statistics Dashboard -->
         <div class="stats-grid" id="statsGrid">
+            <div class="loading"></div>
+        </div>
+
+        <!-- Sector Heatmap Section -->
+        <div class="section-header" style="margin-top:0;">
+            <div>
+                <h2>Sector Sentiment</h2>
+                <p class="text-muted" style="margin-top:0.3rem;">Director buy/sell activity by sector — last 90 days</p>
+            </div>
+        </div>
+        <div class="heatmap-grid" id="sectorHeatmapGrid">
             <div class="loading"></div>
         </div>
 
@@ -664,6 +767,7 @@
                     <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem;">
                         <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
                             <input type="checkbox" id="smartMoneyFilter" onchange="applyFilters()"> 🧠 Smart Money
+                            <button class="info-btn" title="Smart Money: companies where 2+ distinct directors all bought on the open market within the same 7-day window in the last 90 days — signals strong insider conviction.">i</button>
                         </label>
                         <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
                             <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()"> Late Filings Only
@@ -774,6 +878,7 @@
         let filteredTrades = [];
         let allViolations = [];
         let smartMoneyTickers = new Set();
+        let sectorHeatmapData = [];
         let currentPage = 1;
         const TRADES_PER_PAGE = 50;
         let currentSort = { field: 'date_of_trade', asc: false };
@@ -789,19 +894,22 @@
         // Load data from API
         async function loadData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
                     fetch('/api/trades/smart-money'),
+                    fetch('/api/stats/sector-heatmap'),
                 ]);
 
                 allTrades = await tradesRes.json();
                 stats = await statsRes.json();
                 allViolations = await violationsRes.json();
                 smartMoneyTickers = new Set((await smartMoneyRes.json()).map(s => s.ticker));
+                sectorHeatmapData = await heatmapRes.json();
 
                 renderStats();
+                renderSectorHeatmap();
                 renderComplianceTable();
                 applyComplianceFilters();
                 applyFilters();
@@ -820,17 +928,19 @@
         // Refresh data (for polling)
         async function refreshData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
                     fetch('/api/trades/smart-money'),
+                    fetch('/api/stats/sector-heatmap'),
                 ]);
 
                 const newTrades = await tradesRes.json();
                 const newStats = await statsRes.json();
                 const newViolations = await violationsRes.json();
                 const newSmartMoney = await smartMoneyRes.json();
+                const newHeatmap = await heatmapRes.json();
 
                 // Only re-render if data actually changed
                 if (JSON.stringify(newTrades) !== JSON.stringify(allTrades)) {
@@ -838,7 +948,9 @@
                     stats = newStats;
                     allViolations = newViolations;
                     smartMoneyTickers = new Set(newSmartMoney.map(s => s.ticker));
+                    sectorHeatmapData = newHeatmap;
                     renderStats();
+                    renderSectorHeatmap();
                     renderComplianceTable();
                     applyComplianceFilters();
                     applyFilters();
@@ -1186,6 +1298,45 @@
                     th.classList.add(currentSort.asc ? 'sorted-asc' : 'sorted-desc');
                 }
             });
+        }
+
+        // Render sector heatmap
+        function renderSectorHeatmap() {
+            const container = document.getElementById('sectorHeatmapGrid');
+            if (!sectorHeatmapData || sectorHeatmapData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No sector data available yet — run <code>populate_sectors</code> to map tickers to sectors.</p></div>';
+                return;
+            }
+
+            const sentimentLabel = { bullish: '▲ Bullish', bearish: '▼ Bearish', neutral: '◆ Neutral' };
+
+            container.innerHTML = sectorHeatmapData.map(s => {
+                const total = s.buy_value + s.sell_value;
+                const buyPct  = total > 0 ? Math.round(s.buy_value  / total * 100) : 50;
+                const sellPct = total > 0 ? Math.round(s.sell_value / total * 100) : 50;
+                return `
+                    <div class="heatmap-card ${s.net_sentiment}">
+                        <div class="heatmap-sector-name">${s.sector}</div>
+                        <span class="heatmap-sentiment ${s.net_sentiment}">${sentimentLabel[s.net_sentiment] || s.net_sentiment}</span>
+                        <div class="heatmap-bar-wrap">
+                            <div class="heatmap-bar-buy"  style="width:${buyPct}%"></div>
+                            <div class="heatmap-bar-sell" style="width:${sellPct}%"></div>
+                        </div>
+                        <div class="heatmap-meta">
+                            <span class="hm-buy">${s.buy_count} buys · ${formatCompact(s.buy_value)}</span>
+                            <span>${s.trade_count} total</span>
+                            <span class="hm-sell">${formatCompact(s.sell_value)} · ${s.sell_count} sells</span>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function formatCompact(value) {
+            if (!value || value === 0) return '$0';
+            if (value >= 1e9) return '$' + (value / 1e9).toFixed(1) + 'B';
+            if (value >= 1e6) return '$' + (value / 1e6).toFixed(1) + 'M';
+            if (value >= 1e3) return '$' + (value / 1e3).toFixed(0) + 'K';
+            return '$' + Math.round(value);
         }
 
         // Dark mode toggle
