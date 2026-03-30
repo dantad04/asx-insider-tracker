@@ -10,8 +10,10 @@ Endpoints:
 from __future__ import annotations
 
 import io
+import json
 import logging
 import math
+import os
 import time as _time
 from collections import defaultdict
 from datetime import date, timedelta
@@ -34,13 +36,42 @@ from app.models.trade import Trade, TradeType
 
 logger = logging.getLogger(__name__)
 
-# Cache: pdf_url -> verified date_of_change (or None if verification failed).
+# Cache: pdf_url -> (verified date_of_change, mentions_compliance).
 # Persists for the life of the process; avoids re-fetching the same PDF.
-_pdf_verification_cache: dict[str, date | None] = {}
+_pdf_verification_cache: dict[str, tuple[date | None, bool]] = {}
+
+_COMPLIANCE_KEYWORDS = frozenset({
+    "late lodgement", "lodged late", "late notice", "late filing",
+    "lodged outside", "outside the required", "failed to comply",
+    "non-compliance", "in breach", "lodgement delay", "delay in lodging",
+    "not lodged within", "after the required",
+})
 
 # Cache: smart money tickers (result, computed_at). TTL = 10 minutes.
 _smart_money_cache: tuple[list, float] | None = None
 _SMART_MONEY_TTL = 600
+
+# Cache: ASX 200 ticker → sector mapping (loaded once from JSON)
+_asx200_cache: dict[str, str] | None = None
+
+
+def _load_asx200() -> dict[str, str]:
+    """Load ASX 200 ticker→sector map from JSON. Cached after first load."""
+    global _asx200_cache
+    if _asx200_cache is not None:
+        return _asx200_cache
+    try:
+        path = os.path.join(os.path.dirname(__file__), "../../data/asx200_sectors.json")
+        path = os.path.normpath(path)
+        with open(path) as f:
+            data = json.load(f)
+        _asx200_cache = {item["ticker"]: item["sector"] for item in data}
+        logger.info(f"Loaded {len(_asx200_cache)} ASX 200 tickers from {path}")
+    except Exception as e:
+        logger.warning(f"Could not load asx200_sectors.json: {e}")
+        # Don't cache failures — retry on next request
+        return {}
+    return _asx200_cache
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -151,6 +182,27 @@ class SmartMoneyV2Item(BaseModel):
     latest_trade_date: date
 
 
+class DirectorBuyDetail(BaseModel):
+    director_id: str
+    director_name: str
+    trade_count: int
+    buy_value: float
+    last_trade_date: date
+
+
+class ClusterSignalItem(BaseModel):
+    ticker: str
+    company_name: str
+    director_count: int
+    directors: list[DirectorBuyDetail]
+    total_buy_value: float
+    total_buy_count: int
+    first_trade_date: date
+    last_trade_date: date
+    market_cap: int | None = None
+    buy_pct_market_cap: float | None = None
+
+
 class SectorHeatmapCompany(BaseModel):
     ticker: str
     company_name: str
@@ -159,14 +211,23 @@ class SectorHeatmapCompany(BaseModel):
     trade_count: int
 
 
+class SectorTopBuyer(BaseModel):
+    director_name: str
+    ticker: str
+    company_name: str
+    total_value: float
+
+
 class SectorHeatmap(BaseModel):
     sector: str
-    buy_count: int
-    sell_count: int
-    buy_value: float
-    sell_value: float
-    net_sentiment: str  # "bullish", "bearish", "neutral"
-    trade_count: int
+    companies_in_sector: int
+    total_buys_90d: int
+    total_sells_90d: int
+    net_buy_sell_ratio: float   # -1.0 (all sells) to +1.0 (all buys)
+    total_value_bought_90d: float
+    total_value_sold_90d: float
+    net_sentiment: str           # "strong-bull" | "bull" | "neutral" | "bear" | "strong-bear"
+    top_buyers: list[SectorTopBuyer]
     top_companies: list[SectorHeatmapCompany]
 
 
@@ -484,6 +545,103 @@ async def get_smart_money_tickers(db: AsyncSession = Depends(get_db)):
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# Director Cluster Signal endpoint
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/trades/cluster-signal", response_model=list[ClusterSignalItem])
+async def get_cluster_signal(db: AsyncSession = Depends(get_db)):
+    """
+    Return companies where 3+ distinct directors made on-market buys in the last 90 days.
+    Sorted by director_count descending, then total_buy_value descending.
+    """
+    cutoff = date.today() - timedelta(days=90)
+
+    result = await db.execute(
+        select(
+            Company.ticker,
+            Company.name.label("company_name"),
+            Company.market_cap,
+            Trade.director_id,
+            Director.full_name.label("director_name"),
+            func.count(Trade.id).label("trade_count"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Trade.price_per_share.is_not(None),
+                         func.abs(Trade.quantity) * Trade.price_per_share),
+                        else_=None,
+                    )
+                ), 0.0,
+            ).label("buy_value"),
+            func.min(Trade.date_of_trade).label("first_date"),
+            func.max(Trade.date_of_trade).label("last_date"),
+        )
+        .join(Company, Company.id == Trade.company_id)
+        .join(Director, Director.id == Trade.director_id)
+        .where(
+            Trade.trade_type == TradeType.ON_MARKET_BUY,
+            Trade.date_of_trade >= cutoff,
+        )
+        .group_by(Company.ticker, Company.name, Company.market_cap, Trade.director_id, Director.full_name)
+        .order_by(Company.ticker)
+    )
+    rows = result.all()
+
+    # Group by ticker
+    ticker_groups: dict[str, dict] = {}
+    for r in rows:
+        if r.ticker not in ticker_groups:
+            ticker_groups[r.ticker] = {
+                "company_name": r.company_name,
+                "market_cap": r.market_cap,
+                "directors": [],
+                "total_buy_value": 0.0,
+                "total_buy_count": 0,
+                "first_trade_date": r.first_date,
+                "last_trade_date": r.last_date,
+            }
+        g = ticker_groups[r.ticker]
+        g["directors"].append(DirectorBuyDetail(
+            director_id=str(r.director_id),
+            director_name=r.director_name,
+            trade_count=r.trade_count,
+            buy_value=round(float(r.buy_value or 0), 2),
+            last_trade_date=r.last_date,
+        ))
+        g["total_buy_value"] += float(r.buy_value or 0)
+        g["total_buy_count"] += r.trade_count
+        if r.first_date < g["first_trade_date"]:
+            g["first_trade_date"] = r.first_date
+        if r.last_date > g["last_trade_date"]:
+            g["last_trade_date"] = r.last_date
+
+    # Filter to 3+ directors, sort directors within each group by buy_value desc
+    output = []
+    for ticker, g in ticker_groups.items():
+        if len(g["directors"]) < 3:
+            continue
+        g["directors"].sort(key=lambda d: -d.buy_value)
+        mkt_cap = g["market_cap"]
+        buy_pct = round(g["total_buy_value"] / mkt_cap * 100, 4) if mkt_cap and mkt_cap > 0 else None
+        output.append(ClusterSignalItem(
+            ticker=ticker,
+            company_name=g["company_name"],
+            director_count=len(g["directors"]),
+            directors=g["directors"],
+            total_buy_value=round(g["total_buy_value"], 2),
+            total_buy_count=g["total_buy_count"],
+            first_trade_date=g["first_trade_date"],
+            last_trade_date=g["last_trade_date"],
+            market_cap=mkt_cap,
+            buy_pct_market_cap=buy_pct,
+        ))
+
+    output.sort(key=lambda x: (-x.director_count, -x.total_buy_value))
+    return output
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # Smart Money v2 endpoint — price-accuracy scored
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -626,11 +784,17 @@ async def get_smart_money_v2(
 @router.get("/stats/sector-heatmap", response_model=list[SectorHeatmap])
 async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
     """
-    Return sector-level buy/sell activity for the last 90 days.
-    Groups on-market trades by company sector and calculates sentiment.
+    ASX 200 sector heatmap — last 90 days of director on-market trades,
+    filtered to ASX 200 constituents only. Sorted by net buy/sell ratio.
     """
+    asx200 = _load_asx200()  # ticker -> sector
+    if not asx200:
+        return []
+
+    asx200_tickers = list(asx200.keys())
     cutoff = date.today() - timedelta(days=90)
 
+    # ── Sector-level counts & values ───────────────────────────────────────
     buy_count_expr = func.count(
         case((Trade.trade_type == TradeType.ON_MARKET_BUY, Trade.id), else_=None)
     )
@@ -640,39 +804,34 @@ async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
     buy_value_expr = func.coalesce(
         func.sum(
             case(
-                (
-                    Trade.trade_type == TradeType.ON_MARKET_BUY,
-                    func.abs(Trade.quantity) * Trade.price_per_share,
-                ),
+                (Trade.trade_type == TradeType.ON_MARKET_BUY,
+                 func.abs(Trade.quantity) * Trade.price_per_share),
                 else_=None,
             )
-        ),
-        0,
+        ), 0,
     )
     sell_value_expr = func.coalesce(
         func.sum(
             case(
-                (
-                    Trade.trade_type == TradeType.ON_MARKET_SELL,
-                    func.abs(Trade.quantity) * Trade.price_per_share,
-                ),
+                (Trade.trade_type == TradeType.ON_MARKET_SELL,
+                 func.abs(Trade.quantity) * Trade.price_per_share),
                 else_=None,
             )
-        ),
-        0,
+        ), 0,
     )
 
     _base_where = [
         Trade.trade_type.in_((TradeType.ON_MARKET_BUY, TradeType.ON_MARKET_SELL)),
         Trade.date_of_trade >= cutoff,
-        Company.sector.is_not(None),
+        Company.ticker.in_(asx200_tickers),
         Trade.price_per_share.is_not(None),
         Trade.quantity.is_not(None),
     ]
 
     result = await db.execute(
         select(
-            Company.sector,
+            Company.ticker,
+            Company.name.label("company_name"),
             func.count(Trade.id).label("trade_count"),
             buy_count_expr.label("buy_count"),
             sell_count_expr.label("sell_count"),
@@ -681,57 +840,106 @@ async def get_sector_heatmap(db: AsyncSession = Depends(get_db)):
         )
         .join(Company, Company.id == Trade.company_id)
         .where(*_base_where)
-        .group_by(Company.sector)
-        .order_by(func.count(Trade.id).desc())
+        .group_by(Company.ticker, Company.name)
     )
-    rows = result.all()
+    ticker_rows = result.all()
 
-    # Company-level breakdown for modal detail
-    company_result = await db.execute(
+    # ── Top buyers per (director, ticker) for each sector ─────────────────
+    buyer_result = await db.execute(
         select(
-            Company.sector,
             Company.ticker,
             Company.name.label("company_name"),
-            func.count(Trade.id).label("trade_count"),
-            buy_count_expr.label("buy_count"),
-            sell_count_expr.label("sell_count"),
+            Director.full_name.label("director_name"),
+            func.sum(func.abs(Trade.quantity) * Trade.price_per_share).label("total_value"),
         )
         .join(Company, Company.id == Trade.company_id)
-        .where(*_base_where)
-        .group_by(Company.sector, Company.ticker, Company.name)
-        .order_by(Company.sector, func.count(Trade.id).desc())
+        .join(Director, Director.id == Trade.director_id)
+        .where(
+            Trade.trade_type == TradeType.ON_MARKET_BUY,
+            Trade.date_of_trade >= cutoff,
+            Company.ticker.in_(asx200_tickers),
+            Trade.price_per_share.is_not(None),
+            Trade.quantity.is_not(None),
+        )
+        .group_by(Company.ticker, Company.name, Director.full_name)
+        .order_by(func.sum(func.abs(Trade.quantity) * Trade.price_per_share).desc())
     )
-    sector_companies: dict[str, list[SectorHeatmapCompany]] = defaultdict(list)
-    for cr in company_result.all():
-        sector_companies[cr.sector].append(SectorHeatmapCompany(
-            ticker=cr.ticker,
-            company_name=cr.company_name,
-            buy_count=cr.buy_count or 0,
-            sell_count=cr.sell_count or 0,
-            trade_count=cr.trade_count or 0,
-        ))
 
-    output = []
-    for r in rows:
-        buy_v = float(r.buy_value or 0)
-        sell_v = float(r.sell_value or 0)
-        if buy_v > sell_v * 1.5:
-            sentiment = "bullish"
-        elif sell_v > buy_v * 1.5:
-            sentiment = "bearish"
-        else:
-            sentiment = "neutral"
-        output.append(SectorHeatmap(
-            sector=r.sector,
+    # Group buyer rows by sector
+    sector_buyers: dict[str, list[SectorTopBuyer]] = defaultdict(list)
+    for br in buyer_result.all():
+        sector = asx200.get(br.ticker)
+        if sector:
+            sector_buyers[sector].append(SectorTopBuyer(
+                director_name=br.director_name,
+                ticker=br.ticker,
+                company_name=br.company_name,
+                total_value=round(float(br.total_value or 0), 2),
+            ))
+
+    # ── Aggregate by sector ────────────────────────────────────────────────
+    # Count distinct ASX200 companies per sector
+    sector_company_count: dict[str, int] = defaultdict(int)
+    for ticker in asx200_tickers:
+        sector_company_count[asx200[ticker]] += 1
+
+    sector_stats: dict[str, dict] = defaultdict(lambda: {
+        "buy_count": 0, "sell_count": 0, "buy_value": 0.0,
+        "sell_value": 0.0, "trade_count": 0,
+        "top_companies": [],
+    })
+
+    for r in ticker_rows:
+        sector = asx200.get(r.ticker)
+        if not sector:
+            continue
+        s = sector_stats[sector]
+        s["buy_count"] += r.buy_count or 0
+        s["sell_count"] += r.sell_count or 0
+        s["buy_value"] += float(r.buy_value or 0)
+        s["sell_value"] += float(r.sell_value or 0)
+        s["trade_count"] += r.trade_count or 0
+        s["top_companies"].append(SectorHeatmapCompany(
+            ticker=r.ticker,
+            company_name=r.company_name,
             buy_count=r.buy_count or 0,
             sell_count=r.sell_count or 0,
-            buy_value=round(buy_v, 2),
-            sell_value=round(sell_v, 2),
-            net_sentiment=sentiment,
             trade_count=r.trade_count or 0,
-            top_companies=sector_companies.get(r.sector, [])[:5],
         ))
 
+    # ── Build output & sort ────────────────────────────────────────────────
+    def _sentiment(ratio: float) -> str:
+        if ratio >= 0.5:
+            return "strong-bull"
+        if ratio >= 0.1:
+            return "bull"
+        if ratio > -0.1:
+            return "neutral"
+        if ratio > -0.5:
+            return "bear"
+        return "strong-bear"
+
+    output = []
+    for sector, s in sector_stats.items():
+        buys = s["buy_count"]
+        sells = s["sell_count"]
+        total = buys + sells
+        ratio = (buys - sells) / total if total > 0 else 0.0
+        s["top_companies"].sort(key=lambda c: -c.trade_count)
+        output.append(SectorHeatmap(
+            sector=sector,
+            companies_in_sector=sector_company_count.get(sector, 0),
+            total_buys_90d=buys,
+            total_sells_90d=sells,
+            net_buy_sell_ratio=round(ratio, 3),
+            total_value_bought_90d=round(s["buy_value"], 2),
+            total_value_sold_90d=round(s["sell_value"], 2),
+            net_sentiment=_sentiment(ratio),
+            top_buyers=sector_buyers.get(sector, [])[:5],
+            top_companies=s["top_companies"][:5],
+        ))
+
+    output.sort(key=lambda h: h.net_buy_sell_ratio, reverse=True)
     return output
 
 
@@ -753,19 +961,14 @@ async def _get_pdf_url_for_filing(
     return row[0] if row else None
 
 
-async def _verify_trade_date_from_pdf(pdf_url: str) -> date | None:
+async def _verify_trade_date_from_pdf(pdf_url: str) -> tuple[date | None, bool]:
     """
     Fetch PDF and extract the true date_of_change, with date-swap correction.
+    Also scans for keywords that indicate the filing was acknowledged as late.
 
-    Appendix 3Y fields:
-      date_of_change     = the actual trade date (should be NEWER)
-      date_of_last_notice = the previous filing date (should be OLDER)
-
-    If date_of_change < date_of_last_notice the parser got confused and
-    extracted them in the wrong order — swap and return the correct one.
-
-    Returns None if the URL is expired/unreachable or dates can't be parsed.
-    Results are cached in _pdf_verification_cache.
+    Returns: (verified_date, mentions_compliance)
+      - verified_date: corrected trade date (or None if unextractable)
+      - mentions_compliance: True if PDF text contains late-lodgement language
     """
     if pdf_url in _pdf_verification_cache:
         return _pdf_verification_cache[pdf_url]
@@ -780,13 +983,16 @@ async def _verify_trade_date_from_pdf(pdf_url: str) -> date | None:
             for page in pdf.pages:
                 text += page.extract_text() or ""
 
+        # Check if the PDF text mentions compliance issues
+        text_lower = text.lower()
+        mentions_compliance = any(kw in text_lower for kw in _COMPLIANCE_KEYWORDS)
+
         from app.scripts.parse_3y_pdfs import parse_date_of_change, parse_date_of_last_notice
         doc = parse_date_of_change(text)
         last = parse_date_of_last_notice(text)
 
         if doc and last:
             if doc < last:
-                # Parser swapped the two dates — correct it
                 logger.warning(
                     f"Date swap detected in PDF: date_of_change={doc} < "
                     f"date_of_last_notice={last}. Using {last} as trade date."
@@ -797,14 +1003,16 @@ async def _verify_trade_date_from_pdf(pdf_url: str) -> date | None:
         else:
             verified_date = doc  # None if not found
 
-        _pdf_verification_cache[pdf_url] = verified_date
-        logger.info(f"PDF verified: {pdf_url} → trade_date={verified_date}")
-        return verified_date
+        result = (verified_date, mentions_compliance)
+        _pdf_verification_cache[pdf_url] = result
+        logger.info(f"PDF verified: {pdf_url} → trade_date={verified_date}, mentions_compliance={mentions_compliance}")
+        return result
 
     except Exception as e:
         logger.warning(f"PDF verification failed ({pdf_url}): {e}")
-        _pdf_verification_cache[pdf_url] = None
-        return None
+        result = (None, False)
+        _pdf_verification_cache[pdf_url] = result
+        return result
 
 
 @router.get("/compliance/violations", response_model=list[ComplianceViolationResponse])
@@ -875,10 +1083,11 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
             continue
 
         # ── Pass 2: verify MODERATE/SEVERE against original PDF ────────────
+        mentions_compliance = False
         if severity in ("moderate", "severe"):
             pdf_url = await _get_pdf_url_for_filing(db, ticker, date_lodged)
             if pdf_url:
-                verified_date = await _verify_trade_date_from_pdf(pdf_url)
+                verified_date, mentions_compliance = await _verify_trade_date_from_pdf(pdf_url)
                 if verified_date is not None:
                     v_cal = (date_lodged - verified_date).days
                     if v_cal < 0 or v_cal > 365:
@@ -903,9 +1112,9 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
                         verified=True,
                     ))
                     continue
-            # PDF unavailable — include as unverified, only if SEVERE
-            # (MODERATE unverified is too noisy without confirmation)
-            if severity == "severe":
+            # PDF unavailable or date unextractable
+            # If the PDF text mentioned compliance → verified; otherwise unverified SEVERE only
+            if mentions_compliance or severity == "severe":
                 violations.append(ComplianceViolationResponse(
                     trade_id=best.id,
                     ticker=rep.ticker,
@@ -915,7 +1124,7 @@ async def get_compliance_violations(db: AsyncSession = Depends(get_db)):
                     date_lodged=date_lodged,
                     days_late=bd - COMPLIANCE_WINDOW,
                     severity=severity,
-                    verified=False,
+                    verified=mentions_compliance,
                 ))
         else:
             # MINOR — include as-is, small gaps are genuine

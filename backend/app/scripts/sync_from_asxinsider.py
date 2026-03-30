@@ -276,6 +276,7 @@ async def main(url: str | None = None) -> dict:
             except Exception as e:
                 logger.warning(f"Error processing record {i} ({ticker}): {e}")
                 consecutive_existing = 0
+                await session.rollback()
                 continue
 
             # Batch commit every 100 records

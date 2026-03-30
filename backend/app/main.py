@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import compliance, health, public
+from app.routers import compliance, health, portfolio, public
 from app.scheduler import setup_scheduler
 
 
@@ -78,6 +78,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(compliance.router)
 app.include_router(public.router)
+app.include_router(portfolio.router)
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"

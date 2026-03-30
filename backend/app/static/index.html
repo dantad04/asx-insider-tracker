@@ -606,9 +606,11 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .heatmap-card.bullish { border-left-color: var(--success); }
-        .heatmap-card.bearish { border-left-color: var(--danger); }
-        .heatmap-card.neutral { border-left-color: #aaa; }
+        .heatmap-card.strong-bull { border-left-color: #1a7a3a; background: rgba(26,122,58,0.06); }
+        .heatmap-card.bull        { border-left-color: var(--success); }
+        .heatmap-card.neutral     { border-left-color: #aaa; }
+        .heatmap-card.bear        { border-left-color: #e05a6a; }
+        .heatmap-card.strong-bear { border-left-color: var(--danger); background: rgba(220,53,69,0.06); }
 
         .heatmap-sector-name {
             font-size: 0.95rem;
@@ -626,9 +628,11 @@
             letter-spacing: 0.3px;
         }
 
-        .heatmap-sentiment.bullish { background: rgba(40,167,69,0.15); color: var(--success); }
-        .heatmap-sentiment.bearish { background: rgba(220,53,69,0.15); color: var(--danger); }
-        .heatmap-sentiment.neutral  { background: rgba(108,117,125,0.13); color: #888; }
+        .heatmap-sentiment.strong-bull { background: rgba(26,122,58,0.18);   color: #1a7a3a; }
+        .heatmap-sentiment.bull        { background: rgba(40,167,69,0.13);   color: var(--success); }
+        .heatmap-sentiment.neutral     { background: rgba(108,117,125,0.13); color: #888; }
+        .heatmap-sentiment.bear        { background: rgba(224,90,106,0.13);  color: #e05a6a; }
+        .heatmap-sentiment.strong-bear { background: rgba(220,53,69,0.15);   color: var(--danger); }
 
         .heatmap-bar-wrap {
             height: 7px;
@@ -819,6 +823,112 @@
         }
 
         .modal-company-row:last-child { border-bottom: none; }
+
+        /* ── Smart Money Portfolio ───────────────────────────────────────── */
+        .portfolio-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .portfolio-stat {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+        }
+        .portfolio-stat .stat-label { font-size: 0.78rem; }
+        .portfolio-stat .stat-value { font-size: 1.5rem; }
+        .portfolio-stat.positive .stat-value { color: var(--success); }
+        .portfolio-stat.negative .stat-value { color: var(--danger); }
+        .portfolio-stat.neutral .stat-value { color: var(--accent); }
+
+        .equity-chart-wrap {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.25rem 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .equity-chart-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+        #equityChartSvg { width: 100%; height: 160px; display: block; }
+
+        .portfolio-sub-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1.25rem 0 0.5rem;
+        }
+        .position-row-open { border-left: 3px solid var(--success); }
+        .position-row-closed { border-left: 3px solid var(--text-secondary); }
+        .pnl-positive { color: var(--success); font-weight: 600; }
+        .pnl-negative { color: var(--danger); font-weight: 600; }
+        .exit-reason-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 10px;
+            font-weight: 600;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+        .exit-reason-badge.sell-signal { background: #ffe4e1; color: #c0392b; }
+        .exit-reason-badge.days90 { background: #e8f4fd; color: #2980b9; }
+
+        .portfolio-run-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+        .portfolio-run-btn:hover { background: #218838; }
+        .portfolio-run-btn:disabled { background: #666; cursor: not-allowed; }
+
+        /* ── Cluster Signal ──────────────────────────────────────────────── */
+        .cluster-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .cluster-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 1.1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .cluster-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .cluster-badge.d3 { background: rgba(255,193,7,0.18);  color: #b8860b; border: 1px solid rgba(255,193,7,0.4); }
+        .cluster-badge.d4 { background: rgba(255,120,0,0.15);  color: #c85000; border: 1px solid rgba(255,120,0,0.35); }
+        .cluster-badge.d5 { background: rgba(220,53,69,0.13);  color: var(--danger); border: 1px solid rgba(220,53,69,0.3); }
     </style>
 </head>
 <body>
@@ -842,52 +952,6 @@
     <div class="container">
         <!-- Statistics Dashboard -->
         <div class="stats-grid" id="statsGrid">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Sector Heatmap Section -->
-        <div class="section-header" style="margin-top:0;">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <h2>Sector Sentiment</h2>
-                <span class="tooltip-wrap">
-                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                    <div class="tooltip-box">Director on-market buy/sell activity grouped by GICS sector over the last 90 days. Sentiment is bullish when buy value exceeds sell value by 50%+, bearish when sell value exceeds buy value by 50%+, otherwise neutral. Click any sector card to see the top companies.</div>
-                </span>
-            </div>
-            <p class="text-muted" style="margin-top:0.3rem;">Director buy/sell activity by sector — last 90 days</p>
-        </div>
-        <div class="heatmap-grid" id="sectorHeatmapGrid">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Smart Money Scores Section -->
-        <div class="section-header">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <h2>Smart Money Scores</h2>
-                <span class="tooltip-wrap">
-                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                    <div class="tooltip-box">Each director-company pair is scored 0–10 on how often their on-market trades were followed by price movements in the correct direction (buys preceding rises, sells preceding falls) within 90 days. Scores are weighted by recency using exponential decay with an 18-month half-life — recent accurate trades count more than old ones.</div>
-                </span>
-            </div>
-            <p class="text-muted" style="margin-top:0.3rem;">Director prediction accuracy, weighted for recency (requires price data)</p>
-        </div>
-
-        <div class="sm-date-row">
-            <div class="filter-group">
-                <label for="smFrom">Score period from</label>
-                <input type="date" id="smFrom">
-            </div>
-            <div class="filter-group">
-                <label for="smTo">Score period to</label>
-                <input type="date" id="smTo">
-            </div>
-            <div class="filter-group" style="align-self:flex-end">
-                <button onclick="loadSmartMoneyV2()" style="margin-right:0.5rem">Apply</button>
-                <button onclick="clearSmDates()" style="background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color)">Clear</button>
-            </div>
-        </div>
-
-        <div id="smartMoneySection" style="margin-bottom:2rem;">
             <div class="loading"></div>
         </div>
 
@@ -1002,6 +1066,147 @@
             </div>
         </div>
 
+        <!-- Sector Heatmap Section -->
+        <div class="section-header" style="margin-top:0;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+                <h2>ASX 200 Sector Heatmap</h2>
+                <span class="tooltip-wrap">
+                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
+                    <div class="tooltip-box">Director on-market buy/sell activity grouped by GICS sector over the last 90 days. Sentiment is bullish when buy value exceeds sell value by 50%+, bearish when sell value exceeds buy value by 50%+, otherwise neutral. Click any sector card to see the top companies.</div>
+                </span>
+            </div>
+            <p class="text-muted" style="margin-top:0.3rem;">Director buy/sell activity in ASX 200 companies — past 90 days <span style="font-size:0.75rem;background:var(--bg-tertiary);padding:0.1rem 0.45rem;border-radius:10px;margin-left:0.3rem">Past 90 days</span></p>
+        </div>
+        <div class="heatmap-grid" id="sectorHeatmapGrid">
+            <div class="loading"></div>
+        </div>
+
+        <!-- Smart Money Scores Section -->
+        <div class="section-header">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+                <h2>Smart Money Scores</h2>
+                <span class="tooltip-wrap">
+                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
+                    <div class="tooltip-box">Each director-company pair is scored 0–10 on how often their on-market trades were followed by price movements in the correct direction (buys preceding rises, sells preceding falls) within 90 days. Scores are weighted by recency using exponential decay with an 18-month half-life — recent accurate trades count more than old ones.</div>
+                </span>
+            </div>
+            <p class="text-muted" style="margin-top:0.3rem;">Director prediction accuracy, weighted for recency (requires price data)</p>
+        </div>
+
+        <div class="sm-date-row">
+            <div class="filter-group">
+                <label for="smFrom">Score period from</label>
+                <input type="date" id="smFrom">
+            </div>
+            <div class="filter-group">
+                <label for="smTo">Score period to</label>
+                <input type="date" id="smTo">
+            </div>
+            <div class="filter-group" style="align-self:flex-end">
+                <button onclick="loadSmartMoneyV2()" style="margin-right:0.5rem">Apply</button>
+                <button onclick="clearSmDates()" style="background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color)">Clear</button>
+            </div>
+        </div>
+
+        <div id="smartMoneySection" style="margin-bottom:2rem;">
+            <div class="loading"></div>
+        </div>
+
+        <!-- Director Cluster Signal Section -->
+        <div class="section-header">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+                <h2>Director Cluster Signal</h2>
+                <span class="tooltip-wrap">
+                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
+                    <div class="tooltip-box">Companies where 3 or more distinct directors all made open-market purchases in the last 90 days. High director count = strong insider conviction. Sorted by number of buying directors, then total buy value.</div>
+                </span>
+            </div>
+            <p class="text-muted" style="margin-top:0.3rem;">High-conviction clusters — 3+ directors buying the same stock · past 90 days</p>
+        </div>
+        <div class="cluster-list" id="clusterSignalList">
+            <div class="loading"></div>
+        </div>
+
+        <!-- Smart Money Portfolio Section -->
+        <div class="section-header" style="margin-top:2rem;">
+            <div>
+                <div style="display:flex;align-items:center;gap:0.6rem;">
+                    <h2>Smart Money Portfolio</h2>
+                    <span class="tooltip-wrap">
+                        <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
+                        <div class="tooltip-box">Live paper trading portfolio that follows every Smart Money signal from today forward. Entry: $10,000 AUD at closing price when 2+ directors buy within 7 days. Exit: after 90 days, or immediately if 2+ directors sell. $100,000 starting capital, max 10 concurrent positions. Auto-updates every 2 minutes after each trade sync.</div>
+                    </span>
+                </div>
+                <p class="text-muted" id="portfolioSubtitle" style="margin-top:0.3rem;font-size:0.85rem;">Auto-updates every 2 minutes.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <span id="portfolioRunStatus" style="font-size:0.85rem;color:var(--text-secondary);"></span>
+                <button class="portfolio-run-btn" onclick="triggerPortfolioRun()" id="portfolioRunBtn">↺ Refresh</button>
+                <button class="portfolio-run-btn" onclick="investNow()" id="investNowBtn" style="background:#0066cc;" title="Buy up to 5 positions ($50k) based on the most recent Smart Money signals">💰 Invest $50k</button>
+            </div>
+        </div>
+
+        <!-- Portfolio summary cards -->
+        <div class="portfolio-summary-grid" id="portfolioSummaryGrid">
+            <div class="loading"></div>
+        </div>
+
+        <!-- Equity curve chart -->
+        <div class="equity-chart-wrap" id="equityChartWrap" style="display:none;">
+            <div class="equity-chart-title">Portfolio Value Over Time</div>
+            <svg id="equityChartSvg" viewBox="0 0 800 160" preserveAspectRatio="none"></svg>
+        </div>
+
+        <!-- Open positions -->
+        <div id="openPositionsSection" style="display:none;">
+            <p class="portfolio-sub-header">Open Positions</p>
+            <div class="table-container">
+                <table id="openPositionsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Signal Dirs</th>
+                            <th>Entry Date</th>
+                            <th>Entry Price</th>
+                            <th>Qty</th>
+                            <th>Cost</th>
+                            <th>Current Price</th>
+                            <th>Current Value</th>
+                            <th>Unrealised P&amp;L</th>
+                            <th>Days Held</th>
+                            <th>Exit Due</th>
+                        </tr>
+                    </thead>
+                    <tbody id="openPositionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Closed positions -->
+        <div id="closedPositionsSection" style="display:none;">
+            <p class="portfolio-sub-header">Closed Positions</p>
+            <div class="table-container">
+                <table id="closedPositionsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Signal Dirs</th>
+                            <th>Entry Date</th>
+                            <th>Entry Price</th>
+                            <th>Exit Date</th>
+                            <th>Exit Price</th>
+                            <th>Qty</th>
+                            <th>P&amp;L $</th>
+                            <th>P&amp;L %</th>
+                            <th>Days Held</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="closedPositionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Compliance Violations Section (Verified Data Only) -->
         <div class="section-header mt-2">
             <div>
@@ -1078,18 +1283,33 @@
         let smartMoneyTickers = new Set();
         let smartMoneyV2Data = [];
         let smartMoneyScoreMap = {};   // ticker -> {score, label}
+        let clusterSignalData = [];
         let sectorHeatmapData = [];
         let currentPage = 1;
         const TRADES_PER_PAGE = 50;
         let currentSort = { field: 'date_of_trade', asc: false };
         let stats = null;
 
+        // Build the /v2 URL from current smFrom/smTo inputs
+        function buildSmV2Url() {
+            const from = document.getElementById('smFrom').value;
+            const to   = document.getElementById('smTo').value;
+            let url = '/api/trades/smart-money/v2';
+            const params = [];
+            if (from) params.push(`from=${from}`);
+            if (to)   params.push(`to=${to}`);
+            if (params.length) url += '?' + params.join('&');
+            return url;
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             // Default Smart Money Scores to last 90 days
-            const d90 = new Date();
+            const today = new Date();
+            const d90   = new Date();
             d90.setDate(d90.getDate() - 90);
             document.getElementById('smFrom').value = d90.toISOString().slice(0, 10);
+            document.getElementById('smTo').value   = today.toISOString().slice(0, 10);
 
             await loadData();
             // Lazy sync: trigger on page load if >1 hour since last sync
@@ -1099,13 +1319,14 @@
         // Load data from API
         async function loadData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
                     fetch('/api/trades/smart-money'),
                     fetch('/api/stats/sector-heatmap'),
-                    fetch('/api/trades/smart-money/v2'),
+                    fetch(buildSmV2Url()),
+                    fetch('/api/trades/cluster-signal'),
                 ]);
 
                 allTrades = await tradesRes.json();
@@ -1114,15 +1335,18 @@
                 smartMoneyTickers = new Set((await smartMoneyRes.json()).map(s => s.ticker));
                 sectorHeatmapData = await heatmapRes.json();
                 smartMoneyV2Data = await smV2Res.json();
+                clusterSignalData = await clusterRes.json();
                 buildSmartMoneyScoreMap();
 
                 renderStats();
                 renderSectorHeatmap();
                 renderSmartMoneySection();
+                renderClusterSignal();
                 renderComplianceTable();
                 applyComplianceFilters();
                 applyFilters();
                 updateSortIndicators();
+                loadPortfolioData();
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML = `
@@ -1137,13 +1361,14 @@
         // Refresh data (for polling)
         async function refreshData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
                     fetch('/api/trades/smart-money'),
                     fetch('/api/stats/sector-heatmap'),
-                    fetch('/api/trades/smart-money/v2'),
+                    fetch(buildSmV2Url()),
+                    fetch('/api/trades/cluster-signal'),
                 ]);
 
                 const newTrades = await tradesRes.json();
@@ -1152,6 +1377,7 @@
                 const newSmartMoney = await smartMoneyRes.json();
                 const newHeatmap = await heatmapRes.json();
                 const newSmV2 = await smV2Res.json();
+                const newCluster = await clusterRes.json();
 
                 // Only re-render if data actually changed
                 if (JSON.stringify(newTrades) !== JSON.stringify(allTrades)) {
@@ -1161,10 +1387,12 @@
                     smartMoneyTickers = new Set(newSmartMoney.map(s => s.ticker));
                     sectorHeatmapData = newHeatmap;
                     smartMoneyV2Data = newSmV2;
+                    clusterSignalData = newCluster;
                     buildSmartMoneyScoreMap();
                     renderStats();
                     renderSectorHeatmap();
                     renderSmartMoneySection();
+                    renderClusterSignal();
                     renderComplianceTable();
                     applyComplianceFilters();
                     applyFilters();
@@ -1553,29 +1781,34 @@
         function renderSectorHeatmap() {
             const container = document.getElementById('sectorHeatmapGrid');
             if (!sectorHeatmapData || sectorHeatmapData.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>No sector data available yet — run <code>populate_sectors</code> to map tickers to sectors.</p></div>';
+                container.innerHTML = '<div class="empty-state"><p>No ASX 200 trade data found for the past 90 days.</p></div>';
                 return;
             }
 
-            const sentimentLabel = { bullish: '▲ Bullish', bearish: '▼ Bearish', neutral: '◆ Neutral' };
-
             container.innerHTML = sectorHeatmapData.map(s => {
-                const total = s.buy_value + s.sell_value;
-                const buyPct  = total > 0 ? Math.round(s.buy_value  / total * 100) : 50;
-                const sellPct = total > 0 ? Math.round(s.sell_value / total * 100) : 50;
+                const totalV = s.total_value_bought_90d + s.total_value_sold_90d;
+                const buyPct  = totalV > 0 ? Math.round(s.total_value_bought_90d / totalV * 100) : 50;
+                const sellPct = totalV > 0 ? Math.round(s.total_value_sold_90d   / totalV * 100) : 50;
+                const topBuyerNames = (s.top_buyers || []).slice(0, 2).map(b => b.director_name.split(' ').pop()).join(', ');
+                const ratioStr = s.net_buy_sell_ratio >= 0
+                    ? `+${(s.net_buy_sell_ratio * 100).toFixed(0)}%`
+                    : `${(s.net_buy_sell_ratio * 100).toFixed(0)}%`;
                 return `
                     <div class="heatmap-card ${s.net_sentiment}" onclick="showSectorModal(${JSON.stringify(s).replace(/"/g, '&quot;')})" style="cursor:pointer">
-                        <div class="heatmap-sector-name">${s.sector}</div>
-                        <span class="heatmap-sentiment ${s.net_sentiment}">${sentimentLabel[s.net_sentiment] || s.net_sentiment}</span>
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem">
+                            <div class="heatmap-sector-name" style="margin-bottom:0">${s.sector}</div>
+                            <span style="font-size:0.78rem;font-weight:700;color:${s.net_buy_sell_ratio >= 0 ? 'var(--success)' : 'var(--danger)'}">${ratioStr}</span>
+                        </div>
                         <div class="heatmap-bar-wrap">
                             <div class="heatmap-bar-buy"  style="width:${buyPct}%"></div>
                             <div class="heatmap-bar-sell" style="width:${sellPct}%"></div>
                         </div>
                         <div class="heatmap-meta">
-                            <span class="hm-buy">${s.buy_count} buys · ${formatCompact(s.buy_value)}</span>
-                            <span>${s.trade_count} total</span>
-                            <span class="hm-sell">${formatCompact(s.sell_value)} · ${s.sell_count} sells</span>
+                            <span class="hm-buy">${s.total_buys_90d}B · ${formatCompact(s.total_value_bought_90d)}</span>
+                            <span>${s.total_buys_90d + s.total_sells_90d} total</span>
+                            <span class="hm-sell">${formatCompact(s.total_value_sold_90d)} · ${s.total_sells_90d}S</span>
                         </div>
+                        ${topBuyerNames ? `<div style="font-size:0.73rem;color:var(--text-secondary);margin-top:0.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔥 ${topBuyerNames}</div>` : ''}
                     </div>`;
             }).join('');
         }
@@ -1586,6 +1819,43 @@
             if (value >= 1e6) return '$' + (value / 1e6).toFixed(1) + 'M';
             if (value >= 1e3) return '$' + (value / 1e3).toFixed(0) + 'K';
             return '$' + Math.round(value);
+        }
+
+        // Render cluster signal
+        function renderClusterSignal() {
+            const container = document.getElementById('clusterSignalList');
+            if (!clusterSignalData || clusterSignalData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No companies with 3+ directors buying in the past 90 days.</p></div>';
+                return;
+            }
+
+            container.innerHTML = clusterSignalData.map(c => {
+                const badgeCls = c.director_count >= 5 ? 'd5' : c.director_count >= 4 ? 'd4' : 'd3';
+                const badgeTxt = `${c.director_count} directors`;
+                const dirNames = c.directors.slice(0, 4).map(d => {
+                    const lastName = d.director_name.trim().split(/\s+/).pop();
+                    return `<a href="/static/director.html?id=${d.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${lastName}</a>`;
+                }).join(', ') + (c.directors.length > 4 ? ` +${c.directors.length - 4}` : '');
+
+                const dateRange = c.first_trade_date === c.last_trade_date
+                    ? c.last_trade_date
+                    : `${c.first_trade_date} – ${c.last_trade_date}`;
+
+                const pctStr = c.buy_pct_market_cap != null
+                    ? `<span style="font-size:0.78rem;background:rgba(0,102,204,.1);color:var(--accent);padding:0.1rem 0.45rem;border-radius:10px;white-space:nowrap;font-weight:700" title="Director buys as % of market cap">${c.buy_pct_market_cap.toFixed(2)}% mkt cap</span>`
+                    : '';
+
+                return `
+                    <div class="cluster-row">
+                        <span class="cluster-badge ${badgeCls}">${badgeTxt}</span>
+                        <span style="font-weight:700;min-width:3.5rem"><a class="ticker" href="/static/company.html?ticker=${c.ticker}" style="text-decoration:none">${c.ticker}</a></span>
+                        <span style="color:var(--text-secondary);font-size:0.9rem;flex:1;min-width:10rem">${c.company_name}</span>
+                        <span style="color:var(--success);font-weight:600;white-space:nowrap">${formatCompact(c.total_buy_value)}</span>
+                        ${pctStr}
+                        <span style="color:var(--text-secondary);font-size:0.85rem;flex:2;min-width:12rem">${dirNames}</span>
+                        <span style="color:var(--text-secondary);font-size:0.8rem;white-space:nowrap">${dateRange}</span>
+                    </div>`;
+            }).join('');
         }
 
         // Build score map from v2 data: ticker -> best score for quick lookup
@@ -1681,16 +1951,9 @@
         }
 
         async function loadSmartMoneyV2() {
-            const from = document.getElementById('smFrom').value;
-            const to   = document.getElementById('smTo').value;
             document.getElementById('smartMoneySection').innerHTML = '<div class="loading"></div>';
-            let url = '/api/trades/smart-money/v2';
-            const params = [];
-            if (from) params.push(`from=${from}`);
-            if (to)   params.push(`to=${to}`);
-            if (params.length) url += '?' + params.join('&');
             try {
-                smartMoneyV2Data = await fetch(url).then(r => r.json());
+                smartMoneyV2Data = await fetch(buildSmV2Url()).then(r => r.json());
                 buildSmartMoneyScoreMap();
                 renderSmartMoneySection();
             } catch (e) {
@@ -1699,32 +1962,58 @@
         }
 
         function clearSmDates() {
-            document.getElementById('smFrom').value = '';
-            document.getElementById('smTo').value   = '';
+            const today = new Date();
+            const d90   = new Date();
+            d90.setDate(d90.getDate() - 90);
+            document.getElementById('smFrom').value = d90.toISOString().slice(0, 10);
+            document.getElementById('smTo').value   = today.toISOString().slice(0, 10);
             loadSmartMoneyV2();
         }
 
         // Sector modal
         function showSectorModal(sector) {
-            const sentimentLabel = { bullish: '▲ Bullish', bearish: '▼ Bearish', neutral: '◆ Neutral' };
             document.getElementById('modalSectorName').textContent = sector.sector;
-            const badge = document.getElementById('modalSentimentBadge');
-            badge.innerHTML = `<span class="heatmap-sentiment ${sector.net_sentiment}">${sentimentLabel[sector.net_sentiment] || sector.net_sentiment}</span>`;
+            const ratioColor = sector.net_buy_sell_ratio >= 0 ? 'var(--success)' : 'var(--danger)';
+            const ratioStr2 = (sector.net_buy_sell_ratio >= 0 ? '+' : '') + (sector.net_buy_sell_ratio * 100).toFixed(0) + '% net buy';
+            document.getElementById('modalSentimentBadge').innerHTML =
+                `<span style="font-size:0.85rem;font-weight:700;color:${ratioColor}">${ratioStr2}</span>`;
 
+            const totalTrades = (sector.total_buys_90d || 0) + (sector.total_sells_90d || 0);
+            const ratioStr = sector.net_buy_sell_ratio !== undefined
+                ? (sector.net_buy_sell_ratio >= 0 ? '+' : '') + (sector.net_buy_sell_ratio * 100).toFixed(0) + '%'
+                : '—';
             document.getElementById('modalStats').innerHTML = `
-                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Total Trades</div><strong>${sector.trade_count}</strong></div>
-                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Buy Value</div><strong style="color:var(--success)">${formatCompact(sector.buy_value)}</strong></div>
-                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Sell Value</div><strong style="color:var(--danger)">${formatCompact(sector.sell_value)}</strong></div>
-                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Buys / Sells</div><strong>${sector.buy_count} / ${sector.sell_count}</strong></div>`;
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Total Trades</div><strong>${totalTrades}</strong></div>
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Buy Value</div><strong style="color:var(--success)">${formatCompact(sector.total_value_bought_90d)}</strong></div>
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Sell Value</div><strong style="color:var(--danger)">${formatCompact(sector.total_value_sold_90d)}</strong></div>
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Buys / Sells</div><strong>${sector.total_buys_90d} / ${sector.total_sells_90d}</strong></div>
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">Net Ratio</div><strong>${ratioStr}</strong></div>
+                <div><div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.2rem">ASX 200 Cos</div><strong>${sector.companies_in_sector || '—'}</strong></div>`;
 
+            // Top buyers
+            const buyers = (sector.top_buyers || []);
+            const buyerHtml = buyers.length
+                ? `<p style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.4px">Top Buyers</p>` +
+                  buyers.map(b => `
+                    <div class="modal-company-row">
+                        <span><a class="ticker" href="/static/company.html?ticker=${b.ticker}" style="text-decoration:none" onclick="closeSectorModal()">${b.ticker}</a> <span style="color:var(--text-secondary);font-size:0.85rem">${b.director_name}</span></span>
+                        <span style="font-size:0.85rem;color:var(--success);font-weight:600">${formatCompact(b.total_value)}</span>
+                    </div>`).join('')
+                : '';
+
+            // Active companies
             const companies = (sector.top_companies || []);
-            document.getElementById('modalCompanies').innerHTML = companies.length
-                ? companies.map(c => `
+            const companyHtml = companies.length
+                ? `<p style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin:0.75rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.4px">Active Companies</p>` +
+                  companies.map(c => `
                     <div class="modal-company-row">
                         <span><a class="ticker" href="/static/company.html?ticker=${c.ticker}" style="text-decoration:none" onclick="closeSectorModal()">${c.ticker}</a> <span style="color:var(--text-secondary);font-size:0.85rem">${c.company_name}</span></span>
                         <span style="font-size:0.85rem"><span style="color:var(--success)">${c.buy_count}B</span> / <span style="color:var(--danger)">${c.sell_count}S</span></span>
                     </div>`).join('')
-                : '<p style="color:var(--text-secondary);font-size:0.9rem">No company data available.</p>';
+                : '';
+
+            document.getElementById('modalCompanies').innerHTML = buyerHtml + companyHtml
+                || '<p style="color:var(--text-secondary);font-size:0.9rem">No trade data available.</p>';
 
             document.getElementById('sectorModal').classList.add('open');
         }
@@ -1788,6 +2077,274 @@
             link.click();
             document.body.removeChild(link);
         }
+        // ── Smart Money Portfolio ────────────────────────────────────────────
+        async function loadPortfolioData() {
+            try {
+                const [summaryRes, posRes, perfRes] = await Promise.all([
+                    fetch('/api/portfolio/summary'),
+                    fetch('/api/portfolio/positions'),
+                    fetch('/api/portfolio/performance'),
+                ]);
+                if (!summaryRes.ok) {
+                    renderPortfolioEmpty();
+                    return;
+                }
+                const summary = await summaryRes.json();
+                const positions = await posRes.json();
+                const performance = await perfRes.json();
+                renderPortfolioSummary(summary);
+                renderPortfolioPositions(positions);
+                renderEquityCurve(performance);
+            } catch (e) {
+                document.getElementById('portfolioSummaryGrid').innerHTML =
+                    '<div class="empty-state"><p>Portfolio data unavailable. Try clicking Refresh, or check the server logs.</p></div>';
+            }
+        }
+
+        function renderPortfolioEmpty() {
+            document.getElementById('portfolioSummaryGrid').innerHTML =
+                '<div class="empty-state" style="padding:1.5rem;"><p><strong>Portfolio is live and waiting.</strong> No Smart Money signals have fired yet since launch. Positions will appear here automatically when 2+ directors buy the same stock within 7 days.</p></div>';
+        }
+
+        function fmtAUD(val) {
+            if (val == null) return '—';
+            const abs = Math.abs(val);
+            const sign = val < 0 ? '-' : '';
+            return sign + '$' + abs.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtPct(val) {
+            if (val == null) return '—';
+            const sign = val >= 0 ? '+' : '';
+            return sign + val.toFixed(2) + '%';
+        }
+
+        function renderPortfolioSummary(s) {
+            // Update subtitle with live start date
+            const subtitle = document.getElementById('portfolioSubtitle');
+            if (s.portfolio_start_date) {
+                subtitle.textContent = `Live paper trading from ${s.portfolio_start_date}. Auto-updates every 2 minutes.`;
+            }
+
+            const totalReturnClass = s.total_return_aud >= 0 ? 'positive' : 'negative';
+            const realisedClass = s.realised_pnl_aud >= 0 ? 'positive' : 'negative';
+            const unrealisedClass = s.unrealised_pnl_aud >= 0 ? 'positive' : 'negative';
+
+            document.getElementById('portfolioSummaryGrid').innerHTML = `
+                <div class="portfolio-stat neutral">
+                    <div class="stat-label">Portfolio Value</div>
+                    <div class="stat-value">${fmtAUD(s.total_portfolio_value)}</div>
+                    <div class="stat-subtext">Started ${fmtAUD(s.starting_capital)}</div>
+                </div>
+                <div class="portfolio-stat ${totalReturnClass}">
+                    <div class="stat-label">Total Return</div>
+                    <div class="stat-value">${fmtPct(s.total_return_pct)}</div>
+                    <div class="stat-subtext">${fmtAUD(s.total_return_aud)}</div>
+                </div>
+                <div class="portfolio-stat ${realisedClass}">
+                    <div class="stat-label">Realised P&L</div>
+                    <div class="stat-value">${fmtAUD(s.realised_pnl_aud)}</div>
+                    <div class="stat-subtext">${s.closed_positions} closed trades</div>
+                </div>
+                <div class="portfolio-stat ${unrealisedClass}">
+                    <div class="stat-label">Unrealised P&L</div>
+                    <div class="stat-value">${fmtAUD(s.unrealised_pnl_aud)}</div>
+                    <div class="stat-subtext">${s.open_positions} open positions</div>
+                </div>
+                <div class="portfolio-stat neutral">
+                    <div class="stat-label">Cash Available</div>
+                    <div class="stat-value">${fmtAUD(s.cash_available)}</div>
+                    <div class="stat-subtext">Reserve: $10,000</div>
+                </div>
+                <div class="portfolio-stat neutral">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-value">${s.win_rate_pct != null ? s.win_rate_pct.toFixed(1) + '%' : '—'}</div>
+                    <div class="stat-subtext">Avg win ${fmtAUD(s.avg_win_aud)} · Avg loss ${fmtAUD(s.avg_loss_aud)}</div>
+                </div>
+                ${s.best_trade ? `
+                <div class="portfolio-stat positive">
+                    <div class="stat-label">Best Trade</div>
+                    <div class="stat-value" style="font-size:1.1rem;">${s.best_trade.ticker}</div>
+                    <div class="stat-subtext">${fmtAUD(s.best_trade.pnl_aud)} (${fmtPct(s.best_trade.pnl_pct)})</div>
+                </div>` : ''}
+                ${s.worst_trade ? `
+                <div class="portfolio-stat negative">
+                    <div class="stat-label">Worst Trade</div>
+                    <div class="stat-value" style="font-size:1.1rem;">${s.worst_trade.ticker}</div>
+                    <div class="stat-subtext">${fmtAUD(s.worst_trade.pnl_aud)} (${fmtPct(s.worst_trade.pnl_pct)})</div>
+                </div>` : ''}
+            `;
+        }
+
+        function renderEquityCurve(points) {
+            const wrap = document.getElementById('equityChartWrap');
+            if (!points || points.length < 2) {
+                wrap.style.display = '';
+                document.getElementById('equityChartSvg').innerHTML =
+                    '<text x="400" y="88" text-anchor="middle" font-size="13" fill="var(--text-secondary)">Waiting for first closed position…</text>';
+                return;
+            }
+            wrap.style.display = '';
+            const svg = document.getElementById('equityChartSvg');
+            const W = 800, H = 160, PAD = 8;
+
+            const values = points.map(p => p.portfolio_value);
+            const minV = Math.min(...values);
+            const maxV = Math.max(...values);
+            const range = maxV - minV || 1;
+
+            const toX = i => PAD + (i / (points.length - 1)) * (W - PAD * 2);
+            const toY = v => H - PAD - ((v - minV) / range) * (H - PAD * 2);
+
+            const pathD = points.map((p, i) =>
+                (i === 0 ? 'M' : 'L') + toX(i).toFixed(1) + ',' + toY(p.portfolio_value).toFixed(1)
+            ).join(' ');
+
+            // Fill area under curve
+            const fillD = pathD +
+                ` L${toX(points.length - 1).toFixed(1)},${H - PAD} L${PAD},${H - PAD} Z`;
+
+            const baseline = toY(100000).toFixed(1);
+            const lineColor = values[values.length - 1] >= 100000 ? '#28a745' : '#dc3545';
+            const fillColor = values[values.length - 1] >= 100000 ? 'rgba(40,167,69,0.12)' : 'rgba(220,53,69,0.12)';
+
+            svg.innerHTML = `
+                <defs>
+                  <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
+                  </linearGradient>
+                </defs>
+                <!-- baseline -->
+                <line x1="${PAD}" y1="${baseline}" x2="${W - PAD}" y2="${baseline}"
+                      stroke="var(--border-color)" stroke-width="1" stroke-dasharray="4,4"/>
+                <!-- fill -->
+                <path d="${fillD}" fill="url(#eqGrad)"/>
+                <!-- line -->
+                <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round"/>
+                <!-- start dot -->
+                <circle cx="${toX(0).toFixed(1)}" cy="${toY(values[0]).toFixed(1)}" r="3" fill="${lineColor}"/>
+                <!-- end dot -->
+                <circle cx="${toX(points.length-1).toFixed(1)}" cy="${toY(values[values.length-1]).toFixed(1)}" r="3" fill="${lineColor}"/>
+                <!-- labels -->
+                <text x="${PAD + 4}" y="${toY(values[0]) - 5}" font-size="10" fill="var(--text-secondary)">${fmtAUD(values[0])}</text>
+                <text x="${W - PAD - 4}" y="${toY(values[values.length-1]) - 5}" font-size="10" fill="${lineColor}" text-anchor="end">${fmtAUD(values[values.length-1])}</text>
+            `;
+        }
+
+        function renderPortfolioPositions(positions) {
+            const open = positions.filter(p => p.status === 'open');
+            const closed = positions.filter(p => p.status === 'closed');
+
+            const openSec = document.getElementById('openPositionsSection');
+            const closedSec = document.getElementById('closedPositionsSection');
+            const openBody = document.getElementById('openPositionsBody');
+            const closedBody = document.getElementById('closedPositionsBody');
+
+            if (open.length > 0) {
+                openSec.style.display = '';
+                openBody.innerHTML = open.map(p => {
+                    const pnlCls = (p.unrealised_pnl_aud || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const dueDate = p.exit_due_date;
+                    const daysLeft = dueDate ? Math.max(0, Math.round((new Date(dueDate) - new Date()) / 86400000)) : '—';
+                    return `<tr class="position-row-open">
+                        <td><strong onclick="showCompanyProfile('${p.ticker}')" style="cursor:pointer;color:var(--accent)">${p.ticker}</strong></td>
+                        <td style="font-size:0.8rem;">${(p.signal_directors || []).join(', ')}</td>
+                        <td>${p.entry_date}</td>
+                        <td>$${Number(p.entry_price).toFixed(4)}</td>
+                        <td>${p.quantity.toLocaleString()}</td>
+                        <td>${fmtAUD(p.cost_basis)}</td>
+                        <td>${p.current_price != null ? '$' + Number(p.current_price).toFixed(4) : '—'}</td>
+                        <td>${fmtAUD(p.current_value)}</td>
+                        <td class="${pnlCls}">${fmtAUD(p.unrealised_pnl_aud)} (${fmtPct(p.unrealised_pnl_pct)})</td>
+                        <td>${p.days_held != null ? p.days_held + 'd' : '—'}</td>
+                        <td>${dueDate} <span style="font-size:0.78rem;color:var(--text-secondary)">(${daysLeft}d left)</span></td>
+                    </tr>`;
+                }).join('');
+            }
+
+            if (closed.length > 0) {
+                closedSec.style.display = '';
+                closedBody.innerHTML = closed.map(p => {
+                    const pnlCls = (p.pnl_aud || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const reasonLabel = p.exit_reason === 'sell_signal'
+                        ? '<span class="exit-reason-badge sell-signal">Sell Signal</span>'
+                        : p.exit_reason === '90_days'
+                        ? '<span class="exit-reason-badge days90">90 Days</span>'
+                        : (p.exit_reason || '—');
+                    return `<tr class="position-row-closed">
+                        <td><strong onclick="showCompanyProfile('${p.ticker}')" style="cursor:pointer;color:var(--accent)">${p.ticker}</strong></td>
+                        <td style="font-size:0.8rem;">${(p.signal_directors || []).join(', ')}</td>
+                        <td>${p.entry_date}</td>
+                        <td>$${Number(p.entry_price).toFixed(4)}</td>
+                        <td>${p.exit_date || '—'}</td>
+                        <td>${p.exit_price != null ? '$' + Number(p.exit_price).toFixed(4) : '—'}</td>
+                        <td>${p.quantity.toLocaleString()}</td>
+                        <td class="${pnlCls}">${fmtAUD(p.pnl_aud)}</td>
+                        <td class="${pnlCls}">${fmtPct(p.pnl_pct)}</td>
+                        <td>${p.days_held != null ? p.days_held + 'd' : '—'}</td>
+                        <td>${reasonLabel}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            if (open.length === 0 && closed.length === 0) {
+                renderPortfolioEmpty();
+            }
+        }
+
+        async function investNow() {
+            const btn = document.getElementById('investNowBtn');
+            const status = document.getElementById('portfolioRunStatus');
+            btn.disabled = true;
+            btn.textContent = '⏳ Investing...';
+            status.textContent = '';
+
+            try {
+                const res = await fetch('/api/portfolio/invest-now', { method: 'POST' });
+                const data = await res.json();
+                if (data.positions_opened > 0) {
+                    const names = data.positions.map(p => p.ticker).join(', ');
+                    status.textContent =
+                        `✓ Opened ${data.positions_opened} positions (${names}) — $${data.total_invested.toLocaleString('en-AU', {minimumFractionDigits:2})} invested`;
+                    await loadPortfolioData();
+                } else if (data.skipped && data.skipped.length > 0) {
+                    status.textContent = `No positions opened — ${data.skipped[0]}`;
+                } else {
+                    status.textContent = 'No actionable Smart Money signals right now.';
+                }
+            } catch (e) {
+                status.textContent = '✗ Request failed';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💰 Invest $50k';
+            }
+        }
+
+        async function triggerPortfolioRun() {
+            const btn = document.getElementById('portfolioRunBtn');
+            const status = document.getElementById('portfolioRunStatus');
+            btn.disabled = true;
+            btn.textContent = '⏳ Updating...';
+            status.textContent = '';
+
+            try {
+                const res = await fetch('/api/portfolio/run', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    status.textContent = `✓ ${data.positions} positions (${data.open} open, ${data.closed} closed)`;
+                    await loadPortfolioData();
+                } else {
+                    status.textContent = `✗ ${data.status}`;
+                }
+            } catch (e) {
+                status.textContent = '✗ Request failed';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '↺ Refresh';
+            }
+        }
+
     </script>
 
     <footer>
