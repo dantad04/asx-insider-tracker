@@ -5,13 +5,13 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import compliance, health, portfolio, public
+from app.routers import clusters, compliance, health, public
 from app.scheduler import setup_scheduler
 
 
@@ -78,7 +78,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(compliance.router)
 app.include_router(public.router)
-app.include_router(portfolio.router)
+app.include_router(clusters.router)
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"
@@ -90,6 +90,16 @@ if static_dir.exists():
 async def root():
     """Redirect root to the web UI"""
     return RedirectResponse(url="/static/index.html")
+
+
+@app.get("/clusters")
+async def clusters_page():
+    return FileResponse(str(static_dir / "clusters.html"))
+
+
+@app.get("/clusters/{cluster_id:int}")
+async def cluster_detail_page(cluster_id: int):
+    return FileResponse(str(static_dir / "cluster_detail.html"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cluster Detail — ASX Insider Tracker</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#ffffff;--bg2:#f5f5f5;--bg3:#e8e8e8;--text:#1a1a1a;--text2:#666;--border:#d0d0d0;--accent:#0066cc;--accent2:#0052a3;--success:#28a745;--danger:#dc3545;--teal:#17a2b8}
+body.dark{--bg:#1a1a1a;--bg2:#2d2d2d;--bg3:#3d3d3d;--text:#e8e8e8;--text2:#b0b0b0;--border:#444}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+/* Nav */
+nav{background:linear-gradient(135deg,var(--accent),#003d99);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.nav-left{display:flex;align-items:center;gap:1rem}
+.back-link{color:rgba(255,255,255,.85);font-size:.9rem;text-decoration:none;display:flex;align-items:center;gap:.3rem}
+.back-link:hover{color:#fff;text-decoration:none}
+.nav-title{font-size:1.05rem;font-weight:700}
+button{background:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background .2s}
+button:hover{background:var(--accent2)}
+.btn-ghost{background:rgba(255,255,255,.2)}.btn-ghost:hover{background:rgba(255,255,255,.3)}
+
+/* Layout */
+.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
+
+/* Hero */
+.hero{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.75rem 2rem;margin-bottom:2rem}
+.hero-header{display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.hero-ticker{font-family:'Courier New',monospace;font-size:2.2rem;font-weight:700;color:var(--accent);line-height:1}
+.hero-badges{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.35rem}
+.badge{display:inline-block;font-size:.75rem;font-weight:600;padding:.25rem .65rem;border-radius:10px;white-space:nowrap}
+.badge-sector{background:rgba(0,102,204,.1);color:var(--accent)}
+.badge-industry{background:var(--bg3);color:var(--text2)}
+.badge-status-active{background:rgba(0,102,204,.12);color:var(--accent)}
+.badge-status-maturing{background:rgba(23,162,184,.12);color:var(--teal)}
+.badge-status-historical{background:var(--bg3);color:var(--text2)}
+.hero-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem 1.5rem;margin-top:.5rem}
+.hero-meta-item .lbl{font-size:.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.hero-meta-item .val{font-size:1.05rem;font-weight:600;margin-top:.1rem}
+
+/* Returns 2×2 grid */
+.returns-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.return-cell{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.25rem}
+.return-cell.awaiting{opacity:.6;background:var(--bg3)}
+.return-cell-label{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+.return-horizon{font-size:.8rem;font-weight:600;color:var(--text2);margin-bottom:.35rem}
+.return-awaiting-msg{font-size:.85rem;color:var(--text2);font-style:italic;margin-top:.3rem}
+.metric-row{display:flex;justify-content:space-between;align-items:baseline;padding:.2rem 0;font-size:.9rem}
+.metric-row .mlabel{color:var(--text2);font-size:.82rem}
+.metric-row .mval{font-weight:600}
+.ret-positive{color:var(--success)}
+.ret-negative{color:var(--danger)}
+.ret-neutral{color:var(--text2)}
+.alpha-highlight{font-size:1.1rem;font-weight:700}
+
+/* Section */
+.section{margin-bottom:2.5rem}
+.section-title{font-size:1.1rem;font-weight:600;margin-bottom:1rem;padding-bottom:.65rem;border-bottom:2px solid var(--border)}
+
+/* Table */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+thead{background:var(--bg3);border-bottom:2px solid var(--border)}
+th{padding:.85rem 1rem;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;font-size:.8rem;text-transform:uppercase;letter-spacing:.4px}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--bg3)}
+
+/* Loading */
+.loading{text-align:center;padding:2.5rem;color:var(--text2)}
+.loading::after{content:'';display:inline-block;width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-left:.5rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{text-align:center;padding:3rem;color:var(--danger)}
+
+/* Mobile */
+@media(max-width:700px){
+  .returns-grid{grid-template-columns:1fr}
+  nav{padding:.85rem 1rem}
+  .container{margin:1.25rem auto}
+  .hero{padding:1.25rem}
+  .hero-ticker{font-size:1.75rem}
+  th,td{padding:.6rem .65rem;font-size:.82rem}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-left">
+    <a class="back-link" href="/clusters">← All Clusters</a>
+    <span class="nav-title" id="navTitle">Cluster Detail</span>
+  </div>
+  <div style="display:flex;gap:.75rem;align-items:center">
+    <a href="/static/index.html" style="color:rgba(255,255,255,.85);font-size:.9rem">Trade Feed</a>
+    <button class="btn-ghost" onclick="toggleDark()" title="Toggle dark mode" style="padding:.4rem .6rem">🌙</button>
+  </div>
+</nav>
+
+<div class="container" id="mainContent">
+  <div class="loading"></div>
+</div>
+
+<script>
+// ── Dark mode ─────────────────────────────────────────────────────────────
+function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('darkMode',document.body.classList.contains('dark'))}
+if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark');
+
+// ── Format helpers ────────────────────────────────────────────────────────
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return`${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`}
+function fmtWindow(start,end){
+  if(!start)return'—';
+  const s=new Date(start+'T00:00:00'),e=new Date(end+'T00:00:00');
+  if(start===end)return fmtDate(start);
+  if(s.getMonth()===e.getMonth()&&s.getFullYear()===e.getFullYear())
+    return`${s.getDate()} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
+  return`${fmtDate(start)} – ${fmtDate(end)}`;
+}
+function fmtMoney(v){
+  if(v===null||v===undefined)return'—';
+  if(v>=1_000_000)return`$${(v/1_000_000).toFixed(1)}m`;
+  if(v>=1_000)return`$${Math.round(v/1_000)}k`;
+  return`$${Math.round(v)}`;
+}
+function fmtPctHtml(v){
+  if(v===null||v===undefined)return'<span class="ret-neutral">—</span>';
+  const p=(v*100).toFixed(1),cls=v>=0?'ret-positive':'ret-negative';
+  return`<span class="${cls}">${v>=0?'+':''}${p}%</span>`;
+}
+function fmtPctText(v){
+  if(v===null||v===undefined)return'—';
+  return`${v>=0?'+':''}${(v*100).toFixed(1)}%`;
+}
+function fmtCapPct(v){return v!=null?`${(v*100).toFixed(2)}%`:'—'}
+function fmtNum(v){return v!=null?v.toLocaleString():'—'}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function returnCell(c,horizonDays,basis,label,today){
+  const key=`${horizonDays}d_${basis}`;
+  const r=c.returns[key];
+  // Determine if horizon elapsed: use end_date or disclosure_date as entry
+  const entryDate=basis==='trade_date'?c.end_date:c.max_disclosure_date;
+  let awaiting=false;
+  let daysLeft=null;
+  if(entryDate){
+    const exitDate=new Date(entryDate+'T00:00:00');
+    exitDate.setDate(exitDate.getDate()+horizonDays);
+    if(exitDate>today){
+      awaiting=true;
+      daysLeft=Math.ceil((exitDate-today)/(1000*60*60*24));
+    }
+  } else {
+    awaiting=!r;
+  }
+
+  const entryLabel=basis==='trade_date'?'Entry: trade close':'Entry: disclosure+1 close';
+  const awaitingCell = awaiting && !r;
+
+  return`
+    <div class="return-cell ${awaitingCell?'awaiting':''}">
+      <div class="return-cell-label">${label}</div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.65rem">${entryLabel}</div>
+      ${awaitingCell
+        ? `<div class="return-awaiting-msg">Awaiting ${daysLeft!==null?daysLeft+' more days':'horizon'}</div>`
+        : `
+        <div class="metric-row">
+          <span class="mlabel">Absolute return</span>
+          <span class="mval alpha-highlight">${fmtPctHtml(r?.absolute_return??null)}</span>
+        </div>
+        <div class="metric-row">
+          <span class="mlabel">Alpha vs ASX 200</span>
+          <span class="mval alpha-highlight">${fmtPctHtml(r?.alpha_vs_asx200??null)}</span>
+        </div>
+        <div class="metric-row">
+          <span class="mlabel">Alpha vs sector</span>
+          <span class="mval">${fmtPctHtml(r?.alpha_vs_sector??null)}</span>
+        </div>`
+      }
+    </div>`;
+}
+
+async function init(){
+  // Extract cluster_id from URL: /clusters/123
+  const parts=window.location.pathname.split('/');
+  const clusterId=parseInt(parts[parts.length-1]);
+  if(!clusterId){
+    document.getElementById('mainContent').innerHTML='<div class="error">Invalid cluster ID.</div>';
+    return;
+  }
+
+  const res=await fetch(`/api/clusters/${clusterId}`);
+  if(res.status===404){
+    document.getElementById('mainContent').innerHTML='<div class="error">Cluster not found.</div>';
+    return;
+  }
+  if(!res.ok){
+    document.getElementById('mainContent').innerHTML='<div class="error">Failed to load cluster data.</div>';
+    return;
+  }
+  const c=await res.json();
+  document.title=`${c.ticker} Cluster — ASX Insider Tracker`;
+  document.getElementById('navTitle').textContent=`${c.ticker} · Cluster ${c.cluster_id}`;
+
+  const today=new Date();
+  const statusLabel=c.status.charAt(0).toUpperCase()+c.status.slice(1);
+  const capPct=c.pct_market_cap?fmtCapPct(c.pct_market_cap):'—';
+  const mcAud=c.market_cap_aud?fmtMoney(c.market_cap_aud):'—';
+
+  // Trades table
+  const tradesRows=c.trades.map(t=>`
+    <tr>
+      <td>${t.director_name}</td>
+      <td>${fmtDate(t.date_of_trade)}</td>
+      <td>${fmtDate(t.date_lodged)}</td>
+      <td>${t.value_aud!==null?fmtMoney(t.value_aud):'—'}</td>
+      <td style="text-align:right">${fmtNum(t.number_of_securities)}</td>
+    </tr>`).join('');
+
+  document.getElementById('mainContent').innerHTML=`
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-header">
+        <div>
+          <div class="hero-ticker">${c.ticker}</div>
+          <div class="hero-badges">
+            ${c.sector?`<span class="badge badge-sector">${c.sector}</span>`:''}
+            ${c.industry?`<span class="badge badge-industry">${c.industry}</span>`:''}
+            <span class="badge badge-status-${c.status}">${statusLabel}</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <div class="lbl">Trade Window</div>
+          <div class="val">${fmtWindow(c.start_date,c.end_date)}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">Max Disclosure</div>
+          <div class="val">${fmtDate(c.max_disclosure_date)}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">Directors</div>
+          <div class="val">${c.director_count}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">Total Bought</div>
+          <div class="val">${fmtMoney(c.total_value_aud)}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">% Market Cap</div>
+          <div class="val">${capPct}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">Market Cap</div>
+          <div class="val">${mcAud}</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="lbl">Cap Bucket</div>
+          <div class="val" style="font-size:.9rem">${c.market_cap_bucket||'—'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Returns grid -->
+    <div class="section">
+      <div class="section-title">Performance — All Return Variants</div>
+      <div class="returns-grid">
+        ${returnCell(c,90,'disclosure_date','90-day · Disclosure Date',today)}
+        ${returnCell(c,90,'trade_date','90-day · Trade Date',today)}
+        ${returnCell(c,180,'disclosure_date','180-day · Disclosure Date',today)}
+        ${returnCell(c,180,'trade_date','180-day · Trade Date',today)}
+      </div>
+      <div style="font-size:.78rem;color:var(--text2);margin-top:-.5rem;margin-bottom:1.5rem">
+        Alpha measured vs STW.AX (SPDR S&amp;P/ASX 200 ETF) over the same horizon. Disclosure-date entry = close of next trading day after max filing date.
+      </div>
+    </div>
+
+    <!-- Director trades -->
+    <div class="section">
+      <div class="section-title">Director Trades in this Cluster</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Director</th>
+              <th>Date of Trade</th>
+              <th>Date Disclosed</th>
+              <th>Value ($)</th>
+              <th style="text-align:right">Securities</th>
+            </tr>
+          </thead>
+          <tbody>${tradesRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+      <a href="/clusters">← Back to all clusters</a>
+    </div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>

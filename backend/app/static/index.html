@@ -254,14 +254,6 @@
             margin-top: 0.8rem;
         }
 
-        /* Smart money badge */
-        .smart-money-badge {
-            font-size: 0.75rem;
-            margin-left: 0.3rem;
-            cursor: help;
-            vertical-align: middle;
-        }
-
         /* Pagination page number input */
         .page-input {
             width: 52px;
@@ -656,7 +648,7 @@
         .heatmap-meta .hm-buy  { color: var(--success); font-weight: 600; }
         .heatmap-meta .hm-sell { color: var(--danger);  font-weight: 600; }
 
-        /* ── Smart Money info button ─────────────────────────────────────── */
+        /* ── Info button ─────────────────────────────────────────────────── */
         .info-btn {
             background: none;
             border: 1px solid var(--text-secondary);
@@ -719,54 +711,14 @@
             display: block;
         }
 
-        /* ── Smart Money Score badges ─────────────────────────────────────── */
-        .score-badge {
-            display: inline-block;
-            padding: 0.15rem 0.55rem;
-            border-radius: 4px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            min-width: 2.8rem;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        .score-badge.strong  { background: rgba(40,167,69,.18);  color: #1e7e34; }
-        .score-badge.good    { background: rgba(102,187,106,.2); color: #2e7d32; }
-        .score-badge.neutral { background: rgba(108,117,125,.15); color: #555; }
-        .score-badge.weak    { background: rgba(255,140,0,.18);  color: #b35a00; }
-        .score-badge.poor    { background: rgba(220,53,69,.18);  color: #c0392b; }
-        .score-badge.na      { background: var(--bg-tertiary);   color: var(--text-secondary); font-weight: 600; }
-
-        /* SM badge for trade rows (consensus signal, no price score) */
-        .sm-badge {
-            display: inline-block;
-            padding: 0.1rem 0.35rem;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            background: rgba(0,102,204,.12);
-            color: var(--accent);
-            margin-left: 0.3rem;
-            vertical-align: middle;
-        }
-
-        /* ── Smart Money Scores section ──────────────────────────────────── */
-        .sm-table-wrap {
-            overflow-x: auto;
-        }
-
-        .sm-table {
-            width: 100%;
-        }
-
-        .sm-date-row {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
+        /* ── Active Cluster Buys widget ─────────────────────────────────── */
+        .cluster-widget-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+        .cluster-widget-table th { padding: .65rem 1rem; text-align: left; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-secondary); background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); }
+        .cluster-widget-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--border-color); }
+        .cluster-widget-table tbody tr:last-child td { border-bottom: none; }
+        .cluster-widget-table tbody tr:hover { background: var(--bg-tertiary); }
+        .cluster-widget-wrap { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: .5rem; }
+        .cluster-widget-footer { text-align: right; padding: .5rem 0; font-size: .85rem; }
 
         /* ── Sector modal ─────────────────────────────────────────────────── */
         .modal-overlay {
@@ -824,80 +776,6 @@
 
         .modal-company-row:last-child { border-bottom: none; }
 
-        /* ── Smart Money Portfolio ───────────────────────────────────────── */
-        .portfolio-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .portfolio-stat {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-        }
-        .portfolio-stat .stat-label { font-size: 0.78rem; }
-        .portfolio-stat .stat-value { font-size: 1.5rem; }
-        .portfolio-stat.positive .stat-value { color: var(--success); }
-        .portfolio-stat.negative .stat-value { color: var(--danger); }
-        .portfolio-stat.neutral .stat-value { color: var(--accent); }
-
-        .equity-chart-wrap {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem 1.25rem 0.5rem;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }
-        .equity-chart-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.75rem;
-        }
-        #equityChartSvg { width: 100%; height: 160px; display: block; }
-
-        .portfolio-sub-header {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 1.25rem 0 0.5rem;
-        }
-        .position-row-open { border-left: 3px solid var(--success); }
-        .position-row-closed { border-left: 3px solid var(--text-secondary); }
-        .pnl-positive { color: var(--success); font-weight: 600; }
-        .pnl-negative { color: var(--danger); font-weight: 600; }
-        .exit-reason-badge {
-            display: inline-block;
-            font-size: 0.72rem;
-            padding: 0.1rem 0.45rem;
-            border-radius: 10px;
-            font-weight: 600;
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-        }
-        .exit-reason-badge.sell-signal { background: #ffe4e1; color: #c0392b; }
-        .exit-reason-badge.days90 { background: #e8f4fd; color: #2980b9; }
-
-        .portfolio-run-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.88rem;
-            font-weight: 600;
-        }
-        .portfolio-run-btn:hover { background: #218838; }
-        .portfolio-run-btn:disabled { background: #666; cursor: not-allowed; }
-
         /* ── Cluster Signal ──────────────────────────────────────────────── */
         .cluster-list {
             display: flex;
@@ -940,6 +818,7 @@
                 <p class="header-subtitle">Real-time monitoring of director trades on the Australian Securities Exchange</p>
             </div>
             <div class="header-controls">
+                <a href="/clusters" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">Cluster Buys</a>
                 <a href="/static/about.html" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">About</a>
                 <a href="/docs" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">API Docs</a>
                 <button class="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
@@ -1009,13 +888,6 @@
                     <label>More Filters</label>
                     <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem;">
                         <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" id="smartMoneyFilter" onchange="applyFilters()"> Smart Money
-                            <span class="tooltip-wrap" style="margin-left:0.2rem">
-                                <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                                <div class="tooltip-box">Filters for companies where 2 or more distinct directors all bought on the open market within the same 7-day window in the last 90 days — a strong signal of insider conviction.</div>
-                            </span>
-                        </label>
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
                             <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()"> Late Filings Only
                         </label>
                         <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
@@ -1081,34 +953,15 @@
             <div class="loading"></div>
         </div>
 
-        <!-- Smart Money Scores Section -->
+        <!-- Active Cluster Buys Section -->
         <div class="section-header">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <h2>Smart Money Scores</h2>
-                <span class="tooltip-wrap">
-                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                    <div class="tooltip-box">Each director-company pair is scored 0–10 on how often their on-market trades were followed by price movements in the correct direction (buys preceding rises, sells preceding falls) within 90 days. Scores are weighted by recency using exponential decay with an 18-month half-life — recent accurate trades count more than old ones.</div>
-                </span>
+            <div>
+                <h2>Active Cluster Buys</h2>
+                <p class="text-muted" style="margin-top:0.3rem;">Multiple directors buying within 20 trading days</p>
             </div>
-            <p class="text-muted" style="margin-top:0.3rem;">Director prediction accuracy, weighted for recency (requires price data)</p>
+            <a href="/clusters" style="font-size:.9rem;font-weight:600;color:var(--accent);white-space:nowrap">View all clusters →</a>
         </div>
-
-        <div class="sm-date-row">
-            <div class="filter-group">
-                <label for="smFrom">Score period from</label>
-                <input type="date" id="smFrom">
-            </div>
-            <div class="filter-group">
-                <label for="smTo">Score period to</label>
-                <input type="date" id="smTo">
-            </div>
-            <div class="filter-group" style="align-self:flex-end">
-                <button onclick="loadSmartMoneyV2()" style="margin-right:0.5rem">Apply</button>
-                <button onclick="clearSmDates()" style="background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color)">Clear</button>
-            </div>
-        </div>
-
-        <div id="smartMoneySection" style="margin-bottom:2rem;">
+        <div id="activeClustersWidget" style="margin-bottom:2rem;">
             <div class="loading"></div>
         </div>
 
@@ -1125,86 +978,6 @@
         </div>
         <div class="cluster-list" id="clusterSignalList">
             <div class="loading"></div>
-        </div>
-
-        <!-- Smart Money Portfolio Section -->
-        <div class="section-header" style="margin-top:2rem;">
-            <div>
-                <div style="display:flex;align-items:center;gap:0.6rem;">
-                    <h2>Smart Money Portfolio</h2>
-                    <span class="tooltip-wrap">
-                        <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                        <div class="tooltip-box">Live paper trading portfolio that follows every Smart Money signal from today forward. Entry: $10,000 AUD at closing price when 2+ directors buy within 7 days. Exit: after 90 days, or immediately if 2+ directors sell. $100,000 starting capital, max 10 concurrent positions. Auto-updates every 2 minutes after each trade sync.</div>
-                    </span>
-                </div>
-                <p class="text-muted" id="portfolioSubtitle" style="margin-top:0.3rem;font-size:0.85rem;">Auto-updates every 2 minutes.</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:0.75rem;">
-                <span id="portfolioRunStatus" style="font-size:0.85rem;color:var(--text-secondary);"></span>
-                <button class="portfolio-run-btn" onclick="triggerPortfolioRun()" id="portfolioRunBtn">↺ Refresh</button>
-                <button class="portfolio-run-btn" onclick="investNow()" id="investNowBtn" style="background:#0066cc;" title="Buy up to 5 positions ($50k) based on the most recent Smart Money signals">💰 Invest $50k</button>
-            </div>
-        </div>
-
-        <!-- Portfolio summary cards -->
-        <div class="portfolio-summary-grid" id="portfolioSummaryGrid">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Equity curve chart -->
-        <div class="equity-chart-wrap" id="equityChartWrap" style="display:none;">
-            <div class="equity-chart-title">Portfolio Value Over Time</div>
-            <svg id="equityChartSvg" viewBox="0 0 800 160" preserveAspectRatio="none"></svg>
-        </div>
-
-        <!-- Open positions -->
-        <div id="openPositionsSection" style="display:none;">
-            <p class="portfolio-sub-header">Open Positions</p>
-            <div class="table-container">
-                <table id="openPositionsTable">
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Signal Dirs</th>
-                            <th>Entry Date</th>
-                            <th>Entry Price</th>
-                            <th>Qty</th>
-                            <th>Cost</th>
-                            <th>Current Price</th>
-                            <th>Current Value</th>
-                            <th>Unrealised P&amp;L</th>
-                            <th>Days Held</th>
-                            <th>Exit Due</th>
-                        </tr>
-                    </thead>
-                    <tbody id="openPositionsBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Closed positions -->
-        <div id="closedPositionsSection" style="display:none;">
-            <p class="portfolio-sub-header">Closed Positions</p>
-            <div class="table-container">
-                <table id="closedPositionsTable">
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Signal Dirs</th>
-                            <th>Entry Date</th>
-                            <th>Entry Price</th>
-                            <th>Exit Date</th>
-                            <th>Exit Price</th>
-                            <th>Qty</th>
-                            <th>P&amp;L $</th>
-                            <th>P&amp;L %</th>
-                            <th>Days Held</th>
-                            <th>Reason</th>
-                        </tr>
-                    </thead>
-                    <tbody id="closedPositionsBody"></tbody>
-                </table>
-            </div>
         </div>
 
         <!-- Compliance Violations Section (Verified Data Only) -->
@@ -1280,9 +1053,6 @@
         let allTrades = [];
         let filteredTrades = [];
         let allViolations = [];
-        let smartMoneyTickers = new Set();
-        let smartMoneyV2Data = [];
-        let smartMoneyScoreMap = {};   // ticker -> {score, label}
         let clusterSignalData = [];
         let sectorHeatmapData = [];
         let currentPage = 1;
@@ -1290,63 +1060,37 @@
         let currentSort = { field: 'date_of_trade', asc: false };
         let stats = null;
 
-        // Build the /v2 URL from current smFrom/smTo inputs
-        function buildSmV2Url() {
-            const from = document.getElementById('smFrom').value;
-            const to   = document.getElementById('smTo').value;
-            let url = '/api/trades/smart-money/v2';
-            const params = [];
-            if (from) params.push(`from=${from}`);
-            if (to)   params.push(`to=${to}`);
-            if (params.length) url += '?' + params.join('&');
-            return url;
-        }
-
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
-            // Default Smart Money Scores to last 90 days
-            const today = new Date();
-            const d90   = new Date();
-            d90.setDate(d90.getDate() - 90);
-            document.getElementById('smFrom').value = d90.toISOString().slice(0, 10);
-            document.getElementById('smTo').value   = today.toISOString().slice(0, 10);
-
             await loadData();
-            // Lazy sync: trigger on page load if >1 hour since last sync
             checkAndLazySync();
         });
 
         // Load data from API
         async function loadData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res, clusterRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, heatmapRes, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
-                    fetch('/api/trades/smart-money'),
                     fetch('/api/stats/sector-heatmap'),
-                    fetch(buildSmV2Url()),
                     fetch('/api/trades/cluster-signal'),
                 ]);
 
                 allTrades = await tradesRes.json();
                 stats = await statsRes.json();
                 allViolations = await violationsRes.json();
-                smartMoneyTickers = new Set((await smartMoneyRes.json()).map(s => s.ticker));
                 sectorHeatmapData = await heatmapRes.json();
-                smartMoneyV2Data = await smV2Res.json();
                 clusterSignalData = await clusterRes.json();
-                buildSmartMoneyScoreMap();
 
                 renderStats();
                 renderSectorHeatmap();
-                renderSmartMoneySection();
+                renderActiveClustersWidget();
                 renderClusterSignal();
                 renderComplianceTable();
                 applyComplianceFilters();
                 applyFilters();
                 updateSortIndicators();
-                loadPortfolioData();
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML = `
@@ -1361,22 +1105,18 @@
         // Refresh data (for polling)
         async function refreshData() {
             try {
-                const [tradesRes, statsRes, violationsRes, smartMoneyRes, heatmapRes, smV2Res, clusterRes] = await Promise.all([
+                const [tradesRes, statsRes, violationsRes, heatmapRes, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
                     fetch('/api/compliance/violations'),
-                    fetch('/api/trades/smart-money'),
                     fetch('/api/stats/sector-heatmap'),
-                    fetch(buildSmV2Url()),
                     fetch('/api/trades/cluster-signal'),
                 ]);
 
                 const newTrades = await tradesRes.json();
                 const newStats = await statsRes.json();
                 const newViolations = await violationsRes.json();
-                const newSmartMoney = await smartMoneyRes.json();
                 const newHeatmap = await heatmapRes.json();
-                const newSmV2 = await smV2Res.json();
                 const newCluster = await clusterRes.json();
 
                 // Only re-render if data actually changed
@@ -1384,14 +1124,11 @@
                     allTrades = newTrades;
                     stats = newStats;
                     allViolations = newViolations;
-                    smartMoneyTickers = new Set(newSmartMoney.map(s => s.ticker));
                     sectorHeatmapData = newHeatmap;
-                    smartMoneyV2Data = newSmV2;
                     clusterSignalData = newCluster;
-                    buildSmartMoneyScoreMap();
                     renderStats();
                     renderSectorHeatmap();
-                    renderSmartMoneySection();
+                    renderActiveClustersWidget();
                     renderClusterSignal();
                     renderComplianceTable();
                     applyComplianceFilters();
@@ -1572,7 +1309,6 @@
             const dateTo = document.getElementById('dateToFilter').value;
             const lateOnly = document.getElementById('lateFilingsFilter').checked;
             const includeIncomplete = document.getElementById('incompleteFilter').checked;
-            const smartMoneyOnly = document.getElementById('smartMoneyFilter').checked;
             const selectedTypes = getSelectedTradeTypes();
 
             filteredTrades = allTrades.filter(trade => {
@@ -1583,7 +1319,6 @@
                 if (dateTo && trade.date_of_trade > dateTo) return false;
                 if (lateOnly && (!trade.days_to_report || trade.days_to_report <= 5)) return false;
                 if (!includeIncomplete && !trade.price_per_share) return false;
-                if (smartMoneyOnly && !smartMoneyTickers.has(trade.ticker)) return false;
                 return true;
             });
 
@@ -1650,7 +1385,7 @@
                 tbody.innerHTML = pageData.map(trade => `
                         <tr>
                             <td>${formatDate(trade.date_of_trade)}</td>
-                            <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a>${getTradeRowBadge(trade.ticker, trade.director_id)}</td>
+                            <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a></td>
                             <td>${trade.company_name}</td>
                             <td><a href="/static/director.html?id=${trade.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${trade.director_name}</a></td>
                             <td><span class="trade-type ${getTradeTypeClass(trade.trade_type)}">${getTradeTypeLabel(trade.trade_type)}</span></td>
@@ -1744,7 +1479,6 @@
             document.getElementById('dateFromFilter').value = '';
             document.getElementById('dateToFilter').value = '';
             document.querySelectorAll('.typeCheckbox').forEach(cb => cb.checked = false);
-            document.getElementById('smartMoneyFilter').checked = false;
             document.getElementById('lateFilingsFilter').checked = false;
             document.getElementById('incompleteFilter').checked = false;
             applyFilters();
@@ -1858,116 +1592,67 @@
             }).join('');
         }
 
-        // Build score map from v2 data: ticker -> best score for quick lookup
-        function buildSmartMoneyScoreMap() {
-            smartMoneyScoreMap = {};
-            for (const item of smartMoneyV2Data) {
-                const existing = smartMoneyScoreMap[item.ticker];
-                const s = item.score ?? item.score_all_time;
-                if (s !== null && s !== undefined) {
-                    if (!existing || s > (existing.score ?? -1)) {
-                        smartMoneyScoreMap[item.ticker] = { score: s, label: item.score_label };
-                    }
-                }
-            }
-        }
+        // Active Cluster Buys widget
+        async function renderActiveClustersWidget() {
+            const el = document.getElementById('activeClustersWidget');
+            try {
+                const res = await fetch('/api/clusters?status=active,maturing&sort=start_date&order=desc&per_page=5');
+                if (!res.ok) throw new Error('fetch failed');
+                const data = await res.json();
+                const clusters = data.clusters;
 
-        // Badge for a ticker in the trade feed row
-        function getTradeRowBadge(ticker, directorId) {
-            const sm = smartMoneyScoreMap[ticker];
-            if (sm && sm.score !== null) {
-                const cls = scoreCssClass(sm.label);
-                return `<span class="score-badge ${cls}" style="margin-left:0.3rem;font-size:0.7rem">${sm.score.toFixed(1)}</span>`;
-            }
-            if (smartMoneyTickers.has(ticker)) {
-                return '<span class="sm-badge">🔥</span>';
-            }
-            return '';
-        }
-
-        function scoreCssClass(label) {
-            if (!label) return 'na';
-            return label.toLowerCase();
-        }
-
-        // Render Smart Money Scores section
-        function renderSmartMoneySection() {
-            const container = document.getElementById('smartMoneySection');
-            if (!smartMoneyV2Data || smartMoneyV2Data.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary)">
-                        <p><strong>No scored trades yet</strong></p>
-                        <p style="font-size:0.85rem;margin-top:0.5rem">Smart Money Scores require price history in the <code>price_snapshots</code> table.<br>Run <code>sync_price_data.py</code> to populate price data.</p>
+                if (!clusters.length) {
+                    el.innerHTML = `<div class="empty-state" style="padding:1.5rem;text-align:center;color:var(--text-secondary)">
+                        No active clusters right now. <a href="/clusters" style="color:var(--accent);font-weight:600">View historical performance →</a>
                     </div>`;
-                return;
-            }
+                    return;
+                }
 
-            const hasDates = document.getElementById('smFrom').value || document.getElementById('smTo').value;
-            const rows = smartMoneyV2Data.slice(0, 50).map(item => {
-                const cls = scoreCssClass(item.score_label);
-                const scoreCell = item.score !== null
-                    ? `<span class="score-badge ${cls}">${item.score.toFixed(1)}</span>`
-                    : '<span class="score-badge na">—</span>';
-                const allTimeCell = item.score_all_time !== null
-                    ? `<span class="score-badge ${scoreCssClass(_scoreLabel(item.score_all_time))}">${item.score_all_time.toFixed(1)}</span>`
-                    : '<span class="score-badge na">—</span>';
-                const recency = item.recency_tag || '—';
-                return `
-                    <tr>
-                        <td><a href="/static/director.html?id=${item.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${item.director_name}</a></td>
-                        <td><a class="ticker" href="/static/company.html?ticker=${item.ticker}" style="text-decoration:none">${item.ticker}</a></td>
-                        <td>${scoreCell}${hasDates ? ` <small style="color:var(--text-secondary);font-size:0.75rem">period</small>` : ''}</td>
-                        ${hasDates ? `<td>${allTimeCell} <small style="color:var(--text-secondary);font-size:0.75rem">all-time</small></td>` : ''}
-                        <td>${item.total_scored_trades}</td>
-                        <td style="color:var(--text-secondary);font-size:0.85rem">${recency}</td>
-                    </tr>`;
-            }).join('');
+                const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                function fmtD(s) {
+                    if (!s) return '—';
+                    const d = new Date(s + 'T00:00:00');
+                    return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+                }
+                function fmtWin(s, e) {
+                    if (!s) return '—';
+                    const sd = new Date(s + 'T00:00:00'), ed = new Date(e + 'T00:00:00');
+                    if (s === e) return fmtD(s);
+                    if (sd.getFullYear() === ed.getFullYear() && sd.getMonth() === ed.getMonth())
+                        return `${sd.getDate()}–${ed.getDate()} ${MON[ed.getMonth()]} ${ed.getFullYear()}`;
+                    return `${fmtD(s)} – ${fmtD(e)}`;
+                }
+                function fmtVal(v) {
+                    if (v == null) return '—';
+                    if (v >= 1e6) return `$${(v/1e6).toFixed(1)}m`;
+                    if (v >= 1e3) return `$${Math.round(v/1e3)}k`;
+                    return `$${Math.round(v)}`;
+                }
 
-            container.innerHTML = `
-                <div class="sm-table-wrap">
-                    <table class="sm-table" id="smTableInner">
-                        <thead>
-                            <tr>
-                                <th>Director</th>
-                                <th>Ticker</th>
-                                <th>Score</th>
-                                ${hasDates ? '<th>All-time</th>' : ''}
-                                <th>Scored Trades</th>
-                                <th>Last Accurate Trade</th>
-                            </tr>
-                        </thead>
+                const rows = clusters.map(c => `<tr>
+                    <td><strong><a href="/clusters/${c.cluster_id}" style="color:var(--accent);font-family:monospace;text-decoration:none">${c.ticker}</a></strong></td>
+                    <td style="color:var(--text-secondary);font-size:.85rem">${c.industry || '—'}</td>
+                    <td style="text-align:center">${c.director_count}</td>
+                    <td>${fmtVal(c.total_value_aud)}</td>
+                    <td>${c.pct_market_cap != null ? (c.pct_market_cap*100).toFixed(2)+'%' : '—'}</td>
+                    <td style="color:var(--text-secondary);font-size:.85rem">${fmtWin(c.start_date, c.end_date)}</td>
+                </tr>`).join('');
+
+                el.innerHTML = `<div class="cluster-widget-wrap">
+                    <table class="cluster-widget-table">
+                        <thead><tr>
+                            <th>Ticker</th><th>Industry</th><th>Dirs</th>
+                            <th>Total Value</th><th>% Cap</th><th>Window</th>
+                        </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
-                    ${smartMoneyV2Data.length > 50 ? `<p style="text-align:center;color:var(--text-secondary);font-size:0.85rem;margin-top:0.75rem">Showing top 50 of ${smartMoneyV2Data.length}</p>` : ''}
+                </div>
+                <div class="cluster-widget-footer">
+                    <a href="/clusters" style="color:var(--accent);font-weight:600">View all clusters →</a>
                 </div>`;
-        }
-
-        function _scoreLabel(score) {
-            if (score >= 8) return 'Strong';
-            if (score >= 6) return 'Good';
-            if (score >= 4) return 'Neutral';
-            if (score >= 2) return 'Weak';
-            return 'Poor';
-        }
-
-        async function loadSmartMoneyV2() {
-            document.getElementById('smartMoneySection').innerHTML = '<div class="loading"></div>';
-            try {
-                smartMoneyV2Data = await fetch(buildSmV2Url()).then(r => r.json());
-                buildSmartMoneyScoreMap();
-                renderSmartMoneySection();
-            } catch (e) {
-                document.getElementById('smartMoneySection').innerHTML = '<div class="empty-state"><p>Error loading scores</p></div>';
+            } catch(e) {
+                el.innerHTML = '<div class="empty-state" style="padding:1rem;color:var(--text-secondary)">Unable to load cluster data.</div>';
             }
-        }
-
-        function clearSmDates() {
-            const today = new Date();
-            const d90   = new Date();
-            d90.setDate(d90.getDate() - 90);
-            document.getElementById('smFrom').value = d90.toISOString().slice(0, 10);
-            document.getElementById('smTo').value   = today.toISOString().slice(0, 10);
-            loadSmartMoneyV2();
         }
 
         // Sector modal
@@ -2077,273 +1762,8 @@
             link.click();
             document.body.removeChild(link);
         }
-        // ── Smart Money Portfolio ────────────────────────────────────────────
-        async function loadPortfolioData() {
-            try {
-                const [summaryRes, posRes, perfRes] = await Promise.all([
-                    fetch('/api/portfolio/summary'),
-                    fetch('/api/portfolio/positions'),
-                    fetch('/api/portfolio/performance'),
-                ]);
-                if (!summaryRes.ok) {
-                    renderPortfolioEmpty();
-                    return;
-                }
-                const summary = await summaryRes.json();
-                const positions = await posRes.json();
-                const performance = await perfRes.json();
-                renderPortfolioSummary(summary);
-                renderPortfolioPositions(positions);
-                renderEquityCurve(performance);
-            } catch (e) {
-                document.getElementById('portfolioSummaryGrid').innerHTML =
-                    '<div class="empty-state"><p>Portfolio data unavailable. Try clicking Refresh, or check the server logs.</p></div>';
-            }
-        }
 
-        function renderPortfolioEmpty() {
-            document.getElementById('portfolioSummaryGrid').innerHTML =
-                '<div class="empty-state" style="padding:1.5rem;"><p><strong>Portfolio is live and waiting.</strong> No Smart Money signals have fired yet since launch. Positions will appear here automatically when 2+ directors buy the same stock within 7 days.</p></div>';
-        }
 
-        function fmtAUD(val) {
-            if (val == null) return '—';
-            const abs = Math.abs(val);
-            const sign = val < 0 ? '-' : '';
-            return sign + '$' + abs.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function fmtPct(val) {
-            if (val == null) return '—';
-            const sign = val >= 0 ? '+' : '';
-            return sign + val.toFixed(2) + '%';
-        }
-
-        function renderPortfolioSummary(s) {
-            // Update subtitle with live start date
-            const subtitle = document.getElementById('portfolioSubtitle');
-            if (s.portfolio_start_date) {
-                subtitle.textContent = `Live paper trading from ${s.portfolio_start_date}. Auto-updates every 2 minutes.`;
-            }
-
-            const totalReturnClass = s.total_return_aud >= 0 ? 'positive' : 'negative';
-            const realisedClass = s.realised_pnl_aud >= 0 ? 'positive' : 'negative';
-            const unrealisedClass = s.unrealised_pnl_aud >= 0 ? 'positive' : 'negative';
-
-            document.getElementById('portfolioSummaryGrid').innerHTML = `
-                <div class="portfolio-stat neutral">
-                    <div class="stat-label">Portfolio Value</div>
-                    <div class="stat-value">${fmtAUD(s.total_portfolio_value)}</div>
-                    <div class="stat-subtext">Started ${fmtAUD(s.starting_capital)}</div>
-                </div>
-                <div class="portfolio-stat ${totalReturnClass}">
-                    <div class="stat-label">Total Return</div>
-                    <div class="stat-value">${fmtPct(s.total_return_pct)}</div>
-                    <div class="stat-subtext">${fmtAUD(s.total_return_aud)}</div>
-                </div>
-                <div class="portfolio-stat ${realisedClass}">
-                    <div class="stat-label">Realised P&L</div>
-                    <div class="stat-value">${fmtAUD(s.realised_pnl_aud)}</div>
-                    <div class="stat-subtext">${s.closed_positions} closed trades</div>
-                </div>
-                <div class="portfolio-stat ${unrealisedClass}">
-                    <div class="stat-label">Unrealised P&L</div>
-                    <div class="stat-value">${fmtAUD(s.unrealised_pnl_aud)}</div>
-                    <div class="stat-subtext">${s.open_positions} open positions</div>
-                </div>
-                <div class="portfolio-stat neutral">
-                    <div class="stat-label">Cash Available</div>
-                    <div class="stat-value">${fmtAUD(s.cash_available)}</div>
-                    <div class="stat-subtext">Reserve: $10,000</div>
-                </div>
-                <div class="portfolio-stat neutral">
-                    <div class="stat-label">Win Rate</div>
-                    <div class="stat-value">${s.win_rate_pct != null ? s.win_rate_pct.toFixed(1) + '%' : '—'}</div>
-                    <div class="stat-subtext">Avg win ${fmtAUD(s.avg_win_aud)} · Avg loss ${fmtAUD(s.avg_loss_aud)}</div>
-                </div>
-                ${s.best_trade ? `
-                <div class="portfolio-stat positive">
-                    <div class="stat-label">Best Trade</div>
-                    <div class="stat-value" style="font-size:1.1rem;">${s.best_trade.ticker}</div>
-                    <div class="stat-subtext">${fmtAUD(s.best_trade.pnl_aud)} (${fmtPct(s.best_trade.pnl_pct)})</div>
-                </div>` : ''}
-                ${s.worst_trade ? `
-                <div class="portfolio-stat negative">
-                    <div class="stat-label">Worst Trade</div>
-                    <div class="stat-value" style="font-size:1.1rem;">${s.worst_trade.ticker}</div>
-                    <div class="stat-subtext">${fmtAUD(s.worst_trade.pnl_aud)} (${fmtPct(s.worst_trade.pnl_pct)})</div>
-                </div>` : ''}
-            `;
-        }
-
-        function renderEquityCurve(points) {
-            const wrap = document.getElementById('equityChartWrap');
-            if (!points || points.length < 2) {
-                wrap.style.display = '';
-                document.getElementById('equityChartSvg').innerHTML =
-                    '<text x="400" y="88" text-anchor="middle" font-size="13" fill="var(--text-secondary)">Waiting for first closed position…</text>';
-                return;
-            }
-            wrap.style.display = '';
-            const svg = document.getElementById('equityChartSvg');
-            const W = 800, H = 160, PAD = 8;
-
-            const values = points.map(p => p.portfolio_value);
-            const minV = Math.min(...values);
-            const maxV = Math.max(...values);
-            const range = maxV - minV || 1;
-
-            const toX = i => PAD + (i / (points.length - 1)) * (W - PAD * 2);
-            const toY = v => H - PAD - ((v - minV) / range) * (H - PAD * 2);
-
-            const pathD = points.map((p, i) =>
-                (i === 0 ? 'M' : 'L') + toX(i).toFixed(1) + ',' + toY(p.portfolio_value).toFixed(1)
-            ).join(' ');
-
-            // Fill area under curve
-            const fillD = pathD +
-                ` L${toX(points.length - 1).toFixed(1)},${H - PAD} L${PAD},${H - PAD} Z`;
-
-            const baseline = toY(100000).toFixed(1);
-            const lineColor = values[values.length - 1] >= 100000 ? '#28a745' : '#dc3545';
-            const fillColor = values[values.length - 1] >= 100000 ? 'rgba(40,167,69,0.12)' : 'rgba(220,53,69,0.12)';
-
-            svg.innerHTML = `
-                <defs>
-                  <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
-                  </linearGradient>
-                </defs>
-                <!-- baseline -->
-                <line x1="${PAD}" y1="${baseline}" x2="${W - PAD}" y2="${baseline}"
-                      stroke="var(--border-color)" stroke-width="1" stroke-dasharray="4,4"/>
-                <!-- fill -->
-                <path d="${fillD}" fill="url(#eqGrad)"/>
-                <!-- line -->
-                <path d="${pathD}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round"/>
-                <!-- start dot -->
-                <circle cx="${toX(0).toFixed(1)}" cy="${toY(values[0]).toFixed(1)}" r="3" fill="${lineColor}"/>
-                <!-- end dot -->
-                <circle cx="${toX(points.length-1).toFixed(1)}" cy="${toY(values[values.length-1]).toFixed(1)}" r="3" fill="${lineColor}"/>
-                <!-- labels -->
-                <text x="${PAD + 4}" y="${toY(values[0]) - 5}" font-size="10" fill="var(--text-secondary)">${fmtAUD(values[0])}</text>
-                <text x="${W - PAD - 4}" y="${toY(values[values.length-1]) - 5}" font-size="10" fill="${lineColor}" text-anchor="end">${fmtAUD(values[values.length-1])}</text>
-            `;
-        }
-
-        function renderPortfolioPositions(positions) {
-            const open = positions.filter(p => p.status === 'open');
-            const closed = positions.filter(p => p.status === 'closed');
-
-            const openSec = document.getElementById('openPositionsSection');
-            const closedSec = document.getElementById('closedPositionsSection');
-            const openBody = document.getElementById('openPositionsBody');
-            const closedBody = document.getElementById('closedPositionsBody');
-
-            if (open.length > 0) {
-                openSec.style.display = '';
-                openBody.innerHTML = open.map(p => {
-                    const pnlCls = (p.unrealised_pnl_aud || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
-                    const dueDate = p.exit_due_date;
-                    const daysLeft = dueDate ? Math.max(0, Math.round((new Date(dueDate) - new Date()) / 86400000)) : '—';
-                    return `<tr class="position-row-open">
-                        <td><strong onclick="showCompanyProfile('${p.ticker}')" style="cursor:pointer;color:var(--accent)">${p.ticker}</strong></td>
-                        <td style="font-size:0.8rem;">${(p.signal_directors || []).join(', ')}</td>
-                        <td>${p.entry_date}</td>
-                        <td>$${Number(p.entry_price).toFixed(4)}</td>
-                        <td>${p.quantity.toLocaleString()}</td>
-                        <td>${fmtAUD(p.cost_basis)}</td>
-                        <td>${p.current_price != null ? '$' + Number(p.current_price).toFixed(4) : '—'}</td>
-                        <td>${fmtAUD(p.current_value)}</td>
-                        <td class="${pnlCls}">${fmtAUD(p.unrealised_pnl_aud)} (${fmtPct(p.unrealised_pnl_pct)})</td>
-                        <td>${p.days_held != null ? p.days_held + 'd' : '—'}</td>
-                        <td>${dueDate} <span style="font-size:0.78rem;color:var(--text-secondary)">(${daysLeft}d left)</span></td>
-                    </tr>`;
-                }).join('');
-            }
-
-            if (closed.length > 0) {
-                closedSec.style.display = '';
-                closedBody.innerHTML = closed.map(p => {
-                    const pnlCls = (p.pnl_aud || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
-                    const reasonLabel = p.exit_reason === 'sell_signal'
-                        ? '<span class="exit-reason-badge sell-signal">Sell Signal</span>'
-                        : p.exit_reason === '90_days'
-                        ? '<span class="exit-reason-badge days90">90 Days</span>'
-                        : (p.exit_reason || '—');
-                    return `<tr class="position-row-closed">
-                        <td><strong onclick="showCompanyProfile('${p.ticker}')" style="cursor:pointer;color:var(--accent)">${p.ticker}</strong></td>
-                        <td style="font-size:0.8rem;">${(p.signal_directors || []).join(', ')}</td>
-                        <td>${p.entry_date}</td>
-                        <td>$${Number(p.entry_price).toFixed(4)}</td>
-                        <td>${p.exit_date || '—'}</td>
-                        <td>${p.exit_price != null ? '$' + Number(p.exit_price).toFixed(4) : '—'}</td>
-                        <td>${p.quantity.toLocaleString()}</td>
-                        <td class="${pnlCls}">${fmtAUD(p.pnl_aud)}</td>
-                        <td class="${pnlCls}">${fmtPct(p.pnl_pct)}</td>
-                        <td>${p.days_held != null ? p.days_held + 'd' : '—'}</td>
-                        <td>${reasonLabel}</td>
-                    </tr>`;
-                }).join('');
-            }
-
-            if (open.length === 0 && closed.length === 0) {
-                renderPortfolioEmpty();
-            }
-        }
-
-        async function investNow() {
-            const btn = document.getElementById('investNowBtn');
-            const status = document.getElementById('portfolioRunStatus');
-            btn.disabled = true;
-            btn.textContent = '⏳ Investing...';
-            status.textContent = '';
-
-            try {
-                const res = await fetch('/api/portfolio/invest-now', { method: 'POST' });
-                const data = await res.json();
-                if (data.positions_opened > 0) {
-                    const names = data.positions.map(p => p.ticker).join(', ');
-                    status.textContent =
-                        `✓ Opened ${data.positions_opened} positions (${names}) — $${data.total_invested.toLocaleString('en-AU', {minimumFractionDigits:2})} invested`;
-                    await loadPortfolioData();
-                } else if (data.skipped && data.skipped.length > 0) {
-                    status.textContent = `No positions opened — ${data.skipped[0]}`;
-                } else {
-                    status.textContent = 'No actionable Smart Money signals right now.';
-                }
-            } catch (e) {
-                status.textContent = '✗ Request failed';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '💰 Invest $50k';
-            }
-        }
-
-        async function triggerPortfolioRun() {
-            const btn = document.getElementById('portfolioRunBtn');
-            const status = document.getElementById('portfolioRunStatus');
-            btn.disabled = true;
-            btn.textContent = '⏳ Updating...';
-            status.textContent = '';
-
-            try {
-                const res = await fetch('/api/portfolio/run', { method: 'POST' });
-                const data = await res.json();
-                if (data.status === 'ok') {
-                    status.textContent = `✓ ${data.positions} positions (${data.open} open, ${data.closed} closed)`;
-                    await loadPortfolioData();
-                } else {
-                    status.textContent = `✗ ${data.status}`;
-                }
-            } catch (e) {
-                status.textContent = '✗ Request failed';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '↺ Refresh';
-            }
-        }
 
     </script>
 
