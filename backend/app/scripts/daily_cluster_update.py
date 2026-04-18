@@ -2,13 +2,14 @@
 Daily Cluster Update Pipeline
 
 Runs once daily after ASX market close (~5:30 PM AEST).
-Four steps in sequence; each step is independent — a failure in one
+Five steps in sequence; each step is independent — a failure in one
 step logs the error but does not block the others.
 
   1. Price update   — fetch recent closes via yfinance into yf_daily_prices
   2. Cluster detect  — re-detect clusters in a lookback window
   3. Return compute  — compute/recompute returns for all eligible clusters
   4. Status refresh  — update clusters.status where it has drifted
+  5. Cluster Portfolio — run one rules-based paper portfolio cycle
 
 Usage:
   docker-compose exec backend python -m app.scripts.daily_cluster_update
@@ -27,6 +28,7 @@ from datetime import date
 
 from sqlalchemy import text
 
+from app.config import settings
 from app.database import async_session
 from app.scripts.detect_clusters import (
     run as detect_run,
@@ -34,6 +36,7 @@ from app.scripts.detect_clusters import (
     _load_trading_calendar,
 )
 from app.scripts.compute_cluster_returns import run as compute_run
+from app.services.cluster_portfolio_runner import run_cluster_portfolio_cycle
 
 logger = logging.getLogger(__name__)
 
@@ -247,12 +250,73 @@ async def _step_status_refresh(dry_run: bool) -> dict:
     return {"changed": total_changed, "transitions": transitions}
 
 
+# ── Step 5: Cluster Portfolio ────────────────────────────────────────────────
+
+async def _step_cluster_portfolio(
+    dry_run: bool,
+    email_test_replay_latest: bool = False,
+) -> dict:
+    if not settings.cluster_portfolio_enabled:
+        logger.info("  Cluster Portfolio disabled by CLUSTER_PORTFOLIO_ENABLED")
+        return {"skipped": True, "reason": "disabled"}
+
+    portfolio_dry_run = dry_run or settings.cluster_portfolio_dry_run
+
+    async with async_session() as session:
+        outcome = await run_cluster_portfolio_cycle(
+            session,
+            dry_run=portfolio_dry_run,
+            send_emails=settings.cluster_portfolio_email_enabled,
+            email_test_replay_latest=email_test_replay_latest,
+        )
+
+    result = outcome.cycle_result
+    valuation = outcome.valuation
+    notifications = outcome.notifications
+
+    summary = {
+        "skipped": False,
+        "dry_run": portfolio_dry_run,
+        "portfolio_created": result.created_default_portfolio,
+        "portfolio_reused": not result.created_default_portfolio,
+        "buys_opened": len(result.buys_opened),
+        "sells_closed": len(result.sells_closed),
+        "skips_logged": len(result.skips_logged),
+        "starting_cash": result.starting_cash,
+        "current_cash": (
+            result.current_cash if portfolio_dry_run else float(valuation.portfolio.current_cash)
+        ),
+        "deployed_capital": (
+            round(result.starting_cash - result.current_cash, 2)
+            if portfolio_dry_run
+            else valuation.deployed_capital
+        ),
+        "emails_sent": sum(1 for item in notifications if item.status == "sent"),
+        "emails_failed": sum(1 for item in notifications if item.status == "failed"),
+        "emails_disabled": sum(1 for item in notifications if item.status == "disabled"),
+    }
+
+    logger.info(
+        "  Cluster Portfolio: %s, buys=%s sells=%s skips=%s cash=%s -> %s emails(sent=%s failed=%s)",
+        "created" if result.created_default_portfolio else "reused",
+        summary["buys_opened"],
+        summary["sells_closed"],
+        summary["skips_logged"],
+        summary["starting_cash"],
+        summary["current_cash"],
+        summary["emails_sent"],
+        summary["emails_failed"],
+    )
+    return summary
+
+
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 async def run(
     skip_prices: bool = False,
     lookback_days: int = DEFAULT_LOOKBACK_DAYS,
     dry_run: bool = False,
+    cluster_portfolio_email_test_replay_latest: bool = False,
 ) -> dict:
     summary: dict = {}
     mode = "[DRY RUN] " if dry_run else ""
@@ -287,6 +351,16 @@ async def run(
     except Exception as e:
         logger.error(f"  STEP 4 FAILED: {e}")
         summary["status"] = {"error": str(e)}
+
+    logger.info(f"{mode}STEP 5 — Cluster Portfolio")
+    try:
+        summary["cluster_portfolio"] = await _step_cluster_portfolio(
+            dry_run,
+            email_test_replay_latest=cluster_portfolio_email_test_replay_latest,
+        )
+    except Exception as e:
+        logger.error(f"  STEP 5 FAILED: {e}", exc_info=True)
+        summary["cluster_portfolio"] = {"error": str(e)}
 
     _print_summary(summary, dry_run)
     return summary
@@ -348,6 +422,26 @@ def _print_summary(summary: dict, dry_run: bool) -> None:
         else:
             print("  Status: no changes", file=sys.stderr)
 
+    cp = summary.get("cluster_portfolio", {})
+    if cp.get("skipped"):
+        print(
+            f"  Cluster Portfolio: skipped ({cp.get('reason', 'unknown')})",
+            file=sys.stderr,
+        )
+    elif cp.get("error"):
+        print(f"  Cluster Portfolio: FAILED — {cp['error']}", file=sys.stderr)
+    else:
+        print(
+            "  Cluster Portfolio: "
+            f"{'created' if cp.get('portfolio_created') else 'reused'}, "
+            f"{cp.get('buys_opened', 0)} buys, "
+            f"{cp.get('sells_closed', 0)} sells, "
+            f"{cp.get('skips_logged', 0)} skips, "
+            f"cash {cp.get('starting_cash')} → {cp.get('current_cash')}, "
+            f"emails {cp.get('emails_sent', 0)} sent / {cp.get('emails_failed', 0)} failed",
+            file=sys.stderr,
+        )
+
     print(f"{'='*60}\n", file=sys.stderr)
 
 
@@ -356,7 +450,8 @@ def _print_summary(summary: dict, dry_run: bool) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Daily cluster update pipeline: price update → "
-                    "cluster detection → return computation → status refresh.",
+                    "cluster detection → return computation → status refresh "
+                    "→ cluster portfolio.",
     )
     parser.add_argument(
         "--skip-prices", action="store_true",

@@ -176,6 +176,35 @@ Key variables:
 - `APP_VERSION`: Application version
 - `DEBUG`: Enable debug mode
 
+## Cluster Portfolio
+
+`Cluster Portfolio` is a simulated paper portfolio and rules-based strategy tracker for Basic Materials cluster buys. It does not connect to a broker, does not place trades, and `/portfolio` remains intentionally unused and returns `404`.
+
+Key env vars:
+- `CLUSTER_PORTFOLIO_ENABLED`
+- `CLUSTER_PORTFOLIO_DRY_RUN`
+- `CLUSTER_PORTFOLIO_EMAIL_ENABLED`
+- `CLUSTER_PORTFOLIO_EMAIL_TO`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_FROM`
+
+Run one cycle manually:
+
+```bash
+curl -X POST http://localhost:8000/api/cluster-portfolio/run \
+  -H 'Content-Type: application/json' \
+  -d '{"dry_run": true, "send_emails": false}'
+```
+
+Cluster Portfolio endpoints:
+- `GET /api/cluster-portfolio/summary`
+- `GET /api/cluster-portfolio/positions`
+- `GET /api/cluster-portfolio/events`
+- `POST /api/cluster-portfolio/run`
+
 ## Technology Stack
 
 - **Framework**: FastAPI

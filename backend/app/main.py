@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import clusters, compliance, health, public
+from app.routers import cluster_portfolio, clusters, compliance, health, public
 from app.scheduler import setup_scheduler
 
 
@@ -79,6 +79,7 @@ app.include_router(health.router)
 app.include_router(compliance.router)
 app.include_router(public.router)
 app.include_router(clusters.router)
+app.include_router(cluster_portfolio.router)
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"
@@ -100,6 +101,11 @@ async def clusters_page():
 @app.get("/clusters/{cluster_id:int}")
 async def cluster_detail_page(cluster_id: int):
     return FileResponse(str(static_dir / "cluster_detail.html"))
+
+
+@app.get("/cluster-portfolio")
+async def cluster_portfolio_page():
+    return FileResponse(str(static_dir / "cluster_portfolio.html"))
 
 
 if __name__ == "__main__":

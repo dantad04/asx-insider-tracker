@@ -19,6 +19,22 @@ class Settings(BaseSettings):
     app_version: str = "0.3.0"
     debug: bool = False
 
+    # Cluster Portfolio automation
+    cluster_portfolio_enabled: bool = False
+    cluster_portfolio_dry_run: bool = False
+    cluster_portfolio_email_enabled: bool = False
+    cluster_portfolio_email_to: str | None = None
+
+    # SMTP
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str | None = None
+    smtp_use_tls: bool = True
+    smtp_use_ssl: bool = False
+    smtp_timeout_seconds: int = 15
+
     class Config:
         env_file = ".env"
         case_sensitive = False

@@ -1,6 +1,11 @@
 """Database models for ASX Insider Tracker"""
 
 from app.models.announcement import Announcement
+from app.models.cluster_portfolio import (
+    ClusterPortfolio,
+    ClusterPortfolioEvent,
+    ClusterPortfolioPosition,
+)
 from app.models.company import Company
 from app.models.director import Director
 from app.models.director_company import DirectorCompany
@@ -17,4 +22,7 @@ __all__ = [
     "Announcement",
     "Pending3YParse",
     "ParseStatus",
+    "ClusterPortfolio",
+    "ClusterPortfolioPosition",
+    "ClusterPortfolioEvent",
 ]
