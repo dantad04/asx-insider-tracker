@@ -37,6 +37,9 @@ RUN playwright install chromium
 # Copy application code
 COPY . .
 
+# Ensure packaged data files are present in image-only deployments (e.g. Railway)
+RUN mkdir -p /app/data
+
 # Expose port
 EXPOSE 8000
 

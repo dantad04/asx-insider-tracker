@@ -1,9 +1,9 @@
 """
-Background scheduler — runs every 2 minutes.
+Background scheduler for lightweight ongoing maintenance.
 
 Jobs:
-  1. sync_asxinsider_trades  — fetch new trades from asxinsider.com.au
-  2. run_portfolio_simulation — update live paper trading portfolio
+  1. sync_asxinsider_trades            — fetch new trades from asxinsider.com.au
+  2. refresh_cluster_portfolio_prices  — keep open paper positions freshly priced
 """
 
 import logging
@@ -44,8 +44,47 @@ async def sync_asxinsider_trades():
         logger.error(f"✗ Portfolio update failed: {e}", exc_info=True)
 
 
+async def refresh_cluster_portfolio_prices():
+    """Refresh stored closes for currently open Cluster Portfolio tickers."""
+    logger.info(f"Running Cluster Portfolio price refresh at {datetime.now().isoformat()}")
+
+    try:
+        from app.database import async_session
+        from app.services.cluster_portfolio import ClusterPortfolioEngine
+        from app.services.price_updater import refresh_recent_prices_for_tickers
+
+        engine = ClusterPortfolioEngine()
+        async with async_session() as session:
+            portfolio = await engine.get_default_portfolio(session)
+            if portfolio is None:
+                logger.info("Cluster Portfolio price refresh skipped — no portfolio yet")
+                return
+
+            positions = await engine.list_positions(session, portfolio.id)
+            open_tickers = sorted({position.ticker for position in positions if position.status == "open"})
+            if not open_tickers:
+                logger.info("Cluster Portfolio price refresh skipped — no open positions")
+                return
+
+            refresh_result = await refresh_recent_prices_for_tickers(session, open_tickers)
+            await session.commit()
+            logger.info(
+                "✓ Cluster Portfolio prices refreshed: %s/%s tickers updated (%s failed)",
+                refresh_result.get("updated", 0),
+                refresh_result.get("attempted", 0),
+                refresh_result.get("failed", 0),
+            )
+            if refresh_result.get("errors"):
+                logger.warning(
+                    "Cluster Portfolio price refresh issues: %s",
+                    refresh_result["errors"],
+                )
+    except Exception as e:
+        logger.error(f"✗ Cluster Portfolio price refresh failed: {e}", exc_info=True)
+
+
 def setup_scheduler():
-    """Initialize the APScheduler with a 2-minute sync+portfolio interval."""
+    """Initialize the APScheduler with trade sync and portfolio price refresh jobs."""
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         sync_asxinsider_trades,
@@ -54,5 +93,15 @@ def setup_scheduler():
         name="Sync trades + update portfolio",
         replace_existing=True,
     )
-    logger.info("✓ Scheduler started — sync + portfolio every 2 minutes")
+    scheduler.add_job(
+        refresh_cluster_portfolio_prices,
+        trigger=IntervalTrigger(minutes=15),
+        id="cluster_portfolio_price_refresh",
+        name="Refresh open Cluster Portfolio prices",
+        replace_existing=True,
+    )
+    logger.info(
+        "✓ Scheduler started — trade sync every 2 minutes, "
+        "Cluster Portfolio price refresh every 15 minutes"
+    )
     return scheduler

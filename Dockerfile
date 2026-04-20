@@ -39,6 +39,7 @@ COPY backend/ .
 
 # Copy seed data
 COPY data/asx_director_transactions.json /app/data/asx_director_transactions.json
+COPY data/asx200_sectors.json /app/data/asx200_sectors.json
 
 # Copy startup script
 COPY start.sh /app/start.sh

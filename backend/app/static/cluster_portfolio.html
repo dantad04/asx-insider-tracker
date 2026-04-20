@@ -187,6 +187,8 @@ let summaryData = null;
 let positionsData = null;
 let eventsData = null;
 let historyData = null;
+let portfolioRefreshTimer = null;
+const PORTFOLIO_REFRESH_MS = 60000;
 
 function fmtCurrency(value){
   if(value===null || value===undefined) return '—';
@@ -241,6 +243,15 @@ function renderMessage(messageHtml){
   const box = document.getElementById('pageMessage');
   box.style.display = 'flex';
   box.innerHTML = messageHtml;
+}
+
+function latestStoredPriceDate(){
+  if(!positionsData || !positionsData.positions) return null;
+  const dates = positionsData.positions
+    .filter(position => position.status === 'open' && position.current_price_date)
+    .map(position => position.current_price_date)
+    .sort();
+  return dates.length ? dates[dates.length - 1] : null;
 }
 
 function renderSummary(){
@@ -559,12 +570,13 @@ async function loadPortfolioPage(){
     historyData = await historyRes.json();
 
     if(summaryData.portfolio_exists){
+      const latestPriceDate = latestStoredPriceDate();
       renderMessage(`
         <div>
           <strong>${escapeHtml(summaryData.name || 'Cluster Portfolio')}</strong>
           <div class="muted">Live paper portfolio data from the current rules-based strategy tracker.</div>
         </div>
-        <div class="muted">Cash ${fmtCurrency(summaryData.current_cash)} · Open positions ${summaryData.open_positions_count}</div>
+        <div class="muted">Cash ${fmtCurrency(summaryData.current_cash)} · Open positions ${summaryData.open_positions_count}${latestPriceDate ? ` · Latest stored price ${escapeHtml(latestPriceDate)}` : ''}</div>
       `);
     }
 
@@ -593,6 +605,14 @@ if(localStorage.getItem('darkMode') === 'true'){
 }
 
 loadPortfolioPage();
+portfolioRefreshTimer = window.setInterval(() => {
+  loadPortfolioPage();
+}, PORTFOLIO_REFRESH_MS);
+window.addEventListener('beforeunload', () => {
+  if(portfolioRefreshTimer){
+    window.clearInterval(portfolioRefreshTimer);
+  }
+});
 </script>
 </body>
 </html>
