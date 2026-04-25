@@ -11,10 +11,10 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
 from app.config import settings
-from app.database import get_db
+from app.database import engine, get_db
 from app.scheduler import (
     refresh_cluster_portfolio_prices,
     run_daily_cluster_update,
@@ -58,16 +58,16 @@ def _require_job_token(x_job_token: str | None) -> None:
         )
 
 
-async def _try_lock(db: AsyncSession) -> bool:
-    result = await db.execute(
+async def _try_lock(conn: AsyncConnection) -> bool:
+    result = await conn.execute(
         text("SELECT pg_try_advisory_lock(:lock_id)"),
         {"lock_id": MAINTENANCE_LOCK_ID},
     )
     return bool(result.scalar_one())
 
 
-async def _release_lock(db: AsyncSession) -> None:
-    await db.execute(
+async def _release_lock(conn: AsyncConnection) -> None:
+    await conn.execute(
         text("SELECT pg_advisory_unlock(:lock_id)"),
         {"lock_id": MAINTENANCE_LOCK_ID},
     )
@@ -198,41 +198,38 @@ async def run_maintenance(
     """Run due production maintenance tasks from Railway Cron."""
     _require_job_token(x_job_token)
 
-    locked = await _try_lock(db)
-    if not locked:
-        return MaintenanceResponse(
-            status="skipped",
-            steps={
-                "maintenance": JobStepResult(
-                    status="skipped",
-                    reason="another_run_in_progress",
-                )
-            },
-        )
+    async with engine.connect() as lock_conn:
+        locked = await _try_lock(lock_conn)
+        if not locked:
+            return MaintenanceResponse(
+                status="skipped",
+                steps={
+                    "maintenance": JobStepResult(
+                        status="skipped",
+                        reason="another_run_in_progress",
+                    )
+                },
+            )
 
-    try:
-        steps = {
-            "sync_trades": await _run_due_job(
-                db,
-                "sync_trades",
-                SYNC_INTERVAL,
-                sync_asxinsider_trades,
-            ),
-            "cluster_portfolio_price_refresh": await _run_due_job(
-                db,
-                "cluster_portfolio_price_refresh",
-                PRICE_REFRESH_INTERVAL,
-                refresh_cluster_portfolio_prices,
-            ),
-            "daily_cluster_update": await _run_daily_if_due(db),
-        }
-        response_status = "ok" if all(
-            step.status in {"success", "skipped"} for step in steps.values()
-        ) else "failed"
-        return MaintenanceResponse(status=response_status, steps=steps)
-    finally:
         try:
-            await _release_lock(db)
-        except Exception:
-            await db.rollback()
-            await _release_lock(db)
+            steps = {
+                "sync_trades": await _run_due_job(
+                    db,
+                    "sync_trades",
+                    SYNC_INTERVAL,
+                    sync_asxinsider_trades,
+                ),
+                "cluster_portfolio_price_refresh": await _run_due_job(
+                    db,
+                    "cluster_portfolio_price_refresh",
+                    PRICE_REFRESH_INTERVAL,
+                    refresh_cluster_portfolio_prices,
+                ),
+                "daily_cluster_update": await _run_daily_if_due(db),
+            }
+            response_status = "ok" if all(
+                step.status in {"success", "skipped"} for step in steps.values()
+            ) else "failed"
+            return MaintenanceResponse(status=response_status, steps=steps)
+        finally:
+            await _release_lock(lock_conn)
