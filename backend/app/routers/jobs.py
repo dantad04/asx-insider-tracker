@@ -89,6 +89,7 @@ async def _record_job(
     summary: dict[str, Any],
     finished_at: datetime,
 ) -> None:
+    last_success_at = finished_at if status_value == "success" else None
     stmt = text(
         """
         INSERT INTO app_job_runs (
@@ -97,17 +98,16 @@ async def _record_job(
         VALUES (
             :job_name,
             :started_at,
-            CASE WHEN :status_value = 'success' THEN :finished_at ELSE NULL END,
+            :last_success_at,
             :status_value,
             :summary
         )
         ON CONFLICT (job_name) DO UPDATE SET
             last_started_at = EXCLUDED.last_started_at,
-            last_success_at = CASE
-                WHEN EXCLUDED.last_status = 'success'
-                THEN EXCLUDED.last_success_at
-                ELSE app_job_runs.last_success_at
-            END,
+            last_success_at = COALESCE(
+                EXCLUDED.last_success_at,
+                app_job_runs.last_success_at
+            ),
             last_status = EXCLUDED.last_status,
             last_summary = EXCLUDED.last_summary
         """
@@ -118,6 +118,7 @@ async def _record_job(
             "job_name": job_name,
             "started_at": started_at,
             "finished_at": finished_at,
+            "last_success_at": last_success_at,
             "status_value": status_value,
             "summary": summary,
         },
@@ -230,4 +231,8 @@ async def run_maintenance(
         ) else "failed"
         return MaintenanceResponse(status=response_status, steps=steps)
     finally:
-        await _release_lock(db)
+        try:
+            await _release_lock(db)
+        except Exception:
+            await db.rollback()
+            await _release_lock(db)
