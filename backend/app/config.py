@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_version: str = "0.3.0"
     debug: bool = False
+    enable_in_app_scheduler: bool = True
+    job_trigger_token: str | None = None
 
     # Cluster Portfolio automation
     cluster_portfolio_enabled: bool = False

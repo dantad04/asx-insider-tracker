@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import cluster_portfolio, clusters, compliance, health, portfolio_returns, public
+from app.routers import cluster_portfolio, clusters, compliance, health, jobs, portfolio_returns, public
 from app.scheduler import setup_scheduler
 
 
@@ -45,15 +45,19 @@ async def lifespan(app: FastAPI):
     # Verify database connection
     await init_db()
 
-    # Start the background scheduler for daily ASX updates
-    scheduler = setup_scheduler()
-    scheduler.start()
+    # Start the background scheduler for local/dev operation. Production can use
+    # Railway Cron to trigger the same jobs without keeping an in-process timer.
+    scheduler = None
+    if settings.enable_in_app_scheduler:
+        scheduler = setup_scheduler()
+        scheduler.start()
     app.state.scheduler = scheduler
 
     yield
 
     # Shutdown
-    scheduler.shutdown(wait=True)
+    if scheduler:
+        scheduler.shutdown(wait=True)
     await close_db()
 
 
@@ -81,6 +85,7 @@ app.include_router(public.router)
 app.include_router(clusters.router)
 app.include_router(cluster_portfolio.router)
 app.include_router(portfolio_returns.router)
+app.include_router(jobs.router)
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"
