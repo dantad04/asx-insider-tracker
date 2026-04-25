@@ -172,6 +172,7 @@ async def main(url: str | None = None) -> dict:
         "replaced": 0,
         "upgraded": 0,
         "checks": 0,
+        "skipped_malformed": 0,
         "early_exit": False,
     }
 
@@ -179,6 +180,15 @@ async def main(url: str | None = None) -> dict:
 
     async with async_session() as session:
         for i, record in enumerate(records):
+            if not isinstance(record, dict):
+                stats["skipped_malformed"] += 1
+                logger.warning(
+                    "Skipping malformed record %s: expected object, got %s",
+                    i,
+                    type(record).__name__,
+                )
+                continue
+
             ticker = (record.get("symbol") or "").strip().upper()
             director_name = (record.get("director_name") or "").strip()
             issuer_name = (record.get("issuer_name") or ticker).strip()
@@ -295,7 +305,8 @@ async def main(url: str | None = None) -> dict:
         f"Sync complete: {stats['inserted']} new, "
         f"{stats['replaced']} replaced, "
         f"{stats['upgraded']} upgraded, "
-        f"{stats['checks']} checks"
+        f"{stats['checks']} checks, "
+        f"{stats['skipped_malformed']} malformed skipped"
         + (" [early exit]" if stats["early_exit"] else " [full scan]")
     )
     return stats
