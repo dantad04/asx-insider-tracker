@@ -118,7 +118,35 @@ async def _load_trading_calendar(session) -> list[date]:
     result = await session.execute(
         select(PriceSnapshot.date).distinct().order_by(PriceSnapshot.date)
     )
-    return [r.date for r in result.all()]
+    dates = [r.date for r in result.all()]
+    if dates:
+        return dates
+
+    result = await session.execute(
+        text(
+            "SELECT MIN(date_of_trade) AS min_date, "
+            "       GREATEST(MAX(date_of_trade), CURRENT_DATE) AS max_date "
+            "FROM trades WHERE date_of_trade IS NOT NULL"
+        )
+    )
+    row = result.one()
+    if not row.min_date or not row.max_date:
+        return []
+
+    calendar: list[date] = []
+    current = row.min_date
+    while current <= row.max_date:
+        if current.weekday() < 5:
+            calendar.append(current)
+        current += timedelta(days=1)
+
+    logger.warning(
+        "No stored price calendar found; using weekday fallback calendar "
+        "for cluster detection (%s to %s)",
+        calendar[0],
+        calendar[-1],
+    )
+    return calendar
 
 
 async def _load_on_market_buys(session):

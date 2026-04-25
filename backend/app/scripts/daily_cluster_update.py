@@ -45,6 +45,7 @@ PRICE_BATCH_SIZE = 10
 PRICE_BATCH_DELAY = 2  # seconds between batches
 PRICE_BOOTSTRAP_STW_MIN_DAYS = 120
 PRICE_RECENT_BUY_LOOKBACK_DAYS = 180
+PRICE_ABORT_AFTER_INITIAL_FAILURES = 50
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -110,7 +111,10 @@ async def _price_update_tickers(session) -> tuple[list[str], bool]:
         ),
         {"since": since},
     )
-    return [row.ticker for row in result.all()], bootstrap_history
+    tickers = [row.ticker for row in result.all()]
+    if "STW" in tickers:
+        tickers = ["STW"] + [ticker for ticker in tickers if ticker != "STW"]
+    return tickers, bootstrap_history
 
 
 async def _step_prices(dry_run: bool) -> dict:
@@ -175,6 +179,19 @@ async def _step_prices(dry_run: bool) -> dict:
 
                 if not fetched:
                     result["failed"] += 1
+
+                if (
+                    result["updated"] == 0
+                    and result["failed"] >= PRICE_ABORT_AFTER_INITIAL_FAILURES
+                ):
+                    result["aborted"] = True
+                    logger.warning(
+                        "  Price update aborted after %s initial failures and "
+                        "0 successful tickers. Cluster detection will continue "
+                        "using stored prices or its calendar fallback.",
+                        result["failed"],
+                    )
+                    return result
 
             try:
                 await session.commit()
@@ -437,6 +454,12 @@ def _print_summary(summary: dict, dry_run: bool) -> None:
         print("  Prices: skipped (yfinance unavailable)", file=sys.stderr)
     elif p.get("error"):
         print(f"  Prices: FAILED — {p['error']}", file=sys.stderr)
+    elif p.get("aborted"):
+        print(
+            f"  Prices: aborted after {p.get('failed', 0)} failed tickers "
+            f"({p.get('updated', 0)}/{p.get('attempted', 0)} updated)",
+            file=sys.stderr,
+        )
     else:
         print(
             f"  Prices: {p.get('updated', 0)}/{p.get('attempted', 0)} "
