@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import math
 import statistics
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -93,6 +93,29 @@ class ClusterStats(BaseModel):
     sample_size_90d: int
     best_sector: str | None
     filter_applied: dict[str, Any]
+
+
+class ClusterPricePoint(BaseModel):
+    date: date
+    close: float
+
+
+class ClusterTradeMarker(BaseModel):
+    date: date
+    director_name: str
+    trade_type: str
+    value_aud: float | None
+    price_per_share: float | None
+    number_of_securities: int
+
+
+class ClusterPriceHistoryResponse(BaseModel):
+    cluster_id: int
+    ticker: str
+    start_date: date | None
+    end_date: date | None
+    points: list[ClusterPricePoint]
+    trades: list[ClusterTradeMarker]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -335,6 +358,101 @@ async def cluster_filters(db: AsyncSession = Depends(get_db)):
         "available_sectors": sectors,
         "industries_by_sector": industries_by_sector,
     }
+
+
+# ── GET /api/clusters/{cluster_id}/price-history  (must be before /{cluster_id})
+
+@router.get("/{cluster_id}/price-history", response_model=ClusterPriceHistoryResponse)
+async def get_cluster_price_history(
+    cluster_id: int,
+    days: int = Query(120, ge=30, le=730),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return stored close-price history plus director-trade markers for a cluster."""
+    cluster_sql = text("""
+        SELECT cluster_id, ticker, start_date, end_date
+        FROM clusters
+        WHERE cluster_id = :cluster_id
+    """)
+    cluster = (await db.execute(cluster_sql, {"cluster_id": cluster_id})).mappings().first()
+    if not cluster:
+        raise HTTPException(status_code=404, detail=f"Cluster {cluster_id} not found")
+
+    marker_sql = text("""
+        SELECT
+            d.full_name AS director_name,
+            t.date_of_trade AS date,
+            t.trade_type,
+            ABS(t.quantity) AS number_of_securities,
+            t.price_per_share,
+            CASE WHEN t.price_per_share IS NOT NULL
+                 THEN ABS(t.quantity)::numeric * t.price_per_share
+                 ELSE NULL END AS value_aud
+        FROM cluster_trades ct
+        JOIN trades t ON t.id = ct.trade_id
+        JOIN directors d ON d.id = t.director_id
+        WHERE ct.cluster_id = :cluster_id
+        ORDER BY t.date_of_trade, d.full_name
+    """)
+    marker_rows = (await db.execute(marker_sql, {"cluster_id": cluster_id})).mappings().all()
+
+    trade_dates = [row["date"] for row in marker_rows if row["date"] is not None]
+    if trade_dates:
+        start_date = min(trade_dates) - timedelta(days=30)
+        end_date = max(trade_dates) + timedelta(days=30)
+    else:
+        start_date = (cluster["start_date"] or date.today()) - timedelta(days=30)
+        end_date = min(date.today(), start_date + timedelta(days=days))
+
+    price_sql = text("""
+        SELECT DISTINCT ON (date)
+               date, close
+        FROM (
+            SELECT date, close, 1 AS source_rank
+            FROM price_snapshots
+            WHERE ticker = :ticker
+              AND date BETWEEN :start_date AND :end_date
+            UNION ALL
+            SELECT date, close, 2 AS source_rank
+            FROM yf_daily_prices
+            WHERE ticker = :ticker
+              AND date BETWEEN :start_date AND :end_date
+        ) prices
+        WHERE close IS NOT NULL
+        ORDER BY date, source_rank
+    """)
+    price_rows = (
+        await db.execute(
+            price_sql,
+            {
+                "ticker": cluster["ticker"],
+                "start_date": start_date,
+                "end_date": end_date,
+            },
+        )
+    ).mappings().all()
+
+    return ClusterPriceHistoryResponse(
+        cluster_id=cluster_id,
+        ticker=cluster["ticker"],
+        start_date=start_date,
+        end_date=end_date,
+        points=[
+            ClusterPricePoint(date=row["date"], close=float(row["close"]))
+            for row in price_rows
+        ],
+        trades=[
+            ClusterTradeMarker(
+                date=row["date"],
+                director_name=row["director_name"],
+                trade_type=str(row["trade_type"]),
+                value_aud=_float_or_none(row["value_aud"]),
+                price_per_share=_float_or_none(row["price_per_share"]),
+                number_of_securities=row["number_of_securities"],
+            )
+            for row in marker_rows
+        ],
+    )
 
 
 # ── GET /api/clusters/{cluster_id} ───────────────────────────────────────────

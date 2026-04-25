@@ -1,307 +1,667 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cluster Detail — ASX Insider Tracker</title>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#ffffff;--bg2:#f5f5f5;--bg3:#e8e8e8;--text:#1a1a1a;--text2:#666;--border:#d0d0d0;--accent:#0066cc;--accent2:#0052a3;--success:#28a745;--danger:#dc3545;--teal:#17a2b8}
-body.dark{--bg:#1a1a1a;--bg2:#2d2d2d;--bg3:#3d3d3d;--text:#e8e8e8;--text2:#b0b0b0;--border:#444}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-
-/* Nav */
-nav{background:linear-gradient(135deg,var(--accent),#003d99);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
-.nav-left{display:flex;align-items:center;gap:1rem}
-.back-link{color:rgba(255,255,255,.85);font-size:.9rem;text-decoration:none;display:flex;align-items:center;gap:.3rem}
-.back-link:hover{color:#fff;text-decoration:none}
-.nav-title{font-size:1.05rem;font-weight:700}
-button{background:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background .2s}
-button:hover{background:var(--accent2)}
-.btn-ghost{background:rgba(255,255,255,.2)}.btn-ghost:hover{background:rgba(255,255,255,.3)}
-
-/* Layout */
-.container{max-width:1100px;margin:2rem auto;padding:0 1rem}
-
-/* Hero */
-.hero{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.75rem 2rem;margin-bottom:2rem}
-.hero-header{display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
-.hero-ticker{font-family:'Courier New',monospace;font-size:2.2rem;font-weight:700;color:var(--accent);line-height:1}
-.hero-badges{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.35rem}
-.badge{display:inline-block;font-size:.75rem;font-weight:600;padding:.25rem .65rem;border-radius:10px;white-space:nowrap}
-.badge-sector{background:rgba(0,102,204,.1);color:var(--accent)}
-.badge-industry{background:var(--bg3);color:var(--text2)}
-.badge-status-active{background:rgba(0,102,204,.12);color:var(--accent)}
-.badge-status-maturing{background:rgba(23,162,184,.12);color:var(--teal)}
-.badge-status-historical{background:var(--bg3);color:var(--text2)}
-.hero-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem 1.5rem;margin-top:.5rem}
-.hero-meta-item .lbl{font-size:.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
-.hero-meta-item .val{font-size:1.05rem;font-weight:600;margin-top:.1rem}
-
-/* Returns 2×2 grid */
-.returns-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
-.return-cell{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.25rem}
-.return-cell.awaiting{opacity:.6;background:var(--bg3)}
-.return-cell-label{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
-.return-horizon{font-size:.8rem;font-weight:600;color:var(--text2);margin-bottom:.35rem}
-.return-awaiting-msg{font-size:.85rem;color:var(--text2);font-style:italic;margin-top:.3rem}
-.metric-row{display:flex;justify-content:space-between;align-items:baseline;padding:.2rem 0;font-size:.9rem}
-.metric-row .mlabel{color:var(--text2);font-size:.82rem}
-.metric-row .mval{font-weight:600}
-.ret-positive{color:var(--success)}
-.ret-negative{color:var(--danger)}
-.ret-neutral{color:var(--text2)}
-.alpha-highlight{font-size:1.1rem;font-weight:700}
-
-/* Section */
-.section{margin-bottom:2.5rem}
-.section-title{font-size:1.1rem;font-weight:600;margin-bottom:1rem;padding-bottom:.65rem;border-bottom:2px solid var(--border)}
-
-/* Table */
-.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-table{width:100%;border-collapse:collapse;font-size:.9rem}
-thead{background:var(--bg3);border-bottom:2px solid var(--border)}
-th{padding:.85rem 1rem;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;font-size:.8rem;text-transform:uppercase;letter-spacing:.4px}
-td{padding:.85rem 1rem;border-bottom:1px solid var(--border)}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--bg3)}
-
-/* Loading */
-.loading{text-align:center;padding:2.5rem;color:var(--text2)}
-.loading::after{content:'';display:inline-block;width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-left:.5rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.error{text-align:center;padding:3rem;color:var(--danger)}
-
-/* Mobile */
-@media(max-width:700px){
-  .returns-grid{grid-template-columns:1fr}
-  nav{padding:.85rem 1rem}
-  .container{margin:1.25rem auto}
-  .hero{padding:1.25rem}
-  .hero-ticker{font-size:1.75rem}
-  th,td{padding:.6rem .65rem;font-size:.82rem}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cluster Detail - ASX Insider Tracker</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/vendor/uplot/uPlot.min.css">
+  <link rel="stylesheet" href="/static/css/app-pages.css">
 </head>
 <body>
-<nav>
-  <div class="nav-left">
-    <a class="back-link" href="/clusters">← All Clusters</a>
-    <span class="nav-title" id="navTitle">Cluster Detail</span>
-  </div>
-  <div style="display:flex;gap:.75rem;align-items:center">
-    <a href="/static/index.html" style="color:rgba(255,255,255,.85);font-size:.9rem">Trade Feed</a>
-    <button class="btn-ghost" onclick="toggleDark()" title="Toggle dark mode" style="padding:.4rem .6rem">🌙</button>
-  </div>
-</nav>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-mark" href="/static/index.html" aria-label="ASX Insider Tracker home">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"></path>
+          <path d="M7 16V9"></path>
+          <path d="M12 16V5"></path>
+          <path d="M17 16v-3"></path>
+        </svg>
+        <span>ASX Insider Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+        <a class="site-nav-link is-active" href="/clusters">Cluster Buys</a>
+        <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+        <a class="site-nav-link" href="/static/about.html">About</a>
+        <a class="site-nav-link" href="/docs">API Docs</a>
+      </nav>
+      <div class="header-actions">
+        <details class="mobile-nav-menu">
+          <summary class="mobile-menu-summary">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+            Menu
+          </summary>
+          <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+            <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+            <a class="site-nav-link is-active" href="/clusters">Cluster Buys</a>
+            <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+            <a class="site-nav-link" href="/static/about.html">About</a>
+            <a class="site-nav-link" href="/docs">API Docs</a>
+          </nav>
+        </details>
+        <button class="header-icon-button" type="button" onclick="toggleDark()" aria-label="Toggle dark mode">
+          <svg class="theme-icon-moon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+          </svg>
+          <svg class="theme-icon-sun" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
 
-<div class="container" id="mainContent">
-  <div class="loading"></div>
-</div>
+  <main class="page-shell" id="mainContent">
+    <div class="empty-panel"><div class="skeleton skeleton-card"></div></div>
+  </main>
 
-<script>
-// ── Dark mode ─────────────────────────────────────────────────────────────
-function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('darkMode',document.body.classList.contains('dark'))}
-if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark');
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>&copy; 2026 ASX Insider Tracker - Cluster analysis is informational only.</span>
+      <div class="footer-links">
+        <a href="/clusters">Cluster Buys</a>
+        <a href="/clusters/portfolio">Cluster Portfolio</a>
+        <a href="/docs">API Docs</a>
+      </div>
+    </div>
+  </footer>
 
-// ── Format helpers ────────────────────────────────────────────────────────
-const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function fmtDate(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return`${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`}
-function fmtWindow(start,end){
-  if(!start)return'—';
-  const s=new Date(start+'T00:00:00'),e=new Date(end+'T00:00:00');
-  if(start===end)return fmtDate(start);
-  if(s.getMonth()===e.getMonth()&&s.getFullYear()===e.getFullYear())
-    return`${s.getDate()} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
-  return`${fmtDate(start)} – ${fmtDate(end)}`;
-}
-function fmtMoney(v){
-  if(v===null||v===undefined)return'—';
-  if(v>=1_000_000)return`$${(v/1_000_000).toFixed(1)}m`;
-  if(v>=1_000)return`$${Math.round(v/1_000)}k`;
-  return`$${Math.round(v)}`;
-}
-function fmtPctHtml(v){
-  if(v===null||v===undefined)return'<span class="ret-neutral">—</span>';
-  const p=(v*100).toFixed(1),cls=v>=0?'ret-positive':'ret-negative';
-  return`<span class="${cls}">${v>=0?'+':''}${p}%</span>`;
-}
-function fmtPctText(v){
-  if(v===null||v===undefined)return'—';
-  return`${v>=0?'+':''}${(v*100).toFixed(1)}%`;
-}
-function fmtCapPct(v){return v!=null?`${(v*100).toFixed(2)}%`:'—'}
-function fmtNum(v){return v!=null?v.toLocaleString():'—'}
+  <script src="/static/vendor/uplot/uPlot.iife.min.js"></script>
+  <script>
+    let clusterPriceChart = null;
+    let clusterPricePayload = null;
+    let clusterMarkerHitboxes = [];
+    const THEME_STORAGE_KEY = 'theme';
 
-// ── Render ────────────────────────────────────────────────────────────────
-function returnCell(c,horizonDays,basis,label,today){
-  const key=`${horizonDays}d_${basis}`;
-  const r=c.returns[key];
-  // Determine if horizon elapsed: use end_date or disclosure_date as entry
-  const entryDate=basis==='trade_date'?c.end_date:c.max_disclosure_date;
-  let awaiting=false;
-  let daysLeft=null;
-  if(entryDate){
-    const exitDate=new Date(entryDate+'T00:00:00');
-    exitDate.setDate(exitDate.getDate()+horizonDays);
-    if(exitDate>today){
-      awaiting=true;
-      daysLeft=Math.ceil((exitDate-today)/(1000*60*60*24));
+    function toggleDark() {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
     }
-  } else {
-    awaiting=!r;
-  }
 
-  const entryLabel=basis==='trade_date'?'Entry: trade close':'Entry: disclosure+1 close';
-  const awaitingCell = awaiting && !r;
+    function preferredTheme() {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
+      const legacyDarkMode = localStorage.getItem('darkMode');
+      if (legacyDarkMode === 'true') return 'dark';
+      if (legacyDarkMode === 'false') return 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
 
-  return`
-    <div class="return-cell ${awaitingCell?'awaiting':''}">
-      <div class="return-cell-label">${label}</div>
-      <div style="font-size:.75rem;color:var(--text2);margin-bottom:.65rem">${entryLabel}</div>
-      ${awaitingCell
-        ? `<div class="return-awaiting-msg">Awaiting ${daysLeft!==null?daysLeft+' more days':'horizon'}</div>`
-        : `
-        <div class="metric-row">
-          <span class="mlabel">Absolute return</span>
-          <span class="mval alpha-highlight">${fmtPctHtml(r?.absolute_return??null)}</span>
-        </div>
-        <div class="metric-row">
-          <span class="mlabel">Alpha vs ASX 200</span>
-          <span class="mval alpha-highlight">${fmtPctHtml(r?.alpha_vs_asx200??null)}</span>
-        </div>
-        <div class="metric-row">
-          <span class="mlabel">Alpha vs sector</span>
-          <span class="mval">${fmtPctHtml(r?.alpha_vs_sector??null)}</span>
-        </div>`
+    function applyTheme(theme, persist = true) {
+      document.documentElement.dataset.theme = theme;
+      if (persist) {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        localStorage.setItem('darkMode', theme === 'dark' ? 'true' : 'false');
       }
-    </div>`;
-}
+      if (clusterPricePayload) window.requestAnimationFrame(() => renderClusterPriceChart(clusterPricePayload));
+    }
 
-async function init(){
-  // Extract cluster_id from URL: /clusters/123
-  const parts=window.location.pathname.split('/');
-  const clusterId=parseInt(parts[parts.length-1]);
-  if(!clusterId){
-    document.getElementById('mainContent').innerHTML='<div class="error">Invalid cluster ID.</div>';
-    return;
-  }
+    function emptyIcon() {
+      return `<svg class="empty-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-7"></path></svg>`;
+    }
 
-  const res=await fetch(`/api/clusters/${clusterId}`);
-  if(res.status===404){
-    document.getElementById('mainContent').innerHTML='<div class="error">Cluster not found.</div>';
-    return;
-  }
-  if(!res.ok){
-    document.getElementById('mainContent').innerHTML='<div class="error">Failed to load cluster data.</div>';
-    return;
-  }
-  const c=await res.json();
-  document.title=`${c.ticker} Cluster — ASX Insider Tracker`;
-  document.getElementById('navTitle').textContent=`${c.ticker} · Cluster ${c.cluster_id}`;
+    applyTheme(preferredTheme(), false);
 
-  const today=new Date();
-  const statusLabel=c.status.charAt(0).toUpperCase()+c.status.slice(1);
-  const capPct=c.pct_market_cap?fmtCapPct(c.pct_market_cap):'—';
-  const mcAud=c.market_cap_aud?fmtMoney(c.market_cap_aud):'—';
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
 
-  // Trades table
-  const tradesRows=c.trades.map(t=>`
-    <tr>
-      <td>${t.director_name}</td>
-      <td>${fmtDate(t.date_of_trade)}</td>
-      <td>${fmtDate(t.date_lodged)}</td>
-      <td>${t.value_aud!==null?fmtMoney(t.value_aud):'—'}</td>
-      <td style="text-align:right">${fmtNum(t.number_of_securities)}</td>
-    </tr>`).join('');
+    function fmtMoney(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
+      if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+      if (Math.abs(n) >= 1_000) return `$${Math.round(n / 1_000)}K`;
+      return `$${Math.round(n)}`;
+    }
 
-  document.getElementById('mainContent').innerHTML=`
-    <!-- Hero -->
-    <div class="hero">
-      <div class="hero-header">
-        <div>
-          <div class="hero-ticker">${c.ticker}</div>
-          <div class="hero-badges">
-            ${c.sector?`<span class="badge badge-sector">${c.sector}</span>`:''}
-            ${c.industry?`<span class="badge badge-industry">${c.industry}</span>`:''}
-            <span class="badge badge-status-${c.status}">${statusLabel}</span>
+    function fmtPrice(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return `$${n.toFixed(n < 1 ? 4 : 2)}`;
+    }
+
+    function fmtFullMoney(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n);
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const date = new Date(`${value}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function fmtDate(value) {
+      const date = parseDate(value);
+      if (!date) return '-';
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-AU', { month: 'short' });
+      const year = String(date.getFullYear()).slice(-2);
+      return `${day} ${month} '${year}`;
+    }
+
+    function fmtWindow(start, end) {
+      if (!start && !end) return '-';
+      if (!start || start === end) return fmtDate(end || start);
+      const s = parseDate(start);
+      const e = parseDate(end);
+      if (s && e && s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+        const month = e.toLocaleDateString('en-AU', { month: 'short' });
+        const year = String(e.getFullYear()).slice(-2);
+        return `${s.getDate()}-${e.getDate()} ${month} '${year}`;
+      }
+      return `${fmtDate(start)} - ${fmtDate(end)}`;
+    }
+
+    function fmtLongDate(value) {
+      const date = parseDate(value);
+      if (!date) return '-';
+      return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function fmtNumber(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return n.toLocaleString('en-AU');
+    }
+
+    function fmtPct(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return `${(n * 100).toFixed(2)}%`;
+    }
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function rgbaFromCss(value, alpha) {
+      if (value.startsWith('#')) {
+        const hex = value.slice(1);
+        const full = hex.length === 3 ? hex.split('').map(char => char + char).join('') : hex;
+        const int = Number.parseInt(full, 16);
+        return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
+      }
+      if (value.startsWith('rgb(')) return value.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+      return value;
+    }
+
+    function chartAxes() {
+      const text2 = cssVar('--text-2');
+      const border = rgbaFromCss(cssVar('--border'), 0.5);
+      const font = `12px ${cssVar('--font-mono')}`;
+      return [
+        {
+          stroke: text2,
+          grid: { stroke: border, width: 1 },
+          font,
+        },
+        {
+          stroke: text2,
+          grid: { stroke: border, width: 1 },
+          font,
+          values: (_u, vals) => vals.map(value => value < 1 ? value.toFixed(3) : value.toFixed(2)),
+        },
+      ];
+    }
+
+    function chartSize(stage) {
+      return {
+        width: Math.max(320, Math.floor(stage.clientWidth)),
+        height: Math.floor(stage.clientHeight || (window.innerWidth < 768 ? 220 : 320)),
+      };
+    }
+
+    function showClusterChartSkeleton(stage) {
+      if (clusterPriceChart) {
+        clusterPriceChart.destroy();
+        clusterPriceChart = null;
+      }
+      stage.classList.remove('is-empty');
+      stage.innerHTML = '<span class="skeleton skeleton-block"></span>';
+    }
+
+    function showClusterChartEmpty(stage, title = 'No price history available') {
+      if (clusterPriceChart) {
+        clusterPriceChart.destroy();
+        clusterPriceChart = null;
+      }
+      stage.classList.add('is-empty');
+      stage.innerHTML = `
+        <div class="chart-empty">
+          <div>
+            ${emptyIcon()}
+            <div class="empty-panel-title">${escapeHtml(title)}</div>
+            <div class="empty-panel-copy">Stored price history is required before the overlay can render.</div>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="loadClusterPriceHistory()">Retry</button>
           </div>
-        </div>
-      </div>
-      <div class="hero-meta">
-        <div class="hero-meta-item">
-          <div class="lbl">Trade Window</div>
-          <div class="val">${fmtWindow(c.start_date,c.end_date)}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">Max Disclosure</div>
-          <div class="val">${fmtDate(c.max_disclosure_date)}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">Directors</div>
-          <div class="val">${c.director_count}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">Total Bought</div>
-          <div class="val">${fmtMoney(c.total_value_aud)}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">% Market Cap</div>
-          <div class="val">${capPct}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">Market Cap</div>
-          <div class="val">${mcAud}</div>
-        </div>
-        <div class="hero-meta-item">
-          <div class="lbl">Cap Bucket</div>
-          <div class="val" style="font-size:.9rem">${c.market_cap_bucket||'—'}</div>
-        </div>
-      </div>
-    </div>
+        </div>`;
+    }
 
-    <!-- Returns grid -->
-    <div class="section">
-      <div class="section-title">Performance — All Return Variants</div>
-      <div class="returns-grid">
-        ${returnCell(c,90,'disclosure_date','90-day · Disclosure Date',today)}
-        ${returnCell(c,90,'trade_date','90-day · Trade Date',today)}
-        ${returnCell(c,180,'disclosure_date','180-day · Disclosure Date',today)}
-        ${returnCell(c,180,'trade_date','180-day · Trade Date',today)}
-      </div>
-      <div style="font-size:.78rem;color:var(--text2);margin-top:-.5rem;margin-bottom:1.5rem">
-        Alpha measured vs STW.AX (SPDR S&amp;P/ASX 200 ETF) over the same horizon. Disclosure-date entry = close of next trading day after max filing date.
-      </div>
-    </div>
+    function normalizeTradeType(value) {
+      const raw = String(value || '').toLowerCase();
+      if (raw.includes('sell')) return 'Sell';
+      if (raw.includes('off')) return 'Off-market';
+      if (raw.includes('buy')) return 'Buy';
+      return 'Other';
+    }
 
-    <!-- Director trades -->
-    <div class="section">
-      <div class="section-title">Director Trades in this Cluster</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Director</th>
-              <th>Date of Trade</th>
-              <th>Date Disclosed</th>
-              <th>Value ($)</th>
-              <th style="text-align:right">Securities</th>
-            </tr>
-          </thead>
-          <tbody>${tradesRows}</tbody>
-        </table>
-      </div>
-    </div>
+    function tradeMarkerColor(type) {
+      if (type === 'Buy') return cssVar('--buy');
+      if (type === 'Sell') return cssVar('--sell');
+      return cssVar('--text-3');
+    }
 
-    <div style="margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--border)">
-      <a href="/clusters">← Back to all clusters</a>
-    </div>
-  `;
-}
+    function markerSize(value) {
+      const n = Number(value || 0);
+      return Math.min(12, Math.max(5, Math.sqrt(Math.max(n, 0)) / 120));
+    }
 
-init();
-</script>
+    function nearestPrice(points, targetDate) {
+      if (!points.length) return null;
+      const target = new Date(`${targetDate}T00:00:00`).getTime();
+      let best = points[0];
+      let bestDistance = Math.abs(new Date(`${best.date}T00:00:00`).getTime() - target);
+      for (const point of points) {
+        const distance = Math.abs(new Date(`${point.date}T00:00:00`).getTime() - target);
+        if (distance < bestDistance) {
+          best = point;
+          bestDistance = distance;
+        }
+      }
+      return best.close;
+    }
+
+    function drawTriangle(ctx, x, y, size, direction) {
+      ctx.beginPath();
+      if (direction === 'up') {
+        ctx.moveTo(x, y - size);
+        ctx.lineTo(x - size, y + size);
+        ctx.lineTo(x + size, y + size);
+      } else {
+        ctx.moveTo(x, y + size);
+        ctx.lineTo(x - size, y - size);
+        ctx.lineTo(x + size, y - size);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawTradeMarkers(chart, payload) {
+      const points = payload.points || [];
+      clusterMarkerHitboxes = [];
+      const ctx = chart.ctx;
+      for (const trade of payload.trades || []) {
+        const type = normalizeTradeType(trade.trade_type);
+        const close = nearestPrice(points, trade.date);
+        if (close === null || close === undefined) continue;
+        const timestamp = Math.floor(new Date(`${trade.date}T00:00:00`).getTime() / 1000);
+        const x = chart.valToPos(timestamp, 'x', true);
+        const y = chart.valToPos(close, 'y', true);
+        const size = markerSize(trade.value_aud);
+        ctx.save();
+        ctx.fillStyle = tradeMarkerColor(type);
+        ctx.strokeStyle = cssVar('--surface');
+        ctx.lineWidth = 1.5;
+        if (type === 'Buy') {
+          drawTriangle(ctx, x, y, size, 'up');
+          ctx.stroke();
+        } else if (type === 'Sell') {
+          drawTriangle(ctx, x, y, size, 'down');
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+        clusterMarkerHitboxes.push({ x, y, radius: size + 5, trade, type });
+      }
+    }
+
+    function showMarkerTooltip(stage, marker, event) {
+      let tooltip = stage.querySelector('.chart-tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'chart-tooltip';
+        stage.appendChild(tooltip);
+      }
+      tooltip.innerHTML = `
+        <div class="chart-tooltip-title">${escapeHtml(marker.trade.director_name)}</div>
+        <div class="chart-tooltip-row"><span>Type</span><span class="chart-tooltip-value">${escapeHtml(marker.type)}</span></div>
+        <div class="chart-tooltip-row"><span>Value</span><span class="chart-tooltip-value">${fmtFullMoney(marker.trade.value_aud)}</span></div>
+        <div class="chart-tooltip-row"><span>Date</span><span class="chart-tooltip-value">${fmtLongDate(marker.trade.date)}</span></div>`;
+      const rect = stage.getBoundingClientRect();
+      const left = Math.min(stage.clientWidth - tooltip.offsetWidth - 8, Math.max(8, event.clientX - rect.left + 16));
+      const top = Math.min(stage.clientHeight - tooltip.offsetHeight - 8, Math.max(8, event.clientY - rect.top + 16));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      tooltip.classList.add('is-visible');
+    }
+
+    function attachMarkerHover(stage) {
+      stage.onmousemove = event => {
+        const rect = stage.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const marker = clusterMarkerHitboxes.find(item => Math.hypot(item.x - x, item.y - y) <= item.radius);
+        const tooltip = stage.querySelector('.chart-tooltip');
+        if (!marker) {
+          if (tooltip) tooltip.classList.remove('is-visible');
+          return;
+        }
+        showMarkerTooltip(stage, marker, event);
+      };
+      stage.onmouseleave = () => {
+        const tooltip = stage.querySelector('.chart-tooltip');
+        if (tooltip) tooltip.classList.remove('is-visible');
+      };
+    }
+
+    function updateLastPrice(payload) {
+      const last = (payload.points || []).at(-1);
+      const node = document.getElementById('lastPriceValue');
+      if (node) node.textContent = last ? fmtPrice(last.close) : '-';
+    }
+
+    function renderClusterPriceChart(payload) {
+      const stage = document.getElementById('clusterPriceChartStage');
+      if (!stage) return;
+      const points = payload.points || [];
+      if (!window.uPlot || points.length < 2) {
+        showClusterChartEmpty(stage);
+        return;
+      }
+
+      clusterPricePayload = payload;
+      if (clusterPriceChart) clusterPriceChart.destroy();
+      stage.classList.remove('is-empty');
+      stage.innerHTML = '';
+
+      const opts = {
+        ...chartSize(stage),
+        cursor: { drag: { x: false, y: false } },
+        scales: { x: { time: true } },
+        axes: chartAxes(),
+        series: [
+          {},
+          { label: 'Close', stroke: cssVar('--accent'), width: 2, spanGaps: true, points: { show: false } },
+        ],
+        hooks: {
+          draw: [chart => drawTradeMarkers(chart, payload)],
+        },
+      };
+      const data = [
+        points.map(point => Math.floor(new Date(`${point.date}T00:00:00`).getTime() / 1000)),
+        points.map(point => point.close),
+      ];
+      clusterPriceChart = new uPlot(opts, data, stage);
+      attachMarkerHover(stage);
+      updateLastPrice(payload);
+    }
+
+    async function loadClusterPriceHistory(clusterId = Number(window.location.pathname.split('/').filter(Boolean).pop())) {
+      const stage = document.getElementById('clusterPriceChartStage');
+      if (!stage || !clusterId) return;
+      showClusterChartSkeleton(stage);
+      try {
+        const response = await fetch(`/api/clusters/${clusterId}/price-history?days=120`);
+        if (!response.ok) throw new Error('price history fetch failed');
+        const payload = await response.json();
+        if (!payload.points || payload.points.length < 2) {
+          showClusterChartEmpty(stage);
+          return;
+        }
+        renderClusterPriceChart(payload);
+      } catch (error) {
+        showClusterChartEmpty(stage, 'Unable to load price history');
+      }
+    }
+
+    function statusBadge(status) {
+      const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+      const cls = status === 'historical' ? 'badge-soft' : status === 'active' ? 'badge-info-soft' : 'badge-warn-soft';
+      return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+    }
+
+    function signalClass(count) {
+      if (Number(count || 0) >= 6) return 'signal-high';
+      if (Number(count || 0) >= 4) return 'signal-medium';
+      return 'signal-base';
+    }
+
+    function clusterDescriptor(cluster) {
+      if (cluster.industry && cluster.sector) return `${cluster.industry} - ${cluster.sector}`;
+      return cluster.industry || cluster.sector || 'Sector unavailable';
+    }
+
+    function renderRelatedCluster(cluster) {
+      return `
+        <a class="cluster-row ${signalClass(cluster.director_count)}" href="/clusters/${cluster.cluster_id}">
+          <span class="cluster-count">${Number(cluster.director_count || 0).toLocaleString('en-AU')} directors</span>
+          <span class="tag-ticker">${escapeHtml(cluster.ticker)}</span>
+          <span class="cluster-main">
+            <span class="cluster-title">${escapeHtml(clusterDescriptor(cluster))}</span>
+            <span class="cluster-subtitle">${escapeHtml(cluster.market_cap_bucket || 'Market cap bucket unavailable')}</span>
+          </span>
+          <span class="cluster-date">${escapeHtml(fmtWindow(cluster.start_date, cluster.end_date))}</span>
+          <span class="cluster-value">${fmtMoney(cluster.total_value_aud)}</span>
+          <span class="cluster-meta">${statusBadge(cluster.status)}</span>
+        </a>`;
+    }
+
+    function renderTimelineTrade(trade) {
+      return `
+        <div class="timeline-row">
+          <span>
+            <span class="cluster-title">${escapeHtml(trade.director_name)}</span>
+            <span class="cluster-subtitle">Director trade</span>
+          </span>
+          <span class="cluster-date">${fmtDate(trade.date_of_trade)}</span>
+          <span class="cluster-date">${fmtDate(trade.date_lodged)}</span>
+          <span class="right money">${fmtMoney(trade.value_aud)}</span>
+          <span class="right num">${fmtNumber(trade.number_of_securities)}</span>
+        </div>`;
+    }
+
+    async function fetchCompany(ticker) {
+      try {
+        const res = await fetch(`/api/company/${encodeURIComponent(ticker)}`);
+        return res.ok ? await res.json() : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    async function fetchOtherClusters(ticker, currentClusterId) {
+      try {
+        const res = await fetch('/api/clusters?sort=start_date&order=desc&per_page=200');
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.clusters || []).filter(cluster => cluster.ticker === ticker && cluster.cluster_id !== currentClusterId);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    async function init() {
+      const clusterId = Number(window.location.pathname.split('/').filter(Boolean).pop());
+      if (!clusterId) {
+        document.getElementById('mainContent').innerHTML = `
+          <div class="empty-panel">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">Invalid cluster route</div>
+              <a class="section-link" href="/clusters">Back to clusters</a>
+            </div>
+          </div>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/clusters/${clusterId}`);
+        if (!res.ok) throw new Error('cluster not found');
+        const cluster = await res.json();
+        const [company, related] = await Promise.all([
+          fetchCompany(cluster.ticker),
+          fetchOtherClusters(cluster.ticker, cluster.cluster_id),
+        ]);
+
+        const companyName = company?.name || `${cluster.ticker} cluster`;
+        document.title = `${cluster.ticker} Cluster - ASX Insider Tracker`;
+
+        const trades = [...(cluster.trades || [])].sort((a, b) => String(a.date_of_trade).localeCompare(String(b.date_of_trade)));
+
+        document.getElementById('mainContent').innerHTML = `
+          <section class="detail-hero">
+            <div class="detail-hero-top">
+              <div class="detail-title">
+                <h1>${escapeHtml(companyName)}</h1>
+                <span class="tag-ticker">${escapeHtml(cluster.ticker)}</span>
+                ${cluster.sector ? `<span class="badge badge-info-soft">${escapeHtml(cluster.sector)}</span>` : ''}
+                ${statusBadge(cluster.status)}
+              </div>
+              <a class="section-link" href="/clusters">&larr; Back to clusters</a>
+            </div>
+            <div class="detail-meta-grid">
+              <div>
+                <div class="meta-label">Market Cap</div>
+                <div class="meta-value money">${fmtMoney(cluster.market_cap_aud)}</div>
+              </div>
+              <div>
+                <div class="meta-label">Last Price</div>
+                <div class="meta-value money" id="lastPriceValue">-</div>
+              </div>
+              <div>
+                <div class="meta-label">Cluster Window</div>
+                <div class="meta-value">${fmtWindow(cluster.start_date, cluster.end_date)}</div>
+              </div>
+              <div>
+                <div class="meta-label">Total Bought</div>
+                <div class="meta-value money">${fmtMoney(cluster.total_value_aud)}</div>
+              </div>
+              <div>
+                <div class="meta-label">Directors</div>
+                <div class="meta-value num">${Number(cluster.director_count || 0).toLocaleString('en-AU')}</div>
+              </div>
+              <div>
+                <div class="meta-label">% Market Cap</div>
+                <div class="meta-value pct">${fmtPct(cluster.pct_market_cap)}</div>
+              </div>
+              <div>
+                <div class="meta-label">Max Disclosure</div>
+                <div class="meta-value">${fmtDate(cluster.max_disclosure_date)}</div>
+              </div>
+              <div>
+                <div class="meta-label">Cap Bucket</div>
+                <div class="meta-value">${escapeHtml(cluster.market_cap_bucket || '-')}</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="page-section" aria-labelledby="timelineTitle">
+            <div class="page-section-header">
+              <div>
+                <h2 id="timelineTitle">Cluster Timeline</h2>
+                <p>Director trades that constitute this cluster, ordered by trade date.</p>
+              </div>
+            </div>
+            <div class="timeline">
+              ${trades.length ? trades.map(renderTimelineTrade).join('') : `
+                <div class="empty-panel">
+                  <div>
+                    ${emptyIcon()}
+                    <div class="empty-panel-title">No trade rows attached to this cluster</div>
+                    <a class="section-link" href="/clusters">Back to clusters</a>
+                  </div>
+                </div>`}
+            </div>
+          </section>
+
+          <section class="page-section" aria-labelledby="priceChartTitle">
+            <div class="page-section-header">
+              <div>
+                <h2 id="priceChartTitle">Price Overlay</h2>
+                <p><span class="chart-inline-label" style="--label-color:var(--accent)">Price</span> with buy, sell, and off-market director trade markers.</p>
+              </div>
+            </div>
+            <div class="chart-panel">
+              <div class="chart-panel-toolbar">
+                <div class="chart-inline-labels" aria-hidden="true">
+                  <span class="chart-inline-label" style="--label-color:var(--accent)">Price</span>
+                  <span class="chart-inline-label" style="--label-color:var(--buy)">Buy</span>
+                  <span class="chart-inline-label" style="--label-color:var(--sell)">Sell</span>
+                  <span class="chart-inline-label" style="--label-color:var(--text-3)">Off-market</span>
+                </div>
+              </div>
+              <div class="chart-stage" id="clusterPriceChartStage" role="img" aria-label="Cluster price history chart">
+                <span class="skeleton skeleton-block"></span>
+              </div>
+            </div>
+          </section>
+
+          <section class="page-section" aria-labelledby="relatedTitle">
+            <div class="page-section-header">
+              <div>
+                <h2 id="relatedTitle">Other Clusters at this Company</h2>
+                <p>Additional cluster-buy signals for the same ticker, where available.</p>
+              </div>
+            </div>
+            <div class="cluster-list">
+              ${related.length ? related.map(renderRelatedCluster).join('') : `
+                <div class="empty-panel">
+                  <div>
+                    ${emptyIcon()}
+                    <div class="empty-panel-title">No other clusters found</div>
+                    <div class="empty-panel-copy">This ticker has no other fetched cluster rows.</div>
+                    <a class="section-link" href="/clusters">View all clusters &rarr;</a>
+                  </div>
+                </div>`}
+            </div>
+          </section>
+        `;
+        loadClusterPriceHistory(cluster.cluster_id);
+      } catch (error) {
+        document.getElementById('mainContent').innerHTML = `
+          <div class="empty-panel">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">Cluster not found</div>
+              <div class="empty-panel-copy">Return to the cluster list and choose another signal.</div>
+              <a class="section-link" href="/clusters">Back to clusters</a>
+            </div>
+          </div>`;
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (clusterPricePayload) renderClusterPriceChart(clusterPricePayload);
+    });
+
+    init();
+  </script>
 </body>
 </html>

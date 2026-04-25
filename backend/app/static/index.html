@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASX Insider Tracker - Real-time Director Trade Monitoring</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/components.css">
     <style>
         * {
             margin: 0;
@@ -13,29 +18,27 @@
         }
 
         :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --bg-tertiary: #e8e8e8;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --border-color: #d0d0d0;
-            --accent: #0066cc;
-            --accent-hover: #0052a3;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --minor: #ffeaa7;
-            --moderate: #ffb347;
-            --severe: #ff6b6b;
+            --bg-primary: var(--bg);
+            --bg-secondary: var(--surface);
+            --bg-tertiary: var(--surface-2);
+            --text-primary: var(--text);
+            --text-secondary: var(--text-2);
+            --border-color: var(--border);
+            --success: var(--buy);
+            --warning: var(--warn);
+            --danger: var(--sell);
+            --minor: var(--surface-2);
+            --moderate: var(--warn-soft);
+            --severe: var(--sell-soft);
         }
 
-        body.dark-mode {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --bg-tertiary: #3d3d3d;
-            --text-primary: #e8e8e8;
-            --text-secondary: #b0b0b0;
-            --border-color: #444444;
+        [data-theme="dark"] {
+            --bg-primary: var(--bg);
+            --bg-secondary: var(--surface);
+            --bg-tertiary: var(--surface-2);
+            --text-primary: var(--text);
+            --text-secondary: var(--text-2);
+            --border-color: var(--border);
         }
 
         body {
@@ -43,14 +46,16 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
-            transition: background-color 0.3s, color 0.3s;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished);
         }
 
         header {
-            background: linear-gradient(135deg, var(--accent) 0%, #003d99 100%);
-            color: white;
+            background: var(--surface);
+            color: var(--text);
             padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: none;
         }
 
         .header-content {
@@ -90,7 +95,10 @@
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 600;
-            transition: background-color 0.2s;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
         }
 
         button:hover {
@@ -121,19 +129,7 @@
         }
 
         .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-left: 0.5rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            content: none;
         }
 
         /* Statistics Dashboard */
@@ -149,12 +145,13 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished);
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--border-strong);
         }
 
         .stat-label {
@@ -229,7 +226,9 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
             font-size: 0.9rem;
-            transition: border-color 0.2s;
+            transition:
+                border-color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
         }
 
         input[type="text"]:focus,
@@ -237,7 +236,7 @@
         select:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+            box-shadow: var(--focus-ring);
         }
 
         input[type="checkbox"] {
@@ -264,11 +263,14 @@
             color: var(--text-primary);
             font-size: 0.9rem;
             text-align: center;
+            transition:
+                border-color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
         }
         .page-input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0,102,204,0.1);
+            box-shadow: var(--focus-ring);
         }
 
         /* Clear filters button */
@@ -280,6 +282,11 @@
             font-size: 0.85rem;
             font-weight: 500;
             white-space: nowrap;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
         }
         .btn-clear-filters:hover {
             background-color: var(--bg-tertiary);
@@ -327,7 +334,7 @@
             user-select: none;
             color: var(--text-secondary);
             white-space: nowrap;
-            transition: background-color 0.2s;
+            transition: background-color var(--duration-row) var(--ease-finished);
         }
 
         th:hover {
@@ -407,13 +414,13 @@
         }
 
         .severity.minor {
-            background-color: rgba(255, 234, 167, 0.3);
-            color: #856404;
+            background-color: var(--surface-2);
+            color: var(--text-2);
         }
 
         .severity.moderate {
-            background-color: rgba(255, 179, 71, 0.3);
-            color: #a86a2e;
+            background-color: var(--warn-soft);
+            color: var(--warn);
         }
 
         .severity.severe {
@@ -590,19 +597,20 @@
             border-left: 4px solid var(--border-color);
             border-radius: 8px;
             padding: 1.1rem 1.25rem;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished);
         }
 
         .heatmap-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: var(--surface-2);
         }
 
-        .heatmap-card.strong-bull { border-left-color: #1a7a3a; background: rgba(26,122,58,0.06); }
+        .heatmap-card.strong-bull { border-left-color: var(--buy); background: var(--buy-soft); }
         .heatmap-card.bull        { border-left-color: var(--success); }
-        .heatmap-card.neutral     { border-left-color: #aaa; }
-        .heatmap-card.bear        { border-left-color: #e05a6a; }
-        .heatmap-card.strong-bear { border-left-color: var(--danger); background: rgba(220,53,69,0.06); }
+        .heatmap-card.neutral     { border-left-color: var(--border-strong); }
+        .heatmap-card.bear        { border-left-color: var(--sell); }
+        .heatmap-card.strong-bear { border-left-color: var(--danger); background: var(--sell-soft); }
 
         .heatmap-sector-name {
             font-size: 0.95rem;
@@ -620,10 +628,10 @@
             letter-spacing: 0.3px;
         }
 
-        .heatmap-sentiment.strong-bull { background: rgba(26,122,58,0.18);   color: #1a7a3a; }
+        .heatmap-sentiment.strong-bull { background: var(--buy-soft);   color: var(--buy); }
         .heatmap-sentiment.bull        { background: rgba(40,167,69,0.13);   color: var(--success); }
-        .heatmap-sentiment.neutral     { background: rgba(108,117,125,0.13); color: #888; }
-        .heatmap-sentiment.bear        { background: rgba(224,90,106,0.13);  color: #e05a6a; }
+        .heatmap-sentiment.neutral     { background: var(--surface-2); color: var(--text-2); }
+        .heatmap-sentiment.bear        { background: var(--sell-soft);  color: var(--sell); }
         .heatmap-sentiment.strong-bear { background: rgba(220,53,69,0.15);   color: var(--danger); }
 
         .heatmap-bar-wrap {
@@ -804,8 +812,8 @@
             white-space: nowrap;
         }
 
-        .cluster-badge.d3 { background: rgba(255,193,7,0.18);  color: #b8860b; border: 1px solid rgba(255,193,7,0.4); }
-        .cluster-badge.d4 { background: rgba(255,120,0,0.15);  color: #c85000; border: 1px solid rgba(255,120,0,0.35); }
+        .cluster-badge.d3 { background: var(--surface-2);  color: var(--text-2); border: 1px solid var(--border); }
+        .cluster-badge.d4 { background: var(--accent-soft);  color: var(--accent); border: 1px solid var(--accent-soft); }
         .cluster-badge.d5 { background: rgba(220,53,69,0.13);  color: var(--danger); border: 1px solid rgba(220,53,69,0.3); }
 
         .header-cta {
@@ -816,245 +824,2205 @@
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.16);
             border: 1px solid rgba(255, 255, 255, 0.28);
-            color: #fff;
+            color: var(--accent-contrast);
             font-size: 0.9rem;
             font-weight: 700;
             text-decoration: none;
-            transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
         }
 
         .header-cta:hover {
             background: rgba(255, 255, 255, 0.24);
             border-color: rgba(255, 255, 255, 0.38);
-            color: #fff;
+            color: var(--accent-contrast);
             text-decoration: none;
-            transform: translateY(-1px);
+        }
+
+        /* Pass 2 top-section refactor. Scoped so lower dashboard sections remain A/B comparable. */
+        .site-header,
+        .page-intro,
+        #statsGrid {
+            --accent: var(--brand-accent);
+            --accent-hover: var(--brand-accent-hover);
+            --accent-soft: var(--brand-accent-soft);
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            background: var(--surface);
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            box-shadow: none;
+            min-height: 64px;
+            padding: 0 24px;
+        }
+
+        .site-header .header-content {
+            max-width: 1400px;
+            min-height: 64px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-md);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .brand-mark svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            stroke-width: 2;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .header-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .site-nav-link {
+            position: relative;
+            color: var(--text-2) !important;
+            font-family: var(--font-ui);
+            font-size: var(--text-sm) !important;
+            font-weight: 500 !important;
+            line-height: 64px;
+            text-decoration: none !important;
+            transition: color var(--duration-hover) var(--ease-finished);
+            white-space: nowrap;
+        }
+
+        .site-nav-link::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: 13px;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0;
+            transform: scaleX(0.72);
+            transform-origin: center;
+            transition:
+                opacity var(--duration-hover) var(--ease-finished),
+                transform var(--duration-hover) var(--ease-finished);
+        }
+
+        .site-nav-link:hover,
+        .site-nav-link.is-active {
+            color: var(--text) !important;
+        }
+
+        .site-nav-link:hover::after,
+        .site-nav-link.is-active::after {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+
+        .header-icon-button,
+        .header-export-button,
+        .mobile-menu-summary {
+            height: 36px;
+            border-radius: 6px;
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            line-height: 1;
+            box-shadow: none;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .header-icon-button {
+            width: 36px;
+            padding: 0;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-2);
+        }
+
+        .header-export-button,
+        .mobile-menu-summary {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text);
+            padding: 0 12px;
+        }
+
+        .header-icon-button:hover,
+        .header-export-button:hover,
+        .mobile-menu-summary:hover {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+            color: var(--text);
+        }
+
+        .header-icon-button:focus-visible,
+        .header-export-button:focus-visible,
+        .mobile-menu-summary:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+            border-color: var(--accent);
+        }
+
+        .theme-icon-sun {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-icon-moon {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-icon-sun {
+            display: block;
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: relative;
+        }
+
+        .mobile-menu-summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .mobile-menu-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .mobile-nav-panel {
+            position: absolute;
+            top: 44px;
+            right: 0;
+            display: grid;
+            min-width: 220px;
+            padding: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .mobile-nav-panel .site-nav-link {
+            line-height: 36px;
+        }
+
+        .mobile-nav-panel .site-nav-link::after {
+            bottom: 4px;
+        }
+
+        .page-intro {
+            max-width: 1400px;
+            margin: 28px auto 20px;
+            padding: 0 16px;
+        }
+
+        .page-intro h1 {
+            margin: 0;
+            max-width: 780px;
+            color: var(--text);
+            font-family: var(--font-serif);
+            font-size: var(--text-display);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1.08;
+        }
+
+        .page-intro p {
+            margin-top: 8px;
+            max-width: 720px;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-md);
+            line-height: 1.5;
+        }
+
+        #statsGrid.stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        #statsGrid .stat-card {
+            position: relative;
+            display: grid;
+            min-height: 154px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: none;
+            transform: none;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished);
+        }
+
+        #statsGrid .stat-card:hover {
+            background: var(--surface);
+            border-color: var(--border-strong);
+            box-shadow: none;
+            transform: none;
+        }
+
+        #statsGrid .stat-label {
+            margin: 0;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        #statsGrid .stat-value {
+            margin-top: 10px;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: var(--text-display);
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        #statsGrid .stat-subtext {
+            align-self: end;
+            margin-top: 16px;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            line-height: 1.35;
+        }
+
+        #statsGrid .stat-card:nth-child(4)::before,
+        #statsGrid .stat-card:nth-child(4)::after {
+            content: "";
+            position: absolute;
+            bottom: 52px;
+            left: 24px;
+            height: 6px;
+            border-radius: 4px;
+        }
+
+        #statsGrid .stat-card:nth-child(4)::before {
+            right: 24px;
+            background: var(--surface-2);
+        }
+
+        #statsGrid .stat-card:nth-child(4)::after {
+            right: calc(24px + 10.3%);
+            background: var(--accent);
+        }
+
+        #statsGrid .stat-card:nth-child(5) .stat-value,
+        #statsGrid .stat-card:nth-child(6) .stat-value {
+            color: var(--accent);
+        }
+
+        #statsGrid .stat-card:nth-child(5) .stat-value {
+            font-size: clamp(1.2rem, 1.35vw, 1.55rem) !important;
+            line-height: 1.15;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #statsGrid .loading {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 900px) {
+            .site-header .header-content {
+                grid-template-columns: auto 1fr;
+            }
+
+            .site-header .header-controls {
+                display: none;
+            }
+
+            .mobile-nav-menu {
+                display: inline-block;
+            }
+        }
+
+        @media (max-width: 860px) and (min-width: 621px) {
+            #statsGrid.stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .page-intro h1 {
+                font-size: var(--text-3xl);
+            }
+        }
+
+        @media (max-width: 620px) {
+            #statsGrid.stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .site-header {
+                padding: 0 14px;
+            }
+
+            .site-header .header-content {
+                gap: 12px;
+            }
+
+            .brand-mark span {
+                max-width: 170px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .header-export-button {
+                display: none;
+            }
+        }
+
+        /* Pass 3 trade-feed refactor. Lower heatmap/cluster/compliance sections keep legacy styling. */
+        .trade-feed-section {
+            --accent: var(--brand-accent);
+            --accent-hover: var(--brand-accent-hover);
+            --accent-soft: var(--brand-accent-soft);
+            margin-bottom: 40px;
+        }
+
+        .trade-feed-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 0 0 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-strong);
+        }
+
+        .trade-feed-heading h2 {
+            margin: 0;
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-2xl);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1.15;
+        }
+
+        .trade-feed-heading p {
+            margin-top: 4px;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+        }
+
+        .trade-filter-shell {
+            margin-bottom: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom: 0;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .trade-filter-summary {
+            display: none;
+        }
+
+        .trade-filter-content {
+            display: grid;
+            grid-template-columns: minmax(124px, 0.72fr) minmax(150px, 0.9fr) minmax(236px, 1.1fr) auto auto minmax(260px, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .trade-filter-input,
+        .trade-date-input {
+            width: 100%;
+            height: 34px;
+            min-height: 34px;
+            padding: 0 10px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            line-height: 1;
+            transition:
+                border-color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished),
+                background-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished);
+        }
+
+        .trade-filter-input::placeholder,
+        .trade-date-input::placeholder {
+            color: var(--text-3);
+        }
+
+        .trade-filter-input:focus,
+        .trade-date-input:focus {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .date-range-control {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            height: 34px;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+        }
+
+        .date-range-control:focus-within {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+        }
+
+        .date-range-control .trade-date-input {
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            min-width: 0;
+        }
+
+        .date-range-separator {
+            color: var(--text-2);
+            font-size: var(--text-xs);
+        }
+
+        .trade-type-chips {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .trade-type-chip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .trade-type-chip input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .trade-type-chip span {
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+            padding: 0 9px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            line-height: 1;
+            transition:
+                background-color var(--duration-chip) var(--ease-finished),
+                border-color var(--duration-chip) var(--ease-finished),
+                color var(--duration-chip) var(--ease-finished),
+                opacity var(--duration-chip) var(--ease-finished);
+        }
+
+        .trade-type-chip:hover span {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .trade-type-chip:has(input:checked) span {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .trade-type-chip input:focus-visible + span {
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .more-filter-popover {
+            position: relative;
+        }
+
+        .more-filter-summary,
+        .trade-ghost-button,
+        .clear-filters-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px;
+            gap: 6px;
+            border-radius: 6px;
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            line-height: 1;
+            text-decoration: none;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .more-filter-summary {
+            padding: 0 10px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+            list-style: none;
+            white-space: nowrap;
+        }
+
+        .more-filter-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .more-filter-popover:has(input:checked) .more-filter-summary {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .more-filter-summary:hover,
+        .trade-ghost-button:hover,
+        .clear-filters-link:hover {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+            color: var(--text);
+        }
+
+        .more-filter-summary:focus-visible,
+        .trade-ghost-button:focus-visible,
+        .clear-filters-link:focus-visible {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .more-filter-panel {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            z-index: 30;
+            display: grid;
+            min-width: 220px;
+            gap: 10px;
+            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .more-filter-panel label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            font-size: var(--text-sm);
+            font-weight: 400;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
+        }
+
+        .more-filter-panel input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+
+        .trade-toolbar-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .trade-result-count,
+        .pagination-summary {
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            white-space: nowrap;
+        }
+
+        .trade-ghost-button {
+            width: 34px;
+            padding: 0;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .trade-ghost-button svg,
+        .empty-state-icon,
+        .sort-chevron {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        .clear-filters-link {
+            padding: 0 6px;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .clear-filters-link[hidden] {
+            display: none;
+        }
+
+        .trade-table-container {
+            border-color: var(--border);
+            border-radius: 0 0 10px 10px;
+            background: var(--surface);
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .trade-table-scroll {
+            overflow-x: auto;
+        }
+
+        #tradesTable {
+            min-width: 1060px;
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+        }
+
+        #tradesTable thead {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-strong);
+        }
+
+        #tradesTable th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            height: 40px;
+            padding: 0 12px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-strong);
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            line-height: 1;
+            text-align: left;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        #tradesTable td {
+            height: 44px;
+            padding: 0 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        #tradesTable tbody tr:hover {
+            background: var(--surface-2);
+        }
+
+        #tradesTable tbody tr {
+            transition: background-color var(--duration-row) var(--ease-finished);
+        }
+
+        #tradesTable tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        #tradesTable th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #tradesTable th.sortable:focus-visible {
+            box-shadow: inset 0 0 0 2px var(--accent);
+            outline: none;
+        }
+
+        #tradesTable th.sortable::after {
+            content: "";
+        }
+
+        .trade-header-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: inherit;
+        }
+
+        .sort-chevron {
+            opacity: 0;
+            color: var(--text-3);
+            transition:
+                opacity var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished);
+        }
+
+        #tradesTable th.sortable:hover .sort-chevron,
+        #tradesTable th.sorted-asc .sort-chevron,
+        #tradesTable th.sorted-desc .sort-chevron {
+            opacity: 1;
+        }
+
+        #tradesTable th.sorted-asc .sort-chevron,
+        #tradesTable th.sorted-desc .sort-chevron {
+            color: var(--accent);
+        }
+
+        #tradesTable th.sorted-desc .sort-chevron {
+            transform: rotate(180deg);
+        }
+
+        .trade-date {
+            color: var(--text-2);
+        }
+
+        #tradesTable th:first-child,
+        #tradesTable td:first-child {
+            min-width: 104px;
+            width: 104px;
+        }
+
+        #tradesTable th:nth-child(2),
+        #tradesTable td:nth-child(2) {
+            min-width: 92px;
+            width: 92px;
+        }
+
+        .trade-company {
+            display: block;
+            max-width: 28ch;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .trade-director-link {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .trade-director-link:hover {
+            color: var(--accent);
+        }
+
+        .trade-num {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        #tradesTable th.trade-num {
+            font-family: var(--font-ui);
+            text-align: right;
+        }
+
+        #tradesTable th.trade-num .trade-header-button {
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        .trade-days-late {
+            color: var(--text-2);
+        }
+
+        .trade-days-late.is-late {
+            color: var(--warn);
+            font-weight: 600;
+        }
+
+        .trade-empty-state {
+            display: none;
+            place-items: center;
+            min-height: 260px;
+            padding: var(--space-8) var(--space-4);
+            background: var(--surface);
+        }
+
+        .trade-empty-card {
+            width: min(100%, 520px);
+            min-height: 168px;
+            padding: var(--space-12) var(--space-6);
+            border: 1px dashed var(--border-strong);
+            border-radius: 8px;
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            color: var(--text-2);
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            color: var(--accent);
+        }
+
+        .trade-empty-title {
+            color: var(--text);
+            font-size: var(--text-base);
+            font-weight: 600;
+        }
+
+        .trade-empty-copy {
+            color: var(--text-2);
+            font-size: var(--text-sm);
+        }
+
+        .trade-table-container.no-data #tradesTable {
+            display: none;
+        }
+
+        .trade-table-container.no-data .trade-empty-state {
+            display: grid;
+        }
+
+        .trade-pagination {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-pages {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pagination-page,
+        .pagination-ellipsis {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 6px;
+            color: var(--text-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        .pagination-page {
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .pagination-page:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .pagination-page:focus-visible {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .pagination-page.is-active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .pagination-page:disabled {
+            color: var(--text-3);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pagination-jump {
+            display: inline-flex;
+            align-items: center;
+            justify-self: end;
+            gap: 8px;
+            color: var(--text-2);
+            font-size: var(--text-sm);
+            white-space: nowrap;
+        }
+
+        .pagination-jump .page-input {
+            width: 60px;
+            height: 30px;
+            min-height: 30px;
+            padding: 0 8px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: var(--text-sm);
+            text-align: right;
+            transition:
+                border-color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .pagination-jump .page-input:focus {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .trade-skeleton-cell {
+            display: block;
+            height: 12px;
+            border-radius: 4px;
+            background: var(--surface-2);
+            animation: skeleton-pulse 1.4s var(--ease-finished) infinite;
+        }
+
+        .trade-skeleton-short {
+            width: 56px;
+        }
+
+        .trade-skeleton-medium {
+            width: 120px;
+        }
+
+        .trade-skeleton-long {
+            width: 210px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (min-width: 769px) {
+            .trade-filter-shell:not([open]) > .trade-filter-content {
+                display: grid !important;
+            }
+        }
+
+        @media (max-width: 1120px) {
+            .trade-filter-content {
+                grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) minmax(224px, 1fr);
+            }
+
+            .trade-type-chips,
+            .more-filter-popover,
+            .trade-toolbar-actions {
+                grid-column: auto;
+            }
+
+            .trade-toolbar-actions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .trade-feed-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .trade-filter-shell {
+                border-bottom: 1px solid var(--border);
+                border-radius: 10px;
+                margin-bottom: 12px;
+            }
+
+            .trade-filter-summary {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                min-height: 44px;
+                padding: 0 12px;
+                color: var(--text);
+                cursor: pointer;
+                font-size: var(--text-sm);
+                font-weight: 600;
+                list-style: none;
+            }
+
+            .trade-filter-summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .trade-filter-summary:focus-visible {
+                box-shadow: var(--focus-ring);
+                outline: none;
+            }
+
+            .trade-filter-content {
+                grid-template-columns: 1fr;
+                padding-top: 0;
+            }
+
+            .trade-type-chips {
+                flex-wrap: wrap;
+            }
+
+            .more-filter-panel {
+                position: static;
+                margin-top: 8px;
+                border-radius: 8px;
+                box-shadow: none;
+            }
+
+            .trade-table-container {
+                border-radius: 10px;
+            }
+
+            #tradesTable th:first-child,
+            #tradesTable td:first-child {
+                position: sticky;
+                left: 0;
+                z-index: 4;
+                background: var(--surface);
+            }
+
+            #tradesTable th:nth-child(2),
+            #tradesTable td:nth-child(2) {
+                position: sticky;
+                left: 104px;
+                z-index: 4;
+                background: var(--surface);
+                box-shadow: 1px 0 0 var(--border);
+            }
+
+            #tradesTable th:first-child,
+            #tradesTable th:nth-child(2) {
+                z-index: 7;
+            }
+
+            #tradesTable tbody tr:hover td:first-child,
+            #tradesTable tbody tr:hover td:nth-child(2) {
+                background: var(--surface-2);
+            }
+
+            .trade-pagination {
+                grid-template-columns: 1fr;
+                justify-items: start;
+            }
+
+            .pagination-pages {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .pagination-jump {
+                justify-self: start;
+            }
+        }
+
+        /* Pass 4 middle-section refactor. Scoped to heatmap and cluster surfaces. */
+        .middle-section {
+            --accent: var(--brand-accent);
+            --accent-hover: var(--brand-accent-hover);
+            --accent-soft: var(--brand-accent-soft);
+            margin: var(--space-16) 0 0;
+            color: var(--text);
+        }
+
+        .trade-feed-section + .middle-section {
+            margin-top: var(--space-16);
+        }
+
+        .middle-section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
+        }
+
+        .middle-section-title-row {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .middle-section h2 {
+            margin: 0;
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-semibold);
+            letter-spacing: var(--tracking-tight);
+            line-height: var(--line-heading);
+        }
+
+        .middle-section-caption {
+            margin-top: var(--space-1);
+            color: var(--text-2);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            line-height: var(--line-body);
+        }
+
+        .middle-section-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: var(--space-2);
+            flex-shrink: 0;
+        }
+
+        .middle-section-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            color: var(--accent);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .middle-section-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .middle-section-link:focus-visible,
+        .cluster-sort-control:focus,
+        .sector-window-control:focus {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .sector-window-control,
+        .cluster-sort-control {
+            height: 36px;
+            min-height: 36px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-md);
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            padding: 0 var(--space-3);
+        }
+
+        .sector-heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: var(--space-4);
+        }
+
+        .sector-tile {
+            display: grid;
+            gap: var(--space-3);
+            min-width: 0;
+            padding: var(--space-4);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                border-color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .sector-tile:hover {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+        }
+
+        .sector-tile:focus-visible {
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            outline: none;
+        }
+
+        .sector-tile-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: var(--space-3);
+            align-items: start;
+        }
+
+        .sector-name {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            gap: var(--space-2);
+            color: var(--text);
+            font-family: var(--font-ui);
+            font-size: var(--text-md);
+            font-weight: var(--weight-semibold);
+            line-height: var(--line-ui);
+        }
+
+        .sector-name-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sector-trend-icon {
+            width: 14px;
+            height: 14px;
+            color: var(--accent);
+            stroke-width: 2;
+            flex: 0 0 auto;
+        }
+
+        .sector-buy-pct {
+            color: var(--buy);
+            font-family: var(--font-mono);
+            font-size: var(--text-xl);
+            font-variant-numeric: tabular-nums;
+            font-weight: var(--weight-semibold);
+            line-height: 1;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .sector-buy-pct.is-net-sell {
+            color: var(--sell);
+        }
+
+        .sector-split-bar {
+            display: flex;
+            height: 6px;
+            overflow: hidden;
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+        }
+
+        .sector-split-bar span {
+            display: block;
+            height: 100%;
+        }
+
+        .sector-bar-buy {
+            width: var(--buy-width, 0);
+            background: var(--buy);
+        }
+
+        .sector-bar-sell {
+            width: var(--sell-width, 0);
+            background: var(--sell);
+        }
+
+        .sector-meta {
+            display: grid;
+            gap: var(--space-1);
+            color: var(--text-2);
+            font-size: var(--text-sm);
+            line-height: var(--line-ui);
+        }
+
+        .sector-meta-line {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            gap: var(--space-2);
+        }
+
+        .sector-meta-line svg {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2;
+            flex: 0 0 auto;
+        }
+
+        .sector-meta-line.is-buy svg {
+            color: var(--buy);
+        }
+
+        .sector-meta-line.is-sell svg {
+            color: var(--sell);
+        }
+
+        .sector-most-active {
+            overflow: hidden;
+            color: var(--text-2);
+            font-size: var(--text-xs);
+            line-height: var(--line-ui);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .active-cluster-list,
+        .cluster-signal-list {
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .cluster-signal-list .loading,
+        .sector-heatmap-grid .loading,
+        .active-cluster-list .loading {
+            grid-column: 1 / -1;
+            padding: var(--space-8);
+        }
+
+        .cluster-signal-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: auto auto minmax(180px, 1fr) minmax(118px, auto) minmax(120px, auto) minmax(160px, 1fr);
+            gap: var(--space-3);
+            align-items: center;
+            min-height: 68px;
+            padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 3px);
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .cluster-signal-row:last-child {
+            border-bottom: 0;
+        }
+
+        .cluster-signal-row:hover {
+            background: var(--surface-2);
+        }
+
+        .cluster-signal-row {
+            transition: background-color var(--duration-row) var(--ease-finished);
+        }
+
+        .cluster-signal-row::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 3px;
+            background: var(--surface-2);
+        }
+
+        .cluster-signal-row.signal-medium::before {
+            background: var(--accent-soft);
+        }
+
+        .cluster-signal-row.signal-high::before {
+            background: var(--accent);
+        }
+
+        .cluster-count {
+            display: inline-flex;
+            align-items: center;
+            height: 24px;
+            padding: 0 var(--space-2);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-2);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-medium);
+            white-space: nowrap;
+        }
+
+        .cluster-company {
+            min-width: 0;
+            overflow: hidden;
+            color: var(--text);
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            line-height: var(--line-ui);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cluster-date {
+            color: var(--text-2);
+            font-size: var(--text-sm);
+            white-space: nowrap;
+        }
+
+        .cluster-value {
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: var(--text-lg);
+            font-variant-numeric: tabular-nums;
+            font-weight: var(--weight-semibold);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .cluster-directors {
+            min-width: 0;
+            overflow: hidden;
+            color: var(--text-2);
+            font-size: var(--text-sm);
+            line-height: var(--line-ui);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cluster-directors a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .cluster-directors a:hover {
+            color: var(--accent);
+        }
+
+        .cluster-overflow {
+            color: var(--text-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cluster-group-header {
+            position: sticky;
+            top: 64px;
+            z-index: 4;
+            padding: var(--space-2) var(--space-4);
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            color: var(--text-2);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            letter-spacing: var(--tracking-label);
+            text-transform: uppercase;
+        }
+
+        .middle-empty-state {
+            display: grid;
+            place-items: center;
+            min-height: 168px;
+            padding: var(--space-8);
+            background: var(--surface);
+            border: 1px dashed var(--border-strong);
+            border-radius: 8px;
+            color: var(--text-2);
+            text-align: center;
+        }
+
+        .middle-empty-state svg {
+            width: 22px;
+            height: 22px;
+            margin: 0 auto var(--space-2);
+            color: var(--accent);
+            stroke-width: 2;
+        }
+
+        .middle-empty-title {
+            color: var(--text);
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            line-height: var(--line-ui);
+        }
+
+        .middle-empty-copy {
+            margin-top: var(--space-1);
+            color: var(--text-2);
+            font-size: var(--text-sm);
+        }
+
+        .middle-empty-state .middle-section-link {
+            justify-content: center;
+            margin-top: var(--space-3);
+        }
+
+        @media (max-width: 1120px) {
+            .sector-heatmap-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .cluster-signal-row {
+                grid-template-columns: auto minmax(68px, auto) minmax(160px, 1fr) minmax(104px, auto);
+                row-gap: var(--space-1);
+            }
+
+            .cluster-count {
+                grid-column: 1;
+                grid-row: 1 / span 2;
+            }
+
+            .cluster-signal-row .tag-ticker {
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: start;
+            }
+
+            .cluster-company {
+                grid-column: 3;
+                grid-row: 1;
+            }
+
+            .cluster-date {
+                grid-column: 2;
+                grid-row: 2;
+            }
+
+            .cluster-directors {
+                grid-column: 3 / 5;
+                grid-row: 2;
+            }
+
+            .cluster-value {
+                grid-column: 4;
+                grid-row: 1;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .middle-section {
+                margin-top: var(--space-12);
+            }
+
+            .middle-section-header {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-bottom: var(--space-6);
+            }
+
+            .middle-section-actions,
+            .sector-window-control,
+            .cluster-sort-control {
+                width: 100%;
+            }
+
+            .sector-heatmap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cluster-signal-row {
+                grid-template-columns: auto minmax(68px, auto) minmax(0, 1fr);
+                min-height: 72px;
+            }
+
+            .cluster-count {
+                grid-column: 1;
+                grid-row: 1;
+            }
+
+            .cluster-signal-row .tag-ticker {
+                grid-column: 2;
+                grid-row: 1;
+            }
+
+            .cluster-company {
+                grid-column: 2 / -1;
+                grid-row: 2;
+            }
+
+            .cluster-date {
+                grid-column: 2 / -1;
+                grid-row: 3;
+            }
+
+            .cluster-directors {
+                grid-column: 2 / -1;
+                grid-row: 4;
+            }
+
+            .cluster-value {
+                grid-column: 3;
+                grid-row: 1;
+                font-size: var(--text-base);
+            }
+
+            .cluster-count {
+                align-self: start;
+            }
+        }
+
+        .compliance-section {
+            --accent: var(--brand-accent);
+            --accent-hover: var(--brand-accent-hover);
+            --accent-soft: var(--brand-accent-soft);
+            margin-top: var(--space-16);
+            color: var(--text);
+        }
+
+        .compliance-filter-bar {
+            display: grid;
+            grid-template-columns: minmax(160px, 220px) minmax(160px, 1fr) auto;
+            gap: var(--space-3);
+            align-items: end;
+            padding: var(--space-3);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom: 0;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .compliance-filter-field {
+            display: grid;
+            gap: var(--space-1);
+        }
+
+        .compliance-filter-field label,
+        .compliance-check label {
+            color: var(--text-2);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            letter-spacing: var(--tracking-label);
+            line-height: var(--line-ui);
+            text-transform: uppercase;
+        }
+
+        .compliance-range-row,
+        .compliance-check {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .compliance-range-row input[type="range"] {
+            min-height: auto;
+            padding: 0;
+        }
+
+        .compliance-range-value {
+            min-width: 44px;
+            color: var(--text-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .compliance-check {
+            align-self: center;
+            color: var(--text-2);
+            font-size: var(--text-sm);
+            white-space: nowrap;
+        }
+
+        .compliance-check input {
+            width: 16px;
+            height: 16px;
+            min-height: 16px;
+            accent-color: var(--accent);
+        }
+
+        .compliance-table-shell {
+            border-color: var(--border);
+            border-radius: 0 0 8px 8px;
+            background: var(--surface);
+        }
+
+        .compliance-table {
+            min-width: 980px;
+        }
+
+        .compliance-table th,
+        .compliance-table td {
+            height: 44px;
+            white-space: nowrap;
+        }
+
+        .compliance-table th:nth-child(6),
+        .compliance-table td:nth-child(6) {
+            text-align: right;
+        }
+
+        .compliance-company,
+        .compliance-director {
+            display: block;
+            max-width: 28ch;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .days-late-cell {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .days-late-cell.is-severe {
+            color: var(--sell);
+            font-weight: var(--weight-semibold);
+        }
+
+        .days-late-cell.is-major {
+            color: var(--warn);
+            font-weight: var(--weight-semibold);
+        }
+
+        .days-late-cell.is-minor {
+            color: var(--text-2);
+        }
+
+        .verified-icon,
+        .unverified-dash {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+        }
+
+        .verified-icon {
+            color: var(--buy);
+        }
+
+        .verified-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        .unverified-dash {
+            color: var(--text-3);
+            font-family: var(--font-mono);
+        }
+
+        .compliance-empty-state {
+            display: none;
+            place-items: center;
+            min-height: 220px;
+            padding: var(--space-12) var(--space-6);
+            background: var(--surface);
+            border: 1px dashed var(--border-strong);
+            border-radius: 8px;
+            margin: var(--space-4);
+            color: var(--text-2);
+            text-align: center;
+        }
+
+        .compliance-empty-state.show {
+            display: grid;
+        }
+
+        .compliance-empty-title {
+            color: var(--text);
+            font-weight: var(--weight-semibold);
+        }
+
+        @media (max-width: 900px) {
+            .compliance-filter-bar {
+                grid-template-columns: 1fr;
+                border-bottom: 1px solid var(--border);
+                border-radius: 8px;
+                margin-bottom: var(--space-3);
+            }
+
+            .compliance-table-shell {
+                border-radius: 8px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header>
+    <header class="site-header">
         <div class="header-content">
-            <div>
-                <h1>📊 ASX Insider Tracker</h1>
-                <p class="header-subtitle">Real-time monitoring of director trades on the Australian Securities Exchange</p>
+            <div class="brand-mark" aria-label="ASX Insider Tracker">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18 17V9"></path>
+                    <path d="M13 17V5"></path>
+                    <path d="M8 17v-3"></path>
+                </svg>
+                <span>ASX Insider Tracker</span>
             </div>
-            <div class="header-controls">
-                <a href="/cluster-portfolio" class="header-cta">View Cluster Portfolio</a>
-                <a href="/clusters" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">Cluster Buys</a>
-                <a href="/cluster-portfolio" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">Cluster Portfolio</a>
-                <a href="/static/about.html" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">About</a>
-                <a href="/docs" target="_blank" style="color:rgba(255,255,255,.85);text-decoration:none;font-size:.9rem;font-weight:600" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.85)'">API Docs</a>
-                <button class="theme-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
-                <button onclick="exportCSV()">📥 Export CSV</button>
+            <nav class="header-controls" aria-label="Primary navigation">
+                <a href="/clusters/portfolio" class="site-nav-link">View Cluster Portfolio</a>
+                <a href="/clusters" class="site-nav-link">Cluster Buys</a>
+                <a href="/clusters/portfolio" class="site-nav-link">Cluster Portfolio</a>
+                <a href="/static/about.html" class="site-nav-link">About</a>
+                <a href="/docs" target="_blank" class="site-nav-link">API Docs</a>
+            </nav>
+            <div class="header-actions">
+                <details class="mobile-nav-menu">
+                    <summary class="mobile-menu-summary">
+                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M4 6h16"></path>
+                            <path d="M4 12h16"></path>
+                            <path d="M4 18h16"></path>
+                        </svg>
+                        Menu
+                    </summary>
+                    <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+                        <a href="/clusters/portfolio" class="site-nav-link">View Cluster Portfolio</a>
+                        <a href="/clusters" class="site-nav-link">Cluster Buys</a>
+                        <a href="/clusters/portfolio" class="site-nav-link">Cluster Portfolio</a>
+                        <a href="/static/about.html" class="site-nav-link">About</a>
+                        <a href="/docs" target="_blank" class="site-nav-link">API Docs</a>
+                    </nav>
+                </details>
+                <button class="header-icon-button" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    <svg class="theme-icon-moon" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3a6 6 0 0 0 9 7.4A9 9 0 1 1 12 3z"></path>
+                    </svg>
+                    <svg class="theme-icon-sun" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2"></path>
+                        <path d="M12 20v2"></path>
+                        <path d="m4.93 4.93 1.41 1.41"></path>
+                        <path d="m17.66 17.66 1.41 1.41"></path>
+                        <path d="M2 12h2"></path>
+                        <path d="M20 12h2"></path>
+                        <path d="m6.34 17.66-1.41 1.41"></path>
+                        <path d="m19.07 4.93-1.41 1.41"></path>
+                    </svg>
+                </button>
+                <button class="header-export-button" onclick="exportCSV()">Export CSV</button>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
     <div class="container">
+        <section class="page-intro" aria-labelledby="pageTitle">
+            <h1 id="pageTitle">Director trades, filing discipline, and market intent.</h1>
+            <p>Real-time monitoring of ASX director transactions, late lodgements, and concentration signals for analysts and capital markets teams.</p>
+        </section>
+
         <!-- Statistics Dashboard -->
         <div class="stats-grid" id="statsGrid">
-            <div class="loading"></div>
+            <div class="stat-card"><span class="skeleton skeleton-text" style="width: 46%"></span><span class="skeleton skeleton-text" style="width: 64%; height: 38px; margin-top: 12px"></span></div>
+            <div class="stat-card"><span class="skeleton skeleton-text" style="width: 52%"></span><span class="skeleton skeleton-text" style="width: 58%; height: 38px; margin-top: 12px"></span></div>
+            <div class="stat-card"><span class="skeleton skeleton-text" style="width: 58%"></span><span class="skeleton skeleton-text" style="width: 62%; height: 38px; margin-top: 12px"></span></div>
         </div>
 
         <!-- Trade Feed Section -->
-        <div class="section-header">
-            <div>
-                <h2>Trade Feed</h2>
-                <p class="text-muted" id="tradeCount" style="margin-top: 0.3rem;">Loading...</p>
+        <section class="trade-feed-section" aria-labelledby="tradeFeedTitle">
+            <div class="trade-feed-heading">
+                <div>
+                    <h2 id="tradeFeedTitle">Trade Feed</h2>
+                    <p>Appendix 3Y director transactions with disclosure timing and value context.</p>
+                </div>
             </div>
-            <button onclick="triggerSync()" id="syncBtn" style="background-color: #28a745; padding: 0.6rem 1.5rem;">🔄 Refresh Now</button>
-        </div>
 
-        <!-- Filters -->
-        <div class="filter-bar">
-            <!-- Row 1: Search fields + clear button -->
-            <div class="filter-row filter-row-primary">
-                <div class="filter-group">
-                    <label for="tickerFilter">Company (Ticker)</label>
-                    <input type="text" id="tickerFilter" placeholder="e.g., BHP, CBA" onkeyup="applyFilters()">
-                </div>
-                <div class="filter-group">
-                    <label for="directorFilter">Director Name</label>
-                    <input type="text" id="directorFilter" placeholder="Director name" onkeyup="applyFilters()">
-                </div>
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button class="btn-clear-filters" onclick="clearFilters()">✕ Clear</button>
-                </div>
-            </div>
-            <!-- Row 2: Date range + type + more filters -->
-            <div class="filter-row filter-row-secondary">
-                <div class="filter-group">
-                    <label for="dateFromFilter">Date From</label>
-                    <input type="date" id="dateFromFilter" onchange="applyFilters()">
-                </div>
-                <div class="filter-group">
-                    <label for="dateToFilter">Date To</label>
-                    <input type="date" id="dateToFilter" onchange="applyFilters()">
-                </div>
-                <div class="filter-group">
-                    <label>Trade Type</label>
-                    <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:0.4rem;">
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" class="typeCheckbox" value="on_market_buy" onchange="applyFilters()"> Buy
+            <details class="trade-filter-shell" open>
+                <summary class="trade-filter-summary">
+                    <span>Filters</span>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M4 6h16"></path>
+                        <path d="M7 12h10"></path>
+                        <path d="M10 18h4"></path>
+                    </svg>
+                </summary>
+                <div class="trade-filter-content">
+                    <label class="sr-only" for="tickerFilter">Ticker search</label>
+                    <input class="trade-filter-input" type="text" id="tickerFilter" placeholder="Ticker" oninput="applyFilters()" onkeyup="applyFilters()">
+
+                    <label class="sr-only" for="directorFilter">Director name</label>
+                    <input class="trade-filter-input" type="text" id="directorFilter" placeholder="Director name" oninput="applyFilters()" onkeyup="applyFilters()">
+
+                    <div class="date-range-control" aria-label="Date range">
+                        <label class="sr-only" for="dateFromFilter">Date from</label>
+                        <input class="trade-date-input" type="date" id="dateFromFilter" onchange="applyFilters()" aria-label="Date from">
+                        <span class="date-range-separator">to</span>
+                        <label class="sr-only" for="dateToFilter">Date to</label>
+                        <input class="trade-date-input" type="date" id="dateToFilter" onchange="applyFilters()" aria-label="Date to">
+                    </div>
+
+                    <div class="trade-type-chips" aria-label="Trade type filters">
+                        <label class="trade-type-chip">
+                            <input type="checkbox" class="typeCheckbox" value="on_market_buy" onchange="applyFilters()">
+                            <span>Buy</span>
                         </label>
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" class="typeCheckbox" value="on_market_sell" onchange="applyFilters()"> Sell
+                        <label class="trade-type-chip">
+                            <input type="checkbox" class="typeCheckbox" value="on_market_sell" onchange="applyFilters()">
+                            <span>Sell</span>
                         </label>
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" class="typeCheckbox" value="off_market" onchange="applyFilters()"> Off-Market
+                        <label class="trade-type-chip">
+                            <input type="checkbox" class="typeCheckbox" value="off_market" onchange="applyFilters()">
+                            <span>Off-Market</span>
                         </label>
                     </div>
-                </div>
-                <div class="filter-group">
-                    <label>More Filters</label>
-                    <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem;">
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()"> Late Filings Only
-                        </label>
-                        <label style="font-weight:normal;text-transform:none;display:flex;align-items:center;gap:0.3rem;">
-                            <input type="checkbox" id="incompleteFilter" onchange="applyFilters()"> Include no-price trades
-                        </label>
+
+                    <details class="more-filter-popover">
+                        <summary class="more-filter-summary">More filters</summary>
+                        <div class="more-filter-panel">
+                            <label>
+                                <input type="checkbox" id="lateFilingsFilter" onchange="applyFilters()">
+                                Late Filings Only
+                            </label>
+                            <label>
+                                <input type="checkbox" id="incompleteFilter" onchange="applyFilters()">
+                                Include no-price trades
+                            </label>
+                        </div>
+                    </details>
+
+                    <div class="trade-toolbar-actions">
+                        <span class="trade-result-count" id="tradeCount" aria-live="polite">Loading trades</span>
+                        <button class="trade-ghost-button" onclick="triggerSync()" id="syncBtn" title="Refresh trades" aria-label="Refresh trades">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12a9 9 0 0 1-15.1 6.6"></path>
+                                <path d="M3 12A9 9 0 0 1 18.1 5.4"></path>
+                                <path d="M3 18v-5h5"></path>
+                                <path d="M21 6v5h-5"></path>
+                            </svg>
+                        </button>
+                        <button class="clear-filters-link" id="clearFiltersBtn" onclick="clearFilters()" hidden>Clear filters</button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </details>
 
-        <!-- Trades Table -->
-        <div class="table-container" id="tradesTableContainer">
-            <table id="tradesTable">
-                <thead>
-                    <tr>
-                        <th class="sortable" onclick="sortTable('date_of_trade')">Date</th>
-                        <th class="sortable" onclick="sortTable('ticker')">Ticker</th>
-                        <th class="sortable" onclick="sortTable('company_name')">Company</th>
-                        <th class="sortable" onclick="sortTable('director_name')">Director</th>
-                        <th class="sortable" onclick="sortTable('trade_type')">Type</th>
-                        <th class="sortable" onclick="sortTable('quantity')">Quantity</th>
-                        <th class="sortable" onclick="sortTable('price_per_share')">Price</th>
-                        <th class="sortable" onclick="sortTable('value')">Value</th>
-                        <th class="sortable" onclick="sortTable('days_to_report')">Days to Report</th>
-                    </tr>
-                </thead>
-                <tbody id="tradesBody">
-                </tbody>
-            </table>
-            <div class="no-results" id="noResults">
-                <div class="empty-state">
-                    <p><strong>No trades match your filters</strong></p>
-                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Try adjusting your search criteria</p>
+            <div class="table-container trade-table-container" id="tradesTableContainer">
+                <div class="trade-table-scroll">
+                    <table id="tradesTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" tabindex="0" role="button" onclick="sortTable('date_of_trade')" onkeydown="handleSortKey(event, 'date_of_trade')"><span class="trade-header-button">Date <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable" tabindex="0" role="button" onclick="sortTable('ticker')" onkeydown="handleSortKey(event, 'ticker')"><span class="trade-header-button">Ticker <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable" tabindex="0" role="button" onclick="sortTable('company_name')" onkeydown="handleSortKey(event, 'company_name')"><span class="trade-header-button">Company <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable" tabindex="0" role="button" onclick="sortTable('director_name')" onkeydown="handleSortKey(event, 'director_name')"><span class="trade-header-button">Director <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable" tabindex="0" role="button" onclick="sortTable('trade_type')" onkeydown="handleSortKey(event, 'trade_type')"><span class="trade-header-button">Type <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable trade-num" tabindex="0" role="button" onclick="sortTable('quantity')" onkeydown="handleSortKey(event, 'quantity')"><span class="trade-header-button">Quantity <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable trade-num" tabindex="0" role="button" onclick="sortTable('price_per_share')" onkeydown="handleSortKey(event, 'price_per_share')"><span class="trade-header-button">Price <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable trade-num" tabindex="0" role="button" onclick="sortTable('value')" onkeydown="handleSortKey(event, 'value')"><span class="trade-header-button">Value <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                                <th class="sortable trade-num" tabindex="0" role="button" onclick="sortTable('days_to_report')" onkeydown="handleSortKey(event, 'days_to_report')"><span class="trade-header-button">Days late <svg class="sort-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="trade-empty-state no-results" id="noResults">
+                    <div class="trade-empty-card">
+                        <svg class="empty-state-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                            <path d="M8 11h6"></path>
+                        </svg>
+                        <div class="trade-empty-title">No trades match these filters</div>
+                        <div class="trade-empty-copy">Clear filters or broaden the date range to restore the feed.</div>
+                        <button class="clear-filters-link" onclick="clearFilters()">Clear filters</button>
+                    </div>
+                </div>
+                <div class="trade-pagination" id="pagination">
+                    <div class="pagination-summary" id="paginationSummary">0 — 0 of 0 trades</div>
+                    <div class="pagination-pages" id="paginationPages" aria-label="Trade feed pagination"></div>
+                    <label class="pagination-jump">
+                        Go to page
+                        <input type="number" class="page-input" id="pageInput" min="1" value="1"
+                               onchange="goToPage(parseInt(this.value))"
+                               onkeydown="if(event.key==='Enter') goToPage(parseInt(this.value))">
+                    </label>
+                    <span id="totalPages" hidden>1</span>
                 </div>
             </div>
-            <div class="pagination" id="pagination">
-                <button onclick="firstPage()" title="First page">⏮</button>
-                <button onclick="previousPage()">← Prev</button>
-                <div class="page-info">
-                    Page
-                    <input type="number" class="page-input" id="pageInput" min="1" value="1"
-                           onchange="goToPage(parseInt(this.value))"
-                           onkeydown="if(event.key==='Enter') goToPage(parseInt(this.value))">
-                    of <span id="totalPages">1</span>
-                </div>
-                <button onclick="nextPage()">Next →</button>
-                <button onclick="lastPage()" title="Last page">⏭</button>
-            </div>
-        </div>
+        </section>
 
         <!-- Sector Heatmap Section -->
-        <div class="section-header" style="margin-top:0;">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <h2>ASX 200 Sector Heatmap</h2>
-                <span class="tooltip-wrap">
-                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                    <div class="tooltip-box">Director on-market buy/sell activity grouped by GICS sector over the last 90 days. Sentiment is bullish when buy value exceeds sell value by 50%+, bearish when sell value exceeds buy value by 50%+, otherwise neutral. Click any sector card to see the top companies.</div>
-                </span>
-            </div>
-            <p class="text-muted" style="margin-top:0.3rem;">Director buy/sell activity in ASX 200 companies — past 90 days <span style="font-size:0.75rem;background:var(--bg-tertiary);padding:0.1rem 0.45rem;border-radius:10px;margin-left:0.3rem">Past 90 days</span></p>
-        </div>
-        <div class="heatmap-grid" id="sectorHeatmapGrid">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Active Cluster Buys Section -->
-        <div class="section-header">
-            <div>
-                <h2>Active Cluster Buys</h2>
-                <p class="text-muted" style="margin-top:0.3rem;">Multiple directors buying within 20 trading days</p>
-            </div>
-            <a href="/clusters" style="font-size:.9rem;font-weight:600;color:var(--accent);white-space:nowrap">View all clusters →</a>
-        </div>
-        <div id="activeClustersWidget" style="margin-bottom:2rem;">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Director Cluster Signal Section -->
-        <div class="section-header">
-            <div style="display:flex;align-items:center;gap:0.6rem;">
-                <h2>Director Cluster Signal</h2>
-                <span class="tooltip-wrap">
-                    <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')">i</button>
-                    <div class="tooltip-box">Companies where 3 or more distinct directors all made open-market purchases in the last 90 days. High director count = strong insider conviction. Sorted by number of buying directors, then total buy value.</div>
-                </span>
-            </div>
-            <p class="text-muted" style="margin-top:0.3rem;">High-conviction clusters — 3+ directors buying the same stock · past 90 days</p>
-        </div>
-        <div class="cluster-list" id="clusterSignalList">
-            <div class="loading"></div>
-        </div>
-
-        <!-- Compliance Violations Section (Verified Data Only) -->
-        <div class="section-header mt-2">
-            <div>
-                <h2>Real-Time Compliance Monitoring</h2>
-                <p class="text-muted" style="margin-top: 0.3rem;">Verified violations from 3Y PDF scraper (Jan 2026 onwards)</p>
-            </div>
-        </div>
-
-        <div class="filter-bar" style="margin-bottom: 1.5rem;">
-            <div class="filter-group">
-                <label for="severityFilter">Severity</label>
-                <select id="severityFilter" onchange="applyComplianceFilters()">
-                    <option value="">All Violations</option>
-                    <option value="severe">Severe (21+ days)</option>
-                    <option value="moderate">Moderate (11-20 days)</option>
-                    <option value="minor">Minor (6-10 days)</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>
-                    <input type="checkbox" id="showUnverifiedFilter" onchange="applyComplianceFilters()">
-                    Include unverified
-                </label>
-            </div>
-        </div>
-
-        <div class="table-container" id="complianceTableContainer">
-            <table id="complianceTable">
-                <thead>
-                    <tr>
-                        <th>Trade Date</th>
-                        <th>Lodged Date</th>
-                        <th>Ticker</th>
-                        <th>Company</th>
-                        <th>Director</th>
-                        <th title="Business days past the 5-day deadline">Days Late</th>
-                        <th>Severity</th>
-                        <th title="Confirmed against original ASX PDF">Verified</th>
-                    </tr>
-                </thead>
-                <tbody id="complianceBody">
-                </tbody>
-            </table>
-            <div class="no-results" id="noComplianceResults">
-                <div class="empty-state">
-                    <p><strong>No recent violations</strong></p>
-                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Only trades lodged since Jan 1, 2026 are monitored</p>
+        <section class="middle-section sector-heatmap-section" aria-labelledby="sectorHeatmapTitle">
+            <div class="middle-section-header">
+                <div>
+                    <div class="middle-section-title-row">
+                        <h2 id="sectorHeatmapTitle">ASX 200 Sector Heatmap</h2>
+                        <span class="tooltip-wrap">
+                            <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')" aria-label="About sector heatmap">i</button>
+                            <div class="tooltip-box">Director on-market buy/sell activity grouped by GICS sector over the last 90 days. Click any sector tile to see the top companies.</div>
+                        </span>
+                    </div>
+                    <p class="middle-section-caption">Director buy/sell activity in ASX 200 companies, grouped by GICS sector.</p>
+                </div>
+                <div class="middle-section-actions">
+                    <label class="sr-only" for="sectorWindowSelect">Sector window</label>
+                    <select class="select sector-window-control" id="sectorWindowSelect" aria-label="Sector window">
+                        <option value="90" selected>Past 90 days</option>
+                    </select>
                 </div>
             </div>
-        </div>
+            <div class="sector-heatmap-grid" id="sectorHeatmapGrid">
+                <div class="sector-tile"><span class="skeleton skeleton-text" style="width: 58%"></span><span class="skeleton skeleton-text" style="width: 36%; height: 24px; justify-self: end"></span><span class="skeleton skeleton-text" style="width: 100%"></span><span class="skeleton skeleton-text" style="width: 72%"></span><span class="skeleton skeleton-text" style="width: 54%"></span></div>
+                <div class="sector-tile"><span class="skeleton skeleton-text" style="width: 64%"></span><span class="skeleton skeleton-text" style="width: 36%; height: 24px; justify-self: end"></span><span class="skeleton skeleton-text" style="width: 100%"></span><span class="skeleton skeleton-text" style="width: 70%"></span><span class="skeleton skeleton-text" style="width: 48%"></span></div>
+                <div class="sector-tile"><span class="skeleton skeleton-text" style="width: 52%"></span><span class="skeleton skeleton-text" style="width: 36%; height: 24px; justify-self: end"></span><span class="skeleton skeleton-text" style="width: 100%"></span><span class="skeleton skeleton-text" style="width: 74%"></span><span class="skeleton skeleton-text" style="width: 52%"></span></div>
+                <div class="sector-tile"><span class="skeleton skeleton-text" style="width: 60%"></span><span class="skeleton skeleton-text" style="width: 36%; height: 24px; justify-self: end"></span><span class="skeleton skeleton-text" style="width: 100%"></span><span class="skeleton skeleton-text" style="width: 68%"></span><span class="skeleton skeleton-text" style="width: 46%"></span></div>
+            </div>
+        </section>
+
+        <!-- Active Cluster Buys Section -->
+        <section class="middle-section active-cluster-section" aria-labelledby="activeClusterTitle">
+            <div class="middle-section-header">
+                <div>
+                    <h2 id="activeClusterTitle">Active Cluster Buys</h2>
+                    <p class="middle-section-caption">Multiple directors buying within 20 trading days.</p>
+                </div>
+                <div class="middle-section-actions">
+                    <a class="middle-section-link" href="/clusters">View all clusters →</a>
+                </div>
+            </div>
+            <div id="activeClustersWidget">
+                <div class="active-cluster-list">
+                    <div class="cluster-signal-row"><span class="skeleton skeleton-text" style="width: 84px"></span><span class="skeleton skeleton-text" style="width: 56px"></span><span class="skeleton skeleton-text" style="width: 180px"></span><span class="skeleton skeleton-text" style="width: 96px"></span><span class="skeleton skeleton-text" style="width: 100px"></span><span class="skeleton skeleton-text" style="width: 140px"></span></div>
+                    <div class="cluster-signal-row"><span class="skeleton skeleton-text" style="width: 84px"></span><span class="skeleton skeleton-text" style="width: 56px"></span><span class="skeleton skeleton-text" style="width: 180px"></span><span class="skeleton skeleton-text" style="width: 96px"></span><span class="skeleton skeleton-text" style="width: 100px"></span><span class="skeleton skeleton-text" style="width: 140px"></span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Director Cluster Signal Section -->
+        <section class="middle-section director-cluster-section" aria-labelledby="clusterSignalTitle">
+            <div class="middle-section-header">
+                <div>
+                    <div class="middle-section-title-row">
+                        <h2 id="clusterSignalTitle">Director Cluster Signal</h2>
+                        <span class="tooltip-wrap">
+                            <button class="info-btn" onclick="this.closest('.tooltip-wrap').classList.toggle('tip-open')" aria-label="About director cluster signal">i</button>
+                            <div class="tooltip-box">Companies where 3 or more distinct directors all made open-market purchases in the last 90 days.</div>
+                        </span>
+                    </div>
+                    <p class="middle-section-caption">High-conviction clusters: 3+ directors buying the same stock over the past 90 days.</p>
+                </div>
+                <div class="middle-section-actions">
+                    <label class="sr-only" for="clusterSortSelect">Sort cluster signals</label>
+                    <select class="select cluster-sort-control" id="clusterSortSelect" aria-label="Sort cluster signals" onchange="renderClusterSignal()">
+                        <option value="director_count" selected>Sort by director count</option>
+                        <option value="value">Sort by $ value</option>
+                        <option value="recency">Sort by recency</option>
+                    </select>
+                </div>
+            </div>
+            <div class="cluster-signal-list" id="clusterSignalList">
+                <div class="cluster-signal-row"><span class="skeleton skeleton-text" style="width: 84px"></span><span class="skeleton skeleton-text" style="width: 56px"></span><span class="skeleton skeleton-text" style="width: 180px"></span><span class="skeleton skeleton-text" style="width: 96px"></span><span class="skeleton skeleton-text" style="width: 100px"></span><span class="skeleton skeleton-text" style="width: 140px"></span></div>
+                <div class="cluster-signal-row"><span class="skeleton skeleton-text" style="width: 84px"></span><span class="skeleton skeleton-text" style="width: 56px"></span><span class="skeleton skeleton-text" style="width: 180px"></span><span class="skeleton skeleton-text" style="width: 96px"></span><span class="skeleton skeleton-text" style="width: 100px"></span><span class="skeleton skeleton-text" style="width: 140px"></span></div>
+                <div class="cluster-signal-row"><span class="skeleton skeleton-text" style="width: 84px"></span><span class="skeleton skeleton-text" style="width: 56px"></span><span class="skeleton skeleton-text" style="width: 180px"></span><span class="skeleton skeleton-text" style="width: 96px"></span><span class="skeleton skeleton-text" style="width: 100px"></span><span class="skeleton skeleton-text" style="width: 140px"></span></div>
+            </div>
+        </section>
+
+        <!-- Compliance Violations Section (Verified Data Only) -->
+        <section class="compliance-section" aria-labelledby="complianceTitle">
+            <div class="middle-section-header">
+                <div>
+                    <h2 id="complianceTitle">Real-Time Compliance Monitoring</h2>
+                    <p class="middle-section-caption">Appendix 3Y filing delays, verified against PDF-scraped source data where available.</p>
+                </div>
+            </div>
+
+            <div class="compliance-filter-bar">
+                <div class="compliance-filter-field">
+                    <label for="severityFilter">Severity</label>
+                    <select class="select" id="severityFilter" onchange="applyComplianceFilters()">
+                        <option value="">All Violations</option>
+                        <option value="severe">Severe</option>
+                        <option value="moderate">Major</option>
+                        <option value="minor">Minor</option>
+                    </select>
+                </div>
+                <div class="compliance-filter-field">
+                    <label for="daysLateFilter">Minimum Days Late</label>
+                    <div class="compliance-range-row">
+                        <input id="daysLateFilter" type="range" min="0" max="120" step="5" value="0" oninput="applyComplianceFilters()">
+                        <span class="compliance-range-value" id="daysLateValue">0+</span>
+                    </div>
+                </div>
+                <div class="compliance-check">
+                    <input type="checkbox" id="showUnverifiedFilter" onchange="applyComplianceFilters()">
+                    <label for="showUnverifiedFilter">Include unverified</label>
+                </div>
+            </div>
+
+            <div class="table-shell compliance-table-shell" id="complianceTableContainer">
+                <div class="table-scroll">
+                    <table class="table compliance-table" id="complianceTable">
+                        <thead>
+                            <tr>
+                                <th>Trade Date</th>
+                                <th>Lodged Date</th>
+                                <th>Ticker</th>
+                                <th>Company</th>
+                                <th>Director</th>
+                                <th title="Business days past the 5-day deadline">Days Late</th>
+                                <th>Severity</th>
+                                <th title="Confirmed against original ASX PDF">Verified</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complianceBody">
+                            <tr><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px"></span></td><td><span class="skeleton skeleton-text" style="width: 180px"></span></td><td><span class="skeleton skeleton-text" style="width: 150px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px; margin-left: auto"></span></td><td><span class="skeleton skeleton-text" style="width: 68px"></span></td><td><span class="skeleton skeleton-text" style="width: 24px"></span></td></tr>
+                            <tr><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px"></span></td><td><span class="skeleton skeleton-text" style="width: 180px"></span></td><td><span class="skeleton skeleton-text" style="width: 150px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px; margin-left: auto"></span></td><td><span class="skeleton skeleton-text" style="width: 68px"></span></td><td><span class="skeleton skeleton-text" style="width: 24px"></span></td></tr>
+                            <tr><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 86px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px"></span></td><td><span class="skeleton skeleton-text" style="width: 180px"></span></td><td><span class="skeleton skeleton-text" style="width: 150px"></span></td><td><span class="skeleton skeleton-text" style="width: 52px; margin-left: auto"></span></td><td><span class="skeleton skeleton-text" style="width: 68px"></span></td><td><span class="skeleton skeleton-text" style="width: 24px"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="compliance-empty-state" id="noComplianceResults">
+                    <div>
+                        <svg class="empty-state-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11 12 14 22 4"></path>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <div class="compliance-empty-title">No recent violations</div>
+                        <div class="trade-empty-copy">Adjust the filters or include unverified filings to broaden the compliance set.</div>
+                        <button class="clear-filters-link" onclick="resetComplianceFilters()">Reset compliance filters</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Sector detail modal -->
@@ -1085,15 +3053,118 @@
         let currentSort = { field: 'date_of_trade', asc: false };
         let stats = null;
 
+        function skeletonText(width, extraStyle = '') {
+            return `<span class="skeleton skeleton-text" style="width: ${width}; ${extraStyle}"></span>`;
+        }
+
+        function renderStatsSkeleton() {
+            const container = document.getElementById('statsGrid');
+            if (!container) return;
+            const cards = [
+                ['46%', '64%'],
+                ['52%', '58%'],
+                ['58%', '62%'],
+                ['44%', '50%', '72%'],
+                ['62%', '82%', '42%'],
+                ['66%', '34%', '44%'],
+            ];
+            container.innerHTML = cards.map(card => `
+                <div class="stat-card">
+                    ${skeletonText(card[0])}
+                    ${skeletonText(card[1], `height: ${card[1] === '82%' ? '24px' : '38px'}; margin-top: 12px`)}
+                    ${card[2] ? skeletonText(card[2], 'margin-top: auto') : ''}
+                </div>`).join('');
+        }
+
+        function renderSectorHeatmapSkeleton() {
+            const container = document.getElementById('sectorHeatmapGrid');
+            if (!container) return;
+            container.innerHTML = Array.from({ length: 4 }).map((_, index) => `
+                <div class="sector-tile" aria-hidden="true">
+                    ${skeletonText(`${52 + index * 4}%`)}
+                    ${skeletonText('36%', 'height: 24px; justify-self: end')}
+                    ${skeletonText('100%')}
+                    ${skeletonText(`${68 + index * 2}%`)}
+                    ${skeletonText(`${46 + index * 2}%`)}
+                </div>`).join('');
+        }
+
+        function clusterSkeletonRows(count = 3) {
+            return Array.from({ length: count }).map(() => `
+                <div class="cluster-signal-row" aria-hidden="true">
+                    ${skeletonText('84px')}
+                    ${skeletonText('56px')}
+                    ${skeletonText('180px')}
+                    ${skeletonText('96px')}
+                    ${skeletonText('100px')}
+                    ${skeletonText('140px')}
+                </div>`).join('');
+        }
+
+        function renderClusterSkeleton(targetId, count = 3, wrap = false) {
+            const container = document.getElementById(targetId);
+            if (!container) return;
+            const rows = clusterSkeletonRows(count);
+            container.innerHTML = wrap ? `<div class="active-cluster-list">${rows}</div>` : rows;
+        }
+
+        function renderComplianceSkeletonRows() {
+            const tbody = document.getElementById('complianceBody');
+            const noResults = document.getElementById('noComplianceResults');
+            if (!tbody) return;
+            if (noResults) noResults.classList.remove('show');
+            tbody.innerHTML = Array.from({ length: 5 }).map(() => `
+                <tr aria-hidden="true">
+                    <td>${skeletonText('86px')}</td>
+                    <td>${skeletonText('86px')}</td>
+                    <td>${skeletonText('52px')}</td>
+                    <td>${skeletonText('180px')}</td>
+                    <td>${skeletonText('150px')}</td>
+                    <td>${skeletonText('52px', 'margin-left: auto')}</td>
+                    <td>${skeletonText('68px')}</td>
+                    <td>${skeletonText('24px')}</td>
+                </tr>`).join('');
+        }
+
+        function renderAsyncSkeletons() {
+            renderStatsSkeleton();
+            renderTradeSkeletonRows();
+            renderSectorHeatmapSkeleton();
+            renderClusterSkeleton('activeClustersWidget', 2, true);
+            renderClusterSkeleton('clusterSignalList', 4, false);
+            renderComplianceSkeletonRows();
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
+            const filterShell = document.querySelector('.trade-filter-shell');
+            if (filterShell) {
+                filterShell.addEventListener('toggle', () => {
+                    if (window.innerWidth <= 768) {
+                        filterShell.dataset.userOpened = filterShell.open ? 'true' : '';
+                    }
+                });
+            }
+            syncTradeFilterDrawerState();
+            window.addEventListener('resize', syncTradeFilterDrawerState);
             await loadData();
             checkAndLazySync();
         });
 
+        function syncTradeFilterDrawerState() {
+            const shell = document.querySelector('.trade-filter-shell');
+            if (!shell) return;
+            if (window.innerWidth > 768) {
+                shell.setAttribute('open', '');
+            } else if (!shell.dataset.userOpened) {
+                shell.removeAttribute('open');
+            }
+        }
+
         // Load data from API
         async function loadData() {
             try {
+                renderAsyncSkeletons();
                 const [tradesRes, statsRes, violationsRes, heatmapRes, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
@@ -1119,9 +3190,13 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('statsGrid').innerHTML = `
-                    <div class="empty-state">
-                        <p><strong>Error loading data</strong></p>
-                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Please refresh the page or check the server connection</p>
+                    <div class="middle-empty-state" style="grid-column: 1 / -1">
+                        <div>
+                            ${iconSvg('empty')}
+                            <div class="middle-empty-title">Error loading data</div>
+                            <div class="middle-empty-copy">Refresh the page or check the server connection.</div>
+                            <button class="clear-filters-link" onclick="loadData()">Retry</button>
+                        </div>
                     </div>
                 `;
             }
@@ -1130,6 +3205,7 @@
         // Refresh data (for polling)
         async function refreshData() {
             try {
+                renderTradeSkeletonRows();
                 const [tradesRes, statsRes, violationsRes, heatmapRes, clusterRes] = await Promise.all([
                     fetch('/api/trades/all'),
                     fetch('/api/stats'),
@@ -1159,25 +3235,29 @@
                     applyComplianceFilters();
                     applyFilters();
                     console.log('✓ Data refreshed - new trades found');
+                } else {
+                    renderTrades();
                 }
             } catch (error) {
                 console.error('Error refreshing data:', error);
+                renderTrades();
             }
         }
 
         // Trigger manual sync from asxinsider.com.au
         async function triggerSync() {
             const btn = document.getElementById('syncBtn');
-            const originalText = btn.textContent;
+            const originalLabel = btn.getAttribute('aria-label') || 'Refresh trades';
             btn.disabled = true;
-            btn.textContent = '⏳ Syncing...';
+            btn.setAttribute('aria-label', 'Refreshing trades');
+            renderTradeSkeletonRows();
 
             try {
                 const res = await fetch('/api/admin/sync', { method: 'POST' });
                 const data = await res.json();
 
                 if (data.status === 'success') {
-                    btn.textContent = '✓ Sync complete!';
+                    btn.setAttribute('aria-label', 'Refresh complete');
                     localStorage.setItem('lastSyncTime', Date.now().toString());
                     console.log(`Sync results: ${data.inserted} inserted, ${data.upgraded} upgraded, ${data.skipped} skipped`);
 
@@ -1186,22 +3266,24 @@
                         await loadData();
                         applyFilters();
                         btn.disabled = false;
-                        btn.textContent = originalText;
+                        btn.setAttribute('aria-label', originalLabel);
                     }, 1000);
                 } else {
-                    btn.textContent = '✗ Sync failed';
+                    btn.setAttribute('aria-label', 'Refresh failed');
                     console.error('Sync error:', data.message);
                     setTimeout(() => {
                         btn.disabled = false;
-                        btn.textContent = originalText;
+                        btn.setAttribute('aria-label', originalLabel);
+                        renderTrades();
                     }, 3000);
                 }
             } catch (error) {
                 console.error('Error triggering sync:', error);
-                btn.textContent = '✗ Error';
+                btn.setAttribute('aria-label', 'Refresh error');
                 btn.disabled = false;
                 setTimeout(() => {
-                    btn.textContent = originalText;
+                    btn.setAttribute('aria-label', originalLabel);
+                    renderTrades();
                 }, 3000);
             }
         }
@@ -1255,21 +3337,6 @@
                     <div class="stat-label">Total Companies</div>
                     <div class="stat-value">${stats.total_companies.toLocaleString()}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Late Filings</div>
-                    <div class="stat-value">${stats.late_filings.toLocaleString()}</div>
-                    <div class="stat-subtext">Compliance rate: ${stats.compliance_rate_pct}%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Most Active Director</div>
-                    <div class="stat-value" style="font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${stats.most_active_director || 'N/A'}</div>
-                    <div class="stat-subtext">${stats.most_active_director_trades} trades</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Most Traded Company</div>
-                    <div class="stat-value">${stats.most_traded_company || 'N/A'}</div>
-                    <div class="stat-subtext">${stats.most_traded_company_trades} trades</div>
-                </div>
             `;
             document.getElementById('statsGrid').innerHTML = html;
         }
@@ -1279,6 +3346,15 @@
             if (!dateStr) return '—';
             const date = new Date(dateStr + 'T00:00:00');
             return date.toLocaleDateString('en-AU', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatTradeDate(dateStr) {
+            if (!dateStr) return '—';
+            const date = new Date(dateStr + 'T00:00:00');
+            const day = date.getDate();
+            const month = date.toLocaleDateString('en-AU', { month: 'short' });
+            const year = String(date.getFullYear()).slice(-2);
+            return `${day} ${month} '${year}`;
         }
 
         function formatCurrency(value) {
@@ -1303,10 +3379,41 @@
             return Math.abs(parseInt(value)).toLocaleString();
         }
 
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function tradeValueNumber(trade) {
+            const qty = parseFloat(trade.quantity);
+            const price = parseFloat(trade.price_per_share);
+            if (isNaN(qty) || isNaN(price)) return null;
+            return Math.abs(qty) * Math.abs(price);
+        }
+
+        function getDaysLate(trade) {
+            const days = trade.days_to_report;
+            if (days === null || days === undefined || days === '') return null;
+            const n = parseInt(days);
+            if (isNaN(n)) return null;
+            return Math.max(0, n - 5);
+        }
+
         function getTradeTypeClass(type) {
             if (type.includes('buy')) return 'buy';
             if (type.includes('sell')) return 'sell';
             return 'other';
+        }
+
+        function getTradeBadgeClass(type) {
+            if (type.includes('buy')) return 'badge-buy-soft';
+            if (type.includes('sell')) return 'badge-sell-soft';
+            return 'badge-soft';
         }
 
         function getTradeTypeLabel(type) {
@@ -1324,6 +3431,23 @@
         function getSelectedTradeTypes() {
             const checkboxes = document.querySelectorAll('.typeCheckbox:checked');
             return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function filtersAreActive() {
+            return Boolean(
+                document.getElementById('tickerFilter').value ||
+                document.getElementById('directorFilter').value ||
+                document.getElementById('dateFromFilter').value ||
+                document.getElementById('dateToFilter').value ||
+                document.getElementById('lateFilingsFilter').checked ||
+                document.getElementById('incompleteFilter').checked ||
+                getSelectedTradeTypes().length
+            );
+        }
+
+        function updateTradeFilterState() {
+            const clearBtn = document.getElementById('clearFiltersBtn');
+            if (clearBtn) clearBtn.hidden = !filtersAreActive();
         }
 
         // Apply trade filters (always re-applies current sort)
@@ -1353,13 +3477,14 @@
             currentPage = 1;
             renderTrades();
             updateTradeCount();
+            updateTradeFilterState();
         }
 
         function applySortToFiltered() {
             const { field, asc } = currentSort;
             filteredTrades.sort((a, b) => {
-                let aVal = a[field];
-                let bVal = b[field];
+                let aVal = field === 'value' ? tradeValueNumber(a) : a[field];
+                let bVal = field === 'value' ? tradeValueNumber(b) : b[field];
                 if (aVal == null && bVal == null) return 0;
                 if (aVal == null) return 1;
                 if (bVal == null) return -1;
@@ -1376,6 +3501,9 @@
         function applyComplianceFilters() {
             const severity = document.getElementById('severityFilter').value;
             const showUnverified = document.getElementById('showUnverifiedFilter').checked;
+            const minDaysLate = parseInt(document.getElementById('daysLateFilter')?.value || '0', 10);
+            const daysLateValue = document.getElementById('daysLateValue');
+            if (daysLateValue) daysLateValue.textContent = `${minDaysLate}+`;
             let filtered = allViolations;
 
             // Default: show only verified. If checkbox is checked, include unverified too.
@@ -1385,6 +3513,10 @@
 
             if (severity) {
                 filtered = filtered.filter(v => v.severity === severity);
+            }
+
+            if (minDaysLate > 0) {
+                filtered = filtered.filter(v => Number(v.days_late || 0) >= minDaysLate);
             }
 
             renderComplianceTable(filtered);
@@ -1409,20 +3541,42 @@
                 container.classList.remove('no-data');
                 tbody.innerHTML = pageData.map(trade => `
                         <tr>
-                            <td>${formatDate(trade.date_of_trade)}</td>
-                            <td><a class="ticker" href="/static/company.html?ticker=${trade.ticker}" style="text-decoration:none">${trade.ticker}</a></td>
-                            <td>${trade.company_name}</td>
-                            <td><a href="/static/director.html?id=${trade.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${trade.director_name}</a></td>
-                            <td><span class="trade-type ${getTradeTypeClass(trade.trade_type)}">${getTradeTypeLabel(trade.trade_type)}</span></td>
-                            <td class="text-right">${formatNumber(trade.quantity)}</td>
-                            <td class="text-right">${formatCurrency(trade.price_per_share)}</td>
-                            <td class="text-right">${formatValue(trade.quantity, trade.price_per_share)}</td>
-                            <td class="text-right">${trade.days_to_report !== null ? trade.days_to_report : '—'}</td>
+                            <td><span class="trade-date">${formatTradeDate(trade.date_of_trade)}</span></td>
+                            <td><a class="tag-ticker" href="/static/company.html?ticker=${encodeURIComponent(trade.ticker)}">${escapeHtml(trade.ticker)}</a></td>
+                            <td><span class="trade-company" title="${escapeHtml(trade.company_name)}">${escapeHtml(trade.company_name)}</span></td>
+                            <td><a class="trade-director-link" href="/static/director.html?id=${encodeURIComponent(trade.director_id)}">${escapeHtml(trade.director_name)}</a></td>
+                            <td><span class="badge ${getTradeBadgeClass(trade.trade_type)}">${getTradeTypeLabel(trade.trade_type)}</span></td>
+                            <td class="trade-num">${formatNumber(trade.quantity)}</td>
+                            <td class="trade-num">${formatCurrency(trade.price_per_share)}</td>
+                            <td class="trade-num">${formatValue(trade.quantity, trade.price_per_share)}</td>
+                            <td class="trade-num trade-days-late ${getDaysLate(trade) > 0 ? 'is-late' : ''}">${getDaysLate(trade) === null ? '—' : getDaysLate(trade)}</td>
                         </tr>
                     `).join('');
             }
 
             updatePagination();
+        }
+
+        function renderTradeSkeletonRows() {
+            const tbody = document.getElementById('tradesBody');
+            const noResults = document.getElementById('noResults');
+            const container = document.getElementById('tradesTableContainer');
+            if (!tbody || !container) return;
+            if (noResults) noResults.classList.remove('show');
+            container.classList.remove('no-data');
+            tbody.innerHTML = Array.from({ length: 10 }).map(() => `
+                <tr>
+                    <td><span class="skeleton skeleton-text trade-skeleton-short"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-short"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-long"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-medium"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-short"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-medium"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-short"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-medium"></span></td>
+                    <td><span class="skeleton skeleton-text trade-skeleton-short"></span></td>
+                </tr>
+            `).join('');
         }
 
         // Render compliance violations
@@ -1440,21 +3594,52 @@
                     <tr>
                         <td>${formatDate(v.date_of_trade)}</td>
                         <td>${formatDate(v.date_lodged)}</td>
-                        <td><span class="ticker">${v.ticker}</span></td>
-                        <td>${v.company_name}</td>
-                        <td>${v.director_name}</td>
-                        <td class="text-right"><strong>${v.days_late}</strong></td>
-                        <td><span class="severity ${v.severity}">${v.severity.toUpperCase()}</span></td>
-                        <td>${v.verified ? '✓' : '<span title="asxinsider estimate only — original PDF unavailable for cross-check" style="color:var(--text-secondary);cursor:help">~</span>'}</td>
+                        <td><a class="tag-ticker" href="/static/company.html?ticker=${encodeURIComponent(v.ticker)}">${escapeHtml(v.ticker)}</a></td>
+                        <td><span class="compliance-company" title="${escapeHtml(v.company_name)}">${escapeHtml(v.company_name)}</span></td>
+                        <td><span class="compliance-director" title="${escapeHtml(v.director_name)}">${escapeHtml(v.director_name)}</span></td>
+                        <td class="days-late-cell ${getComplianceDaysClass(v.days_late)}">${Number(v.days_late || 0).toLocaleString('en-AU')}</td>
+                        <td><span class="badge ${getComplianceSeverityBadge(v.severity)}">${getComplianceSeverityLabel(v.severity)}</span></td>
+                        <td>${getVerifiedIcon(v.verified)}</td>
                     </tr>
                 `).join('');
             }
         }
 
+        function getComplianceSeverityLabel(severity) {
+            if (severity === 'moderate') return 'Major';
+            if (severity === 'severe') return 'Severe';
+            if (severity === 'minor') return 'Minor';
+            return severity || '—';
+        }
+
+        function getComplianceSeverityBadge(severity) {
+            if (severity === 'severe') return 'badge-sell-soft';
+            if (severity === 'moderate') return 'badge-warn-soft';
+            return 'badge-soft';
+        }
+
+        function getComplianceDaysClass(daysLate) {
+            const n = Number(daysLate || 0);
+            if (n > 60) return 'is-severe';
+            if (n >= 30) return 'is-major';
+            return 'is-minor';
+        }
+
+        function getVerifiedIcon(verified) {
+            if (!verified) {
+                return '<span class="unverified-dash" title="Unverified source estimate">—</span>';
+            }
+            return `<span class="verified-icon" title="Verified against source filing">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6 9 17l-5-5"></path>
+                </svg>
+            </span>`;
+        }
+
         // Update trade count
         function updateTradeCount() {
             const count = filteredTrades.length;
-            const total = stats.total_trades;
+            const total = stats ? stats.total_trades : allTrades.length;
             document.getElementById('tradeCount').textContent = `Showing ${count.toLocaleString()} of ${total.toLocaleString()} trades`;
         }
 
@@ -1462,39 +3647,69 @@
         function updatePagination() {
             const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
             const pageInput = document.getElementById('pageInput');
+            const pagesEl = document.getElementById('paginationPages');
+            const summaryEl = document.getElementById('paginationSummary');
             pageInput.value = currentPage;
             pageInput.max = totalPages;
             document.getElementById('totalPages').textContent = totalPages;
-            const btns = document.querySelectorAll('#pagination button');
-            // btns[0]=⏮ btns[1]=← btns[2]=→ btns[3]=⏭
-            btns[0].disabled = currentPage === 1;
-            btns[1].disabled = currentPage === 1;
-            btns[2].disabled = currentPage === totalPages;
-            btns[3].disabled = currentPage === totalPages;
+
+            const start = filteredTrades.length === 0 ? 0 : (currentPage - 1) * TRADES_PER_PAGE + 1;
+            const end = Math.min(currentPage * TRADES_PER_PAGE, filteredTrades.length);
+            summaryEl.textContent = `${start.toLocaleString()} — ${end.toLocaleString()} of ${filteredTrades.length.toLocaleString()} trades`;
+
+            const pageNumbers = getPaginationPages(currentPage, totalPages);
+            pagesEl.innerHTML = `
+                <button class="pagination-page" onclick="firstPage()" ${currentPage === 1 ? 'disabled' : ''} aria-label="First page">«</button>
+                <button class="pagination-page" onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>
+                ${pageNumbers.map(page => page === 'ellipsis'
+                    ? '<span class="pagination-ellipsis">...</span>'
+                    : `<button class="pagination-page ${page === currentPage ? 'is-active' : ''}" onclick="goToPage(${page})" aria-label="Page ${page}" ${page === currentPage ? 'aria-current="page"' : ''}>${page}</button>`
+                ).join('')}
+                <button class="pagination-page" onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''} aria-label="Next page">›</button>
+                <button class="pagination-page" onclick="lastPage()" ${currentPage === totalPages ? 'disabled' : ''} aria-label="Last page">»</button>
+            `;
+        }
+
+        function getPaginationPages(page, totalPages) {
+            if (totalPages <= 7) {
+                return Array.from({ length: totalPages }, (_, i) => i + 1);
+            }
+            if (page <= 4) {
+                return [1, 2, 3, 4, 5, 'ellipsis', totalPages];
+            }
+            if (page >= totalPages - 3) {
+                return [1, 'ellipsis', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+            }
+            return [1, 'ellipsis', page - 1, page, page + 1, 'ellipsis', totalPages];
+        }
+
+        function scrollTradeFeedIntoView() {
+            const section = document.querySelector('.trade-feed-section');
+            if (section) section.scrollIntoView({ block: 'start' });
         }
 
         function nextPage() {
             const totalPages = Math.ceil(filteredTrades.length / TRADES_PER_PAGE);
-            if (currentPage < totalPages) { currentPage++; renderTrades(); window.scrollTo(0, 0); }
+            if (currentPage < totalPages) { currentPage++; renderTrades(); scrollTradeFeedIntoView(); }
         }
 
         function previousPage() {
-            if (currentPage > 1) { currentPage--; renderTrades(); window.scrollTo(0, 0); }
+            if (currentPage > 1) { currentPage--; renderTrades(); scrollTradeFeedIntoView(); }
         }
 
         function firstPage() {
-            if (currentPage !== 1) { currentPage = 1; renderTrades(); window.scrollTo(0, 0); }
+            if (currentPage !== 1) { currentPage = 1; renderTrades(); scrollTradeFeedIntoView(); }
         }
 
         function lastPage() {
             const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
-            if (currentPage !== totalPages) { currentPage = totalPages; renderTrades(); window.scrollTo(0, 0); }
+            if (currentPage !== totalPages) { currentPage = totalPages; renderTrades(); scrollTradeFeedIntoView(); }
         }
 
         function goToPage(n) {
             const totalPages = Math.max(1, Math.ceil(filteredTrades.length / TRADES_PER_PAGE));
             const page = Math.max(1, Math.min(isNaN(n) ? 1 : n, totalPages));
-            if (page !== currentPage) { currentPage = page; renderTrades(); window.scrollTo(0, 0); }
+            if (page !== currentPage) { currentPage = page; renderTrades(); scrollTradeFeedIntoView(); }
             else document.getElementById('pageInput').value = currentPage;
         }
 
@@ -1506,7 +3721,18 @@
             document.querySelectorAll('.typeCheckbox').forEach(cb => cb.checked = false);
             document.getElementById('lateFilingsFilter').checked = false;
             document.getElementById('incompleteFilter').checked = false;
+            document.querySelectorAll('.more-filter-popover').forEach(el => el.removeAttribute('open'));
             applyFilters();
+        }
+
+        function resetComplianceFilters() {
+            const severity = document.getElementById('severityFilter');
+            const showUnverified = document.getElementById('showUnverifiedFilter');
+            const daysLate = document.getElementById('daysLateFilter');
+            if (severity) severity.value = '';
+            if (showUnverified) showUnverified.checked = true;
+            if (daysLate) daysLate.value = '0';
+            applyComplianceFilters();
         }
 
         // Sorting
@@ -1523,6 +3749,13 @@
             renderTrades();
         }
 
+        function handleSortKey(event, field) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                sortTable(field);
+            }
+        }
+
         function updateSortIndicators() {
             document.querySelectorAll('th.sortable').forEach(th => {
                 th.classList.remove('sorted-asc', 'sorted-desc');
@@ -1536,39 +3769,74 @@
             });
         }
 
+        function iconSvg(name, className = '') {
+            const classes = className ? ` class="${className}"` : '';
+            const icons = {
+                trend: '<path d="m23 6-9.5 9.5-5-5L1 18"></path><path d="M17 6h6v6"></path>',
+                buy: '<path d="M7 17 17 7"></path><path d="M7 7h10v10"></path>',
+                sell: '<path d="M7 7 17 17"></path><path d="M17 7v10H7"></path>',
+                empty: '<path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-7"></path>',
+            };
+            return `<svg${classes} aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.empty}</svg>`;
+        }
+
         // Render sector heatmap
         function renderSectorHeatmap() {
             const container = document.getElementById('sectorHeatmapGrid');
             if (!sectorHeatmapData || sectorHeatmapData.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>No ASX 200 trade data found for the past 90 days.</p></div>';
+                container.innerHTML = `
+                    <div class="middle-empty-state">
+                        <div>
+                            ${iconSvg('empty')}
+                            <div class="middle-empty-title">No ASX 200 trade data found</div>
+                            <div class="middle-empty-copy">The sector view will populate when current 90-day activity is available.</div>
+                            <button class="clear-filters-link" onclick="refreshData()">Refresh data</button>
+                        </div>
+                    </div>`;
                 return;
             }
 
+            const topSectorKeys = new Set(
+                [...sectorHeatmapData]
+                    .sort((a, b) => ((b.total_buys_90d || 0) + (b.total_sells_90d || 0)) - ((a.total_buys_90d || 0) + (a.total_sells_90d || 0)))
+                    .slice(0, 3)
+                    .map(s => s.sector)
+            );
+
             container.innerHTML = sectorHeatmapData.map(s => {
-                const totalV = s.total_value_bought_90d + s.total_value_sold_90d;
-                const buyPct  = totalV > 0 ? Math.round(s.total_value_bought_90d / totalV * 100) : 50;
-                const sellPct = totalV > 0 ? Math.round(s.total_value_sold_90d   / totalV * 100) : 50;
-                const topBuyerNames = (s.top_buyers || []).slice(0, 2).map(b => b.director_name.split(' ').pop()).join(', ');
-                const ratioStr = s.net_buy_sell_ratio >= 0
-                    ? `+${(s.net_buy_sell_ratio * 100).toFixed(0)}%`
-                    : `${(s.net_buy_sell_ratio * 100).toFixed(0)}%`;
+                const bought = Number(s.total_value_bought_90d || 0);
+                const sold = Number(s.total_value_sold_90d || 0);
+                const buys = Number(s.total_buys_90d || 0);
+                const sells = Number(s.total_sells_90d || 0);
+                const totalV = bought + sold;
+                const totalTrades = buys + sells;
+                const buyPct = totalV > 0 ? Math.round((bought / totalV) * 100) : 50;
+                const sellPct = Math.max(0, 100 - buyPct);
+                const isNetSell = sold > bought;
+                const topBuyer = (s.top_buyers || [])[0];
+                const mostActive = topBuyer?.director_name || s.most_active_director || 'No director concentration';
+                const showTrend = topSectorKeys.has(s.sector);
+                const sectorPayload = JSON.stringify(s).replace(/"/g, '&quot;');
+
                 return `
-                    <div class="heatmap-card ${s.net_sentiment}" onclick="showSectorModal(${JSON.stringify(s).replace(/"/g, '&quot;')})" style="cursor:pointer">
-                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem">
-                            <div class="heatmap-sector-name" style="margin-bottom:0">${s.sector}</div>
-                            <span style="font-size:0.78rem;font-weight:700;color:${s.net_buy_sell_ratio >= 0 ? 'var(--success)' : 'var(--danger)'}">${ratioStr}</span>
+                    <button type="button" class="sector-tile" onclick="showSectorModal(${sectorPayload})">
+                        <div class="sector-tile-top">
+                            <div class="sector-name">
+                                ${showTrend ? iconSvg('trend', 'sector-trend-icon') : ''}
+                                <span class="sector-name-text">${escapeHtml(s.sector)}</span>
+                            </div>
+                            <div class="sector-buy-pct ${isNetSell ? 'is-net-sell' : ''}">${buyPct}%</div>
                         </div>
-                        <div class="heatmap-bar-wrap">
-                            <div class="heatmap-bar-buy"  style="width:${buyPct}%"></div>
-                            <div class="heatmap-bar-sell" style="width:${sellPct}%"></div>
+                        <div class="sector-split-bar" aria-label="${buyPct}% buy value and ${sellPct}% sell value">
+                            <span class="sector-bar-buy" style="--buy-width: ${buyPct}%"></span>
+                            <span class="sector-bar-sell" style="--sell-width: ${sellPct}%"></span>
                         </div>
-                        <div class="heatmap-meta">
-                            <span class="hm-buy">${s.total_buys_90d}B · ${formatCompact(s.total_value_bought_90d)}</span>
-                            <span>${s.total_buys_90d + s.total_sells_90d} total</span>
-                            <span class="hm-sell">${formatCompact(s.total_value_sold_90d)} · ${s.total_sells_90d}S</span>
+                        <div class="sector-meta">
+                            <div class="sector-meta-line is-buy">${iconSvg('buy')}<span>${formatCompact(bought)} buys · ${totalTrades.toLocaleString('en-AU')} total</span></div>
+                            <div class="sector-meta-line is-sell">${iconSvg('sell')}<span>${formatCompact(sold)} sells · ${sells.toLocaleString('en-AU')} sells</span></div>
                         </div>
-                        ${topBuyerNames ? `<div style="font-size:0.73rem;color:var(--text-secondary);margin-top:0.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔥 ${topBuyerNames}</div>` : ''}
-                    </div>`;
+                        <div class="sector-most-active" title="${escapeHtml(mostActive)}">Most active: ${escapeHtml(mostActive)}</div>
+                    </button>`;
             }).join('');
         }
 
@@ -1580,41 +3848,151 @@
             return '$' + Math.round(value);
         }
 
+        function formatClusterValue(value) {
+            const n = Number(value);
+            if (value === null || value === undefined || Number.isNaN(n)) return '—';
+            return formatCompact(n);
+        }
+
+        function parseClusterDate(dateStr) {
+            if (!dateStr) return null;
+            const date = new Date(dateStr + 'T00:00:00');
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        function getClusterAnchorDate(cluster) {
+            return cluster.last_trade_date || cluster.end_date || cluster.start_date || cluster.first_trade_date || '';
+        }
+
+        function formatClusterShortDate(dateStr) {
+            const date = parseClusterDate(dateStr);
+            if (!date) return '—';
+            const month = date.toLocaleDateString('en-AU', { month: 'short' });
+            const year = String(date.getFullYear()).slice(-2);
+            return `${date.getDate()} ${month} '${year}`;
+        }
+
+        function formatClusterWindow(startDate, endDate) {
+            if (!startDate && !endDate) return '—';
+            if (!startDate || startDate === endDate) return formatClusterShortDate(endDate || startDate);
+            const start = parseClusterDate(startDate);
+            const end = parseClusterDate(endDate);
+            if (start && end && start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
+                const month = end.toLocaleDateString('en-AU', { month: 'short' });
+                const year = String(end.getFullYear()).slice(-2);
+                return `${start.getDate()}-${end.getDate()} ${month} '${year}`;
+            }
+            return `${formatClusterShortDate(startDate)} - ${formatClusterShortDate(endDate)}`;
+        }
+
+        function getClusterSignalLevel(count) {
+            if (count >= 6) return 'signal-high';
+            if (count >= 4) return 'signal-medium';
+            return 'signal-base';
+        }
+
+        function getClusterGroupLabel(cluster) {
+            const anchor = parseClusterDate(getClusterAnchorDate(cluster));
+            if (!anchor) return 'Earlier';
+            const today = new Date();
+            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const diffDays = Math.floor((todayStart - anchor) / 86400000);
+            if (diffDays <= 7) return 'This week';
+            if (diffDays <= 14) return 'Last week';
+            return `Earlier in ${anchor.toLocaleDateString('en-AU', { month: 'long' })}`;
+        }
+
+        function renderClusterDirectors(directors, count) {
+            if (!Array.isArray(directors) || directors.length === 0) {
+                return `<span>${Number(count || 0).toLocaleString('en-AU')} directors</span>`;
+            }
+
+            const visible = directors.slice(0, 3).map(d => {
+                const fullName = d.director_name || '';
+                const lastName = fullName.trim().split(/\s+/).pop() || fullName;
+                const href = d.director_id ? `/static/director.html?id=${encodeURIComponent(d.director_id)}` : '#';
+                return `<a href="${href}" title="${escapeHtml(fullName)}">${escapeHtml(lastName)}</a>`;
+            });
+            const overflow = directors.length > visible.length
+                ? ` <span class="cluster-overflow">+${directors.length - visible.length}</span>`
+                : '';
+            return `${visible.join(', ')}${overflow}`;
+        }
+
+        function sortClusterSignals(clusters) {
+            const sortMode = document.getElementById('clusterSortSelect')?.value || 'director_count';
+            const sorted = [...clusters];
+            sorted.sort((a, b) => {
+                const countDelta = Number(b.director_count || 0) - Number(a.director_count || 0);
+                const valueDelta = Number(b.total_buy_value || 0) - Number(a.total_buy_value || 0);
+                const recencyDelta = (parseClusterDate(getClusterAnchorDate(b))?.getTime() || 0) - (parseClusterDate(getClusterAnchorDate(a))?.getTime() || 0);
+
+                if (sortMode === 'value') return valueDelta || countDelta || recencyDelta;
+                if (sortMode === 'recency') return recencyDelta || countDelta || valueDelta;
+                return countDelta || valueDelta || recencyDelta;
+            });
+            return sorted;
+        }
+
+        function groupClusterSignals(clusters) {
+            const groups = new Map();
+            clusters.forEach(cluster => {
+                const label = getClusterGroupLabel(cluster);
+                const anchor = parseClusterDate(getClusterAnchorDate(cluster))?.getTime() || 0;
+                if (!groups.has(label)) {
+                    groups.set(label, { label, latest: anchor, rows: [] });
+                }
+                const group = groups.get(label);
+                group.latest = Math.max(group.latest, anchor);
+                group.rows.push(cluster);
+            });
+            return [...groups.values()].sort((a, b) => b.latest - a.latest);
+        }
+
+        function renderClusterRow(cluster, options = {}) {
+            const ticker = cluster.ticker || '—';
+            const count = Number(cluster.director_count || 0);
+            const company = cluster.company_name || cluster.company || cluster.industry || 'Cluster buy';
+            const value = cluster.total_buy_value ?? cluster.total_value_aud;
+            const dateRange = formatClusterWindow(cluster.first_trade_date || cluster.start_date, cluster.last_trade_date || cluster.end_date);
+            const href = options.clusterHref || `/static/company.html?ticker=${encodeURIComponent(ticker)}`;
+
+            return `
+                <div class="cluster-signal-row ${getClusterSignalLevel(count)}">
+                    <span class="cluster-count">${count.toLocaleString('en-AU')} directors</span>
+                    <a class="tag-ticker" href="${href}">${escapeHtml(ticker)}</a>
+                    <span class="cluster-company" title="${escapeHtml(company)}">${escapeHtml(company)}</span>
+                    <span class="cluster-date">${escapeHtml(dateRange)}</span>
+                    <span class="cluster-value">${formatClusterValue(value)}</span>
+                    <span class="cluster-directors">${renderClusterDirectors(cluster.directors, count)}</span>
+                </div>`;
+        }
+
         // Render cluster signal
         function renderClusterSignal() {
             const container = document.getElementById('clusterSignalList');
             if (!clusterSignalData || clusterSignalData.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>No companies with 3+ directors buying in the past 90 days.</p></div>';
+                container.innerHTML = `
+                    <div class="middle-empty-state">
+                        <div>
+                            ${iconSvg('empty')}
+                            <div class="middle-empty-title">No director clusters in the current window</div>
+                            <div class="middle-empty-copy">Clusters appear when 3+ directors buy the same stock.</div>
+                            <a class="middle-section-link" href="/clusters">View cluster list →</a>
+                        </div>
+                    </div>`;
                 return;
             }
 
-            container.innerHTML = clusterSignalData.map(c => {
-                const badgeCls = c.director_count >= 5 ? 'd5' : c.director_count >= 4 ? 'd4' : 'd3';
-                const badgeTxt = `${c.director_count} directors`;
-                const dirNames = c.directors.slice(0, 4).map(d => {
-                    const lastName = d.director_name.trim().split(/\s+/).pop();
-                    return `<a href="/static/director.html?id=${d.director_id}" style="color:var(--text-primary);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-primary)'">${lastName}</a>`;
-                }).join(', ') + (c.directors.length > 4 ? ` +${c.directors.length - 4}` : '');
+            if (clusterSignalData.length > 20) {
+                container.innerHTML = groupClusterSignals(clusterSignalData).map(group => `
+                    <div class="cluster-group-header">${escapeHtml(group.label)}</div>
+                    ${sortClusterSignals(group.rows).map(c => renderClusterRow(c)).join('')}
+                `).join('');
+                return;
+            }
 
-                const dateRange = c.first_trade_date === c.last_trade_date
-                    ? c.last_trade_date
-                    : `${c.first_trade_date} – ${c.last_trade_date}`;
-
-                const pctStr = c.buy_pct_market_cap != null
-                    ? `<span style="font-size:0.78rem;background:rgba(0,102,204,.1);color:var(--accent);padding:0.1rem 0.45rem;border-radius:10px;white-space:nowrap;font-weight:700" title="Director buys as % of market cap">${c.buy_pct_market_cap.toFixed(2)}% mkt cap</span>`
-                    : '';
-
-                return `
-                    <div class="cluster-row">
-                        <span class="cluster-badge ${badgeCls}">${badgeTxt}</span>
-                        <span style="font-weight:700;min-width:3.5rem"><a class="ticker" href="/static/company.html?ticker=${c.ticker}" style="text-decoration:none">${c.ticker}</a></span>
-                        <span style="color:var(--text-secondary);font-size:0.9rem;flex:1;min-width:10rem">${c.company_name}</span>
-                        <span style="color:var(--success);font-weight:600;white-space:nowrap">${formatCompact(c.total_buy_value)}</span>
-                        ${pctStr}
-                        <span style="color:var(--text-secondary);font-size:0.85rem;flex:2;min-width:12rem">${dirNames}</span>
-                        <span style="color:var(--text-secondary);font-size:0.8rem;white-space:nowrap">${dateRange}</span>
-                    </div>`;
-            }).join('');
+            container.innerHTML = sortClusterSignals(clusterSignalData).map(c => renderClusterRow(c)).join('');
         }
 
         // Active Cluster Buys widget
@@ -1624,59 +4002,41 @@
                 const res = await fetch('/api/clusters?status=active,maturing&sort=start_date&order=desc&per_page=5');
                 if (!res.ok) throw new Error('fetch failed');
                 const data = await res.json();
-                const clusters = data.clusters;
+                const clusters = data.clusters || [];
 
                 if (!clusters.length) {
-                    el.innerHTML = `<div class="empty-state" style="padding:1.5rem;text-align:center;color:var(--text-secondary)">
-                        No active clusters right now. <a href="/clusters" style="color:var(--accent);font-weight:600">View historical performance →</a>
-                    </div>`;
+                    el.innerHTML = `
+                        <div class="middle-empty-state">
+                            <div>
+                                ${iconSvg('empty')}
+                                <div class="middle-empty-title">No active clusters right now</div>
+                                <a class="middle-section-link" href="/clusters">View historical performance →</a>
+                            </div>
+                        </div>`;
                     return;
                 }
 
-                const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                function fmtD(s) {
-                    if (!s) return '—';
-                    const d = new Date(s + 'T00:00:00');
-                    return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
-                }
-                function fmtWin(s, e) {
-                    if (!s) return '—';
-                    const sd = new Date(s + 'T00:00:00'), ed = new Date(e + 'T00:00:00');
-                    if (s === e) return fmtD(s);
-                    if (sd.getFullYear() === ed.getFullYear() && sd.getMonth() === ed.getMonth())
-                        return `${sd.getDate()}–${ed.getDate()} ${MON[ed.getMonth()]} ${ed.getFullYear()}`;
-                    return `${fmtD(s)} – ${fmtD(e)}`;
-                }
-                function fmtVal(v) {
-                    if (v == null) return '—';
-                    if (v >= 1e6) return `$${(v/1e6).toFixed(1)}m`;
-                    if (v >= 1e3) return `$${Math.round(v/1e3)}k`;
-                    return `$${Math.round(v)}`;
-                }
+                const rows = clusters.map(c => renderClusterRow({
+                    ...c,
+                    company_name: c.company_name || c.industry || 'Active cluster',
+                    total_buy_value: c.total_value_aud ?? c.total_buy_value,
+                    first_trade_date: c.start_date,
+                    last_trade_date: c.end_date,
+                }, {
+                    clusterHref: `/clusters/${encodeURIComponent(c.cluster_id || c.ticker || '')}`,
+                })).join('');
 
-                const rows = clusters.map(c => `<tr>
-                    <td><strong><a href="/clusters/${c.cluster_id}" style="color:var(--accent);font-family:monospace;text-decoration:none">${c.ticker}</a></strong></td>
-                    <td style="color:var(--text-secondary);font-size:.85rem">${c.industry || '—'}</td>
-                    <td style="text-align:center">${c.director_count}</td>
-                    <td>${fmtVal(c.total_value_aud)}</td>
-                    <td>${c.pct_market_cap != null ? (c.pct_market_cap*100).toFixed(2)+'%' : '—'}</td>
-                    <td style="color:var(--text-secondary);font-size:.85rem">${fmtWin(c.start_date, c.end_date)}</td>
-                </tr>`).join('');
-
-                el.innerHTML = `<div class="cluster-widget-wrap">
-                    <table class="cluster-widget-table">
-                        <thead><tr>
-                            <th>Ticker</th><th>Industry</th><th>Dirs</th>
-                            <th>Total Value</th><th>% Cap</th><th>Window</th>
-                        </tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-                <div class="cluster-widget-footer">
-                    <a href="/clusters" style="color:var(--accent);font-weight:600">View all clusters →</a>
-                </div>`;
+                el.innerHTML = `<div class="active-cluster-list">${rows}</div>`;
             } catch(e) {
-                el.innerHTML = '<div class="empty-state" style="padding:1rem;color:var(--text-secondary)">Unable to load cluster data.</div>';
+                el.innerHTML = `
+                    <div class="middle-empty-state">
+                        <div>
+                            ${iconSvg('empty')}
+                            <div class="middle-empty-title">Unable to load cluster data</div>
+                            <div class="middle-empty-copy">Refresh the page to try again.</div>
+                            <button class="clear-filters-link" onclick="renderActiveClustersWidget()">Retry</button>
+                        </div>
+                    </div>`;
             }
         }
 
@@ -1733,15 +4093,30 @@
         }
 
         // Dark mode toggle
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        const THEME_STORAGE_KEY = 'theme';
+
+        function preferredTheme() {
+            const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
+            const legacyDarkMode = localStorage.getItem('darkMode');
+            if (legacyDarkMode === 'true') return 'dark';
+            if (legacyDarkMode === 'false') return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
 
-        // Load dark mode preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
+        function applyTheme(theme, persist = true) {
+            document.documentElement.dataset.theme = theme;
+            if (persist) {
+                localStorage.setItem(THEME_STORAGE_KEY, theme);
+                localStorage.setItem('darkMode', theme === 'dark' ? 'true' : 'false');
+            }
         }
+
+        function toggleDarkMode() {
+            applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+        }
+
+        applyTheme(preferredTheme(), false);
 
         // Export to CSV
         function exportCSV() {

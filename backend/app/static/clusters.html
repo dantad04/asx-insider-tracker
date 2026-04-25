@@ -1,605 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cluster Buy Analysis — ASX Insider Tracker</title>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg-primary:#ffffff;--bg-secondary:#f5f5f5;--bg-tertiary:#e8e8e8;--text-primary:#1a1a1a;--text-secondary:#666666;--border-color:#d0d0d0;--accent:#0066cc;--accent-hover:#0052a3;--success:#28a745;--danger:#dc3545;--teal:#17a2b8}
-body.dark-mode{--bg-primary:#1a1a1a;--bg-secondary:#2d2d2d;--bg-tertiary:#3d3d3d;--text-primary:#e8e8e8;--text-secondary:#b0b0b0;--border-color:#444444}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background-color:var(--bg-primary);color:var(--text-primary);line-height:1.6;transition:background-color .3s,color .3s}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-header{background:linear-gradient(135deg,var(--accent) 0%,#003d99 100%);color:#fff;padding:1.5rem 2rem;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.header-content{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.header-back{font-size:.85rem;opacity:.8;margin-bottom:.25rem}
-.header-back a{color:inherit;text-decoration:none}.header-back a:hover{opacity:1;text-decoration:underline}
-h1{font-size:1.8rem;font-weight:700;letter-spacing:-.5px}
-.header-subtitle{font-size:.88rem;opacity:.9;font-weight:300;margin-top:.2rem}
-.header-controls{display:flex;gap:1rem;align-items:center}
-.header-controls a{color:rgba(255,255,255,.85);font-size:.9rem;font-weight:600;text-decoration:none}
-.header-controls a:hover{color:#fff;text-decoration:none}
-button{background-color:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background-color .2s}
-button:hover{background-color:var(--accent-hover)}
-.theme-toggle{background:rgba(255,255,255,.2);padding:.5rem .7rem}
-.theme-toggle:hover{background:rgba(255,255,255,.3)}
-.container{max-width:1400px;margin:2rem auto;padding:0 1rem}
-
-/* Stats bar */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:2rem}
-.stat-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1.25rem 1.5rem;transition:transform .2s,box-shadow .2s}
-.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
-.stat-label{font-size:.78rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;font-weight:600}
-.stat-value{font-size:1.8rem;font-weight:700;color:var(--accent)}
-.stat-value.positive{color:var(--success)}
-.stat-value.negative{color:var(--danger)}
-.stat-subtext{font-size:.78rem;color:var(--text-secondary);margin-top:.3rem}
-
-/* Section headers */
-.section-header{display:flex;justify-content:space-between;align-items:center;margin:2rem 0 1rem;padding-bottom:.75rem;border-bottom:2px solid var(--border-color)}
-.section-header h2{font-size:1.3rem;font-weight:600}
-.section-header .section-meta{font-size:.85rem;color:var(--text-secondary);margin-top:.2rem}
-.view-all-link{font-size:.9rem;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap}
-.view-all-link:hover{text-decoration:underline}
-
-/* Active cluster cards */
-.active-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem}
-@media(max-width:1100px){.active-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.active-grid{grid-template-columns:1fr}}
-.cluster-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-left:4px solid var(--accent);border-radius:8px;padding:1.1rem 1.25rem;transition:transform .15s,box-shadow .15s;cursor:pointer}
-.cluster-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.cluster-card.maturing{border-left-color:var(--teal)}
-.cluster-card-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;flex-wrap:wrap}
-.cluster-ticker{font-family:'Courier New',monospace;font-size:1.15rem;font-weight:700;color:var(--accent);text-decoration:none}
-.cluster-ticker:hover{text-decoration:underline}
-.status-badge{display:inline-block;font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:10px;white-space:nowrap}
-.status-badge.active{background:rgba(0,102,204,.12);color:var(--accent)}
-.status-badge.maturing{background:rgba(23,162,184,.12);color:var(--teal)}
-.status-badge.historical{background:var(--bg-tertiary);color:var(--text-secondary)}
-.industry-badge{display:inline-block;font-size:.7rem;padding:.15rem .55rem;border-radius:10px;background:var(--bg-tertiary);color:var(--text-secondary);white-space:nowrap}
-.cluster-card-stats{display:flex;flex-wrap:wrap;gap:.4rem .9rem;font-size:.85rem;color:var(--text-primary);margin-bottom:.5rem}
-.cluster-card-stat{display:flex;align-items:center;gap:.25rem}
-.cluster-card-meta{font-size:.8rem;color:var(--text-secondary);line-height:1.5}
-
-/* Filter bar */
-.filter-bar{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1.25rem;margin-bottom:1.25rem}
-.filter-row{display:grid;gap:.75rem}
-.filter-row-3{grid-template-columns:1fr 1fr 1fr}
-.filter-group{display:flex;flex-direction:column;gap:.3rem}
-.filter-group label{font-size:.78rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
-select,input{padding:.55rem .75rem;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-primary);color:var(--text-primary);font-size:.9rem;transition:border-color .2s}
-select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,102,204,.1)}
-
-/* Table */
-.table-container{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;overflow:hidden;margin-bottom:1.5rem}
-.table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.9rem}
-thead{background:var(--bg-tertiary);border-bottom:2px solid var(--border-color)}
-th{padding:.85rem 1rem;text-align:left;font-weight:600;cursor:pointer;user-select:none;color:var(--text-secondary);white-space:nowrap;transition:background-color .2s;font-size:.82rem;text-transform:uppercase;letter-spacing:.4px}
-th:hover{background:var(--border-color)}
-th.sortable::after{content:' ⇅';font-size:.75rem;opacity:.45}
-th.sorted-asc::after{content:' ↑';opacity:1;color:var(--accent)}
-th.sorted-desc::after{content:' ↓';opacity:1;color:var(--accent)}
-td{padding:.85rem 1rem;border-bottom:1px solid var(--border-color)}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--bg-tertiary)}
-.ticker-link{font-family:'Courier New',monospace;font-weight:700;color:var(--accent);text-decoration:none;font-size:.95rem}
-.ticker-link:hover{text-decoration:underline}
-.ret-positive{color:var(--success);font-weight:600}
-.ret-negative{color:var(--danger);font-weight:600}
-.ret-neutral{color:var(--text-secondary)}
-.alpha-col{font-weight:700}
-
-/* Pagination */
-.pagination{display:flex;justify-content:center;align-items:center;gap:.5rem;padding:1rem;background:var(--bg-secondary);border-top:1px solid var(--border-color)}
-.pagination button{padding:.4rem .75rem;font-size:.85rem;min-width:38px}
-.pagination button:disabled{opacity:.45;cursor:not-allowed}
-.page-info{color:var(--text-secondary);font-size:.88rem;flex-grow:1;text-align:center}
-.table-footnote{font-size:.78rem;color:var(--text-secondary);padding:.5rem 1rem;background:var(--bg-secondary);border-top:1px solid var(--border-color);border-radius:0 0 8px 8px}
-.table-showing{font-size:.82rem;color:var(--text-secondary);margin-bottom:.5rem}
-
-/* Loading */
-.loading{text-align:center;padding:2.5rem;color:var(--text-secondary)}
-.loading::after{content:'';display:inline-block;width:18px;height:18px;border:3px solid var(--border-color);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-left:.5rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-secondary);font-size:.9rem}
-
-/* Disclaimer / Footer */
-.disclaimer{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1.25rem 1.5rem;margin:2.5rem 0 1rem;font-size:.82rem;color:var(--text-secondary);line-height:1.7}
-.disclaimer strong{color:var(--text-primary)}
-footer{background:var(--bg-secondary);border-top:1px solid var(--border-color);padding:1.5rem 1rem;margin-top:2rem;color:var(--text-secondary);font-size:.82rem}
-.footer-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.footer-links{display:flex;gap:1.25rem}
-.footer-links a{color:var(--accent)}
-
-/* Mobile */
-@media(max-width:900px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .filter-row-3{grid-template-columns:1fr}
-}
-@media(max-width:600px){
-  header{padding:1.25rem 1rem}
-  h1{font-size:1.4rem}
-  .stats-grid{grid-template-columns:1fr;gap:.75rem}
-  .container{padding:0 .75rem;margin:1.25rem auto}
-  th,td{padding:.65rem .6rem;font-size:.8rem}
-  .pagination{flex-wrap:wrap}
-  .header-controls a[data-hide-mobile]{display:none}
-  .footer-inner{flex-direction:column}
-  select,input{width:100%}
-  /* Sticky first column so Window label stays visible on horizontal scroll */
-  .table-scroll th:first-child,
-  .table-scroll td:first-child{
-    position:sticky;left:0;
-    background:var(--bg-tertiary);
-    z-index:2;
-  }
-  .table-scroll td:first-child{background:var(--bg-secondary)}
-  .table-scroll tr:hover td:first-child{background:var(--bg-tertiary)}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cluster Buys - ASX Insider Tracker</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/app-pages.css">
 </head>
 <body>
-<header>
-  <div class="header-content">
-    <div>
-      <div class="header-back"><a href="/static/index.html">← ASX Insider Tracker</a></div>
-      <h1>Cluster Buy Analysis</h1>
-      <p class="header-subtitle">Multi-director coordinated buying · backtested May 2025 – Apr 2026</p>
-    </div>
-    <div class="header-controls">
-      <a href="/static/index.html" data-hide-mobile>Trade Feed</a>
-      <a href="/cluster-portfolio" data-hide-mobile>Cluster Portfolio</a>
-      <a href="/static/about.html" data-hide-mobile>About</a>
-      <a href="/docs" target="_blank" data-hide-mobile>API</a>
-      <button class="theme-toggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
-    </div>
-  </div>
-</header>
-
-<div class="container">
-
-  <!-- Section 1: Stats bar -->
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card"><div class="loading"></div></div>
-    <div class="stat-card"><div class="loading"></div></div>
-    <div class="stat-card"><div class="loading"></div></div>
-    <div class="stat-card"><div class="loading"></div></div>
-  </div>
-
-  <!-- Section 2: Active clusters -->
-  <div class="section-header">
-    <div>
-      <h2>Active &amp; Maturing Clusters</h2>
-      <p class="section-meta">Clusters within the last 90 days — horizon not yet elapsed</p>
-    </div>
-    <span class="view-all-link" id="viewAllBtn" onclick="toggleViewAll()" style="display:none"></span>
-  </div>
-  <div id="activeGrid" class="active-grid"><div class="loading"></div></div>
-
-  <!-- Section 3: Historical performance table -->
-  <div class="section-header" style="margin-top:2.5rem">
-    <div>
-      <h2>Historical Performance</h2>
-      <p class="section-meta">Returns measured at disclosure-date entry · alpha vs STW.AX (ASX 200 ETF)</p>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="filter-bar">
-    <div class="filter-row filter-row-3">
-      <div class="filter-group">
-        <label for="sectorFilter">Sector</label>
-        <select id="sectorFilter" onchange="onSectorChange()">
-          <option value="">All sectors</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="industryFilter">Industry</label>
-        <select id="industryFilter" onchange="applyFilters()">
-          <option value="">All industries</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="horizonFilter">Horizon</label>
-        <select id="horizonFilter" onchange="onHorizonChange()">
-          <option value="90">90 day</option>
-          <option value="180">180 day</option>
-        </select>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-mark" href="/static/index.html" aria-label="ASX Insider Tracker home">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"></path>
+          <path d="M7 16V9"></path>
+          <path d="M12 16V5"></path>
+          <path d="M17 16v-3"></path>
+        </svg>
+        <span>ASX Insider Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+        <a class="site-nav-link is-active" href="/clusters">Cluster Buys</a>
+        <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+        <a class="site-nav-link" href="/static/about.html">About</a>
+        <a class="site-nav-link" href="/docs">API Docs</a>
+      </nav>
+      <div class="header-actions">
+        <details class="mobile-nav-menu">
+          <summary class="mobile-menu-summary">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+            Menu
+          </summary>
+          <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+            <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+            <a class="site-nav-link is-active" href="/clusters">Cluster Buys</a>
+            <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+            <a class="site-nav-link" href="/static/about.html">About</a>
+            <a class="site-nav-link" href="/docs">API Docs</a>
+          </nav>
+        </details>
+        <button class="header-icon-button" type="button" onclick="toggleDark()" aria-label="Toggle dark mode">
+          <svg class="theme-icon-moon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+          </svg>
+          <svg class="theme-icon-sun" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </button>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- Table -->
-  <div class="table-showing" id="tableShowing"></div>
-  <div class="table-container" id="histTableContainer">
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th class="sortable" onclick="sortBy('start_date')" id="th_start_date">Window</th>
-            <th>Ticker</th>
-            <th>Industry</th>
-            <th class="sortable" onclick="sortBy('director_count')" id="th_director_count">Dirs</th>
-            <th class="sortable" onclick="sortBy('pct_market_cap')" id="th_pct_market_cap">% Cap</th>
-            <th class="sortable" onclick="sortBy('absolute_return')" id="th_absolute_return">Return</th>
-            <th class="sortable alpha-col" onclick="sortBy('alpha_vs_asx200')" id="th_alpha_vs_asx200">Alpha vs ASX</th>
-          </tr>
-        </thead>
-        <tbody id="histTableBody"><tr><td colspan="7"><div class="loading"></div></td></tr></tbody>
-      </table>
+  <main class="page-shell">
+    <section class="page-intro" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">Cluster Buys</h1>
+      <p>Multi-director buying clusters, filtered for conviction, recency, and traded value.</p>
+    </section>
+
+    <section class="stat-grid" id="clusterStats" aria-label="Cluster summary">
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+    </section>
+
+    <section class="page-section" aria-labelledby="clusterListTitle">
+      <div class="page-section-header">
+        <div>
+          <h2 id="clusterListTitle">Cluster List</h2>
+          <p>Rows use the same signal pattern as the homepage cluster section.</p>
+        </div>
+        <div class="section-actions">
+          <a class="section-link" href="/clusters/portfolio">View portfolio &rarr;</a>
+        </div>
+      </div>
+
+      <details class="filter-drawer" open>
+        <summary>
+          <span>Filters</span>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 6h16"></path>
+            <path d="M7 12h10"></path>
+            <path d="M10 18h4"></path>
+          </svg>
+        </summary>
+        <div class="filter-toolbar">
+          <div class="filter-field">
+            <label for="timeframeFilter">Timeframe</label>
+            <select class="select" id="timeframeFilter" onchange="renderClusters()">
+              <option value="7">Past 7 days</option>
+              <option value="30">Past 30 days</option>
+              <option value="90" selected>Past 90 days</option>
+              <option value="365">Past 365 days</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="minDirectorsFilter">Min directors</label>
+            <input class="input" id="minDirectorsFilter" type="number" min="2" value="3" onchange="renderClusters()" oninput="renderClusters()">
+          </div>
+          <div class="filter-field">
+            <label for="minValueFilter">Min $ value</label>
+            <input class="input" id="minValueFilter" type="number" min="0" step="10000" placeholder="0" onchange="renderClusters()" oninput="renderClusters()">
+          </div>
+          <div class="filter-field">
+            <label for="tickerFilter">Ticker search</label>
+            <input class="input" id="tickerFilter" type="search" placeholder="Ticker" oninput="renderClusters()">
+          </div>
+          <div class="filter-summary" id="clusterShowing" aria-live="polite">Loading clusters</div>
+        </div>
+      </details>
+
+      <div class="cluster-list" id="clusterList">
+        <div class="empty-panel"><div class="skeleton skeleton-card"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>&copy; 2026 ASX Insider Tracker - Data sourced from ASX announcements.</span>
+      <div class="footer-links">
+        <a href="/static/index.html">Trade Feed</a>
+        <a href="/clusters/portfolio">Cluster Portfolio</a>
+        <a href="/docs">API Docs</a>
+      </div>
     </div>
-    <div class="pagination" id="histPagination" style="display:none">
-      <button id="prevBtn" onclick="changePage(-1)" disabled>‹ Prev</button>
-      <span class="page-info" id="pageInfo"></span>
-      <button id="nextBtn" onclick="changePage(1)">Next ›</button>
-    </div>
-    <div class="table-footnote">Alpha = disclosure-date entry close vs STW.AX (SPDR S&amp;P/ASX 200 ETF) over same horizon.</div>
-  </div>
+  </footer>
 
-  <!-- Disclaimer -->
-  <div class="disclaimer">
-    <strong>Disclaimer:</strong> Historical cluster analysis only. Not financial advice. Past performance does not predict future results.
-    Backtest period: May 2025 – April 2026, a favourable period for Australian resources equities. Performance in other market regimes is untested.
-    Entry assumes purchase at close on disclosure date + 1 trading day. Alpha measured vs STW.AX (SPDR ASX 200 ETF).
-  </div>
+  <script>
+    let allClusters = [];
+    let activeClusters = [];
+    let statsData = null;
+    const THEME_STORAGE_KEY = 'theme';
 
-</div><!-- /container -->
+    function toggleDark() {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    }
 
-<footer>
-  <div class="footer-inner">
-    <span>© 2026 ASX Insider Tracker — Data sourced from ASX announcements</span>
-    <div class="footer-links">
-      <a href="/static/index.html">Trade Feed</a>
-      <a href="/static/about.html">About</a>
-      <a href="/docs" target="_blank">API Docs</a>
-    </div>
-  </div>
-</footer>
+    function preferredTheme() {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
+      const legacyDarkMode = localStorage.getItem('darkMode');
+      if (legacyDarkMode === 'true') return 'dark';
+      if (legacyDarkMode === 'false') return 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
 
-<script>
-// ── State ─────────────────────────────────────────────────────────────────
-let sortField = 'start_date';
-let sortOrder = 'desc';
-let currentPage = 1;
-const PER_PAGE = 50;
-let totalHistorical = 0;
-let sectorIndustryMap = {}; // sector -> Set of industries
-let allActiveData = [];
-let showingAll = false;
-const MAX_ACTIVE_PREVIEW = 5;
-
-// ── Dark mode ─────────────────────────────────────────────────────────────
-function toggleDark() {
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-}
-if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
-
-// ── Format helpers ────────────────────────────────────────────────────────
-const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-function fmtDate(s) {
-  if (!s) return '—';
-  const d = new Date(s + 'T00:00:00');
-  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function fmtWindow(start, end) {
-  if (!start) return '—';
-  const s = new Date(start + 'T00:00:00');
-  const e = new Date(end + 'T00:00:00');
-  if (start === end) return fmtDate(start);
-  const sameMonthYear = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
-  if (sameMonthYear) return `${s.getDate()} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
-  const sameYear = s.getFullYear() === e.getFullYear();
-  if (sameYear) return `${s.getDate()} ${MON[s.getMonth()]} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
-  return `${fmtDate(start)} – ${fmtDate(end)}`;
-}
-
-function fmtMoney(v) {
-  if (v === null || v === undefined) return '—';
-  if (v >= 1_000_000) return `$${(v/1_000_000).toFixed(1)}m`;
-  if (v >= 1_000) return `$${Math.round(v/1_000)}k`;
-  return `$${Math.round(v)}`;
-}
-
-function fmtPct(v) {
-  if (v === null || v === undefined) return '<span class="ret-neutral">—</span>';
-  const p = (v * 100).toFixed(1);
-  const cls = v >= 0 ? 'ret-positive' : 'ret-negative';
-  return `<span class="${cls}">${v >= 0 ? '+' : ''}${p}%</span>`;
-}
-
-function fmtCapPct(v) {
-  if (v === null || v === undefined) return '';
-  return `${(v * 100).toFixed(2)}%`;
-}
-
-// ── API fetches ───────────────────────────────────────────────────────────
-function filterParams() {
-  const sector = document.getElementById('sectorFilter').value;
-  const industry = document.getElementById('industryFilter').value;
-  const horizon = document.getElementById('horizonFilter').value;
-  return { sector, industry, horizon };
-}
-
-async function fetchStats(sector='', industry='') {
-  const p = new URLSearchParams();
-  if (sector) p.set('sector', sector);
-  if (industry) p.set('industry', industry);
-  const res = await fetch(`/api/clusters/stats?${p}`);
-  return res.ok ? res.json() : null;
-}
-
-async function fetchClusters(params={}) {
-  const p = new URLSearchParams(params);
-  const res = await fetch(`/api/clusters?${p}`);
-  return res.ok ? res.json() : null;
-}
-
-// ── Stats bar ─────────────────────────────────────────────────────────────
-async function renderStats() {
-  const { sector, industry } = filterParams();
-  const stats = await fetchStats(sector, industry);
-  if (!stats) {
-    document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><p class="ret-neutral">Stats unavailable</p></div>';
-    return;
-  }
-  const alphaLabel = (sector && sector !== '')
-    ? `Median 90d Alpha (${sector.split(' ')[0]})`
-    : 'Median 90d Alpha (Basic Materials)';
-  const alphaVal = (sector && sector !== '')
-    ? stats.median_90d_alpha
-    : null; // Will show Basic Materials if no filter
-
-  // If no sector filter: fetch Basic Materials for the alpha card (both alpha AND n must match)
-  let showAlpha = stats.median_90d_alpha;
-  let showN     = stats.sample_size_90d;
-  let showAlphaLabel = sector
-    ? `Median 90d Alpha · ${sector.split(' ').slice(-1)[0]}`
-    : 'Median 90d Alpha · Basic Materials';
-  if (!sector) {
-    try {
-      const bmStats = await fetchStats('Basic Materials', '');
-      if (bmStats) {
-        showAlpha = bmStats.median_90d_alpha;
-        showN     = bmStats.sample_size_90d;  // n must match the displayed sector
+    function applyTheme(theme, persist = true) {
+      document.documentElement.dataset.theme = theme;
+      if (persist) {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        localStorage.setItem('darkMode', theme === 'dark' ? 'true' : 'false');
       }
-    } catch(e) {}
-  }
-  const hitRate = stats.hit_rate_90d;
-  const alphaColor = showAlpha !== null ? (showAlpha >= 0 ? 'positive' : 'negative') : '';
-  const alphaFmt = showAlpha !== null ? `${showAlpha >= 0 ? '+' : ''}${(showAlpha*100).toFixed(1)}%` : '—';
+    }
 
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">Total Clusters</div>
-      <div class="stat-value">${stats.total_clusters}</div>
-      <div class="stat-subtext">${stats.historical_count} historical · ${stats.maturing_count} maturing · ${stats.active_count} active</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">${showAlphaLabel}</div>
-      <div class="stat-value ${alphaColor}">${alphaFmt}</div>
-      <div class="stat-subtext">n=${showN} with elapsed horizon</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">90d Hit Rate${sector ? ' · ' + sector.split(' ').slice(-1)[0] : ' · Basic Materials'}</div>
-      <div class="stat-value ${hitRate !== null && hitRate >= 0.5 ? 'positive' : 'negative'}">${hitRate !== null ? Math.round(hitRate*100)+'%' : '—'}</div>
-      <div class="stat-subtext">Clusters with positive 90d alpha</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Active Now</div>
-      <div class="stat-value">${stats.active_count}</div>
-      <div class="stat-subtext">+ ${stats.maturing_count} maturing</div>
-    </div>
-  `;
-}
+    function syncFilterDrawer() {
+      const drawer = document.querySelector('.filter-drawer');
+      if (!drawer) return;
+      if (window.innerWidth > 768) {
+        drawer.setAttribute('open', '');
+      } else if (!drawer.dataset.userOpened) {
+        drawer.removeAttribute('open');
+      }
+    }
 
-// ── Active clusters ───────────────────────────────────────────────────────
-async function renderActiveClusters() {
-  const data = await fetchClusters({status:'active,maturing', sort:'start_date', order:'desc', per_page:200});
-  if (!data || !data.clusters.length) {
-    document.getElementById('activeGrid').innerHTML = '<div class="empty-state">No active or maturing clusters at this time.</div>';
-    return;
-  }
-  allActiveData = data.clusters;
-  renderActiveCards();
-}
+    function emptyIcon() {
+      return `<svg class="empty-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-7"></path></svg>`;
+    }
 
-function renderActiveCards() {
-  const clusters = allActiveData;
-  const btn = document.getElementById('viewAllBtn');
-  const toShow = (showingAll || clusters.length <= MAX_ACTIVE_PREVIEW) ? clusters : clusters.slice(0, MAX_ACTIVE_PREVIEW);
-
-  if (clusters.length > MAX_ACTIVE_PREVIEW) {
-    btn.style.display = '';
-    btn.textContent = showingAll ? '↑ Show fewer' : `View all ${clusters.length} clusters →`;
-  } else {
-    btn.style.display = 'none';
-  }
-
-  document.getElementById('activeGrid').innerHTML = toShow.map(c => {
-    const capPct = c.pct_market_cap ? `${(c.pct_market_cap*100).toFixed(2)}% cap` : '';
-    const link = `/clusters/${c.cluster_id}`;
-    const statusClass = c.status;
-    const statusLabel = c.status === 'active' ? 'Active' : 'Maturing';
-    const industryBadge = c.industry ? `<span class="industry-badge">${c.industry}</span>` : '';
-    const discInfo = c.status === 'maturing' && c.max_disclosure_date
-      ? `<div>Disclosed: ${fmtDate(c.max_disclosure_date)}</div>` : '';
-
-    return `
-      <div class="cluster-card ${statusClass}" onclick="window.location='/clusters/${c.cluster_id}'">
-        <div class="cluster-card-header">
-          <a class="cluster-ticker" href="${link}" onclick="event.stopPropagation()">${c.ticker}</a>
-          <span class="status-badge ${statusClass}">${statusLabel}</span>
-          ${industryBadge}
-        </div>
-        <div class="cluster-card-stats">
-          <span class="cluster-card-stat">👥 ${c.director_count} directors</span>
-          <span class="cluster-card-stat">💰 ${fmtMoney(c.total_value_aud)}</span>
-          ${capPct ? `<span class="cluster-card-stat">📊 ${capPct}</span>` : ''}
-        </div>
-        <div class="cluster-card-meta">
-          <div>${fmtWindow(c.start_date, c.end_date)}</div>
-          ${discInfo}
-          ${c.sector ? `<div style="margin-top:.2rem;opacity:.75">${c.sector}</div>` : ''}
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function toggleViewAll() {
-  showingAll = !showingAll;
-  renderActiveCards();
-}
-
-// ── Historical table ──────────────────────────────────────────────────────
-async function renderHistoricalTable() {
-  const { sector, industry, horizon } = filterParams();
-  const tbody = document.getElementById('histTableBody');
-  tbody.innerHTML = '<tr><td colspan="7"><div class="loading"></div></td></tr>';
-
-  const data = await fetchClusters({
-    status: 'historical',
-    sector, industry,
-    horizon,
-    entry_basis: 'disclosure_date',
-    sort: sortField,
-    order: sortOrder,
-    page: currentPage,
-    per_page: PER_PAGE,
-  });
-
-  if (!data) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Failed to load data.</div></td></tr>';
-    return;
-  }
-
-  totalHistorical = data.total;
-  const start = (currentPage - 1) * PER_PAGE + 1;
-  const end = Math.min(currentPage * PER_PAGE, data.total);
-  document.getElementById('tableShowing').textContent =
-    data.total > 0 ? `Showing ${start}–${end} of ${data.total} historical clusters` : '';
-
-  if (!data.clusters.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">No historical clusters match the current filters.</div></td></tr>';
-    document.getElementById('histPagination').style.display = 'none';
-    return;
-  }
-
-  tbody.innerHTML = data.clusters.map(c => {
-    const ret = c.returns;
-    const retHtml = ret ? fmtPct(ret.absolute_return) : '<span class="ret-neutral">—</span>';
-    const alphaHtml = ret ? `<span class="alpha-col">${fmtPct(ret.alpha_vs_asx200)}</span>` : '<span class="ret-neutral">—</span>';
-    const capStr = c.pct_market_cap ? fmtCapPct(c.pct_market_cap) : '—';
-
-    return `<tr>
-      <td>${fmtWindow(c.start_date, c.end_date)}</td>
-      <td><a class="ticker-link" href="/clusters/${c.cluster_id}">${c.ticker}</a></td>
-      <td>${c.industry || '<span style="color:var(--text-secondary)">—</span>'}</td>
-      <td style="text-align:center">${c.director_count}</td>
-      <td>${capStr}</td>
-      <td>${retHtml}</td>
-      <td>${alphaHtml}</td>
-    </tr>`;
-  }).join('');
-
-  // Pagination
-  const pages = Math.ceil(data.total / PER_PAGE);
-  const pagination = document.getElementById('histPagination');
-  const pageInfo = document.getElementById('pageInfo');
-  pagination.style.display = pages > 1 ? 'flex' : 'none';
-  pageInfo.textContent = `Page ${currentPage} of ${pages}`;
-  document.getElementById('prevBtn').disabled = currentPage <= 1;
-  document.getElementById('nextBtn').disabled = currentPage >= pages;
-
-  // Update sort headers
-  document.querySelectorAll('th[id^="th_"]').forEach(th => {
-    th.classList.remove('sorted-asc','sorted-desc');
-    th.classList.toggle('sortable', true);
-  });
-  const activeHeader = document.getElementById(`th_${sortField}`);
-  if (activeHeader) {
-    activeHeader.classList.add(sortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
-  }
-}
-
-function changePage(delta) {
-  const pages = Math.ceil(totalHistorical / PER_PAGE);
-  currentPage = Math.max(1, Math.min(currentPage + delta, pages));
-  renderHistoricalTable();
-}
-
-function sortBy(field) {
-  if (sortField === field) {
-    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortField = field;
-    sortOrder = field === 'start_date' ? 'desc' : 'desc';
-  }
-  currentPage = 1;
-  renderHistoricalTable();
-}
-
-// ── Sector/industry meta ──────────────────────────────────────────────────
-async function buildSectorIndustryMap() {
-  const data = await fetch('/api/clusters/filters').then(r => r.ok ? r.json() : null);
-  if (!data) return;
-
-  sectorIndustryMap = {};
-  for (const [sector, industries] of Object.entries(data.industries_by_sector)) {
-    sectorIndustryMap[sector] = new Set(industries);
-  }
-
-  const sectorSel = document.getElementById('sectorFilter');
-  data.available_sectors.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    sectorSel.appendChild(opt);
-  });
-}
-
-function onSectorChange() {
-  const sector = document.getElementById('sectorFilter').value;
-  const industrySel = document.getElementById('industryFilter');
-  industrySel.innerHTML = '<option value="">All industries</option>';
-  if (sector && sectorIndustryMap[sector]) {
-    Array.from(sectorIndustryMap[sector]).sort().forEach(ind => {
-      const opt = document.createElement('option');
-      opt.value = ind; opt.textContent = ind;
-      industrySel.appendChild(opt);
+    applyTheme(preferredTheme(), false);
+    document.addEventListener('DOMContentLoaded', () => {
+      const drawer = document.querySelector('.filter-drawer');
+      if (drawer) {
+        drawer.addEventListener('toggle', () => {
+          if (window.innerWidth <= 768) drawer.dataset.userOpened = drawer.open ? 'true' : '';
+        });
+      }
+      syncFilterDrawer();
+      window.addEventListener('resize', syncFilterDrawer);
     });
-  }
-  applyFilters();
-}
 
-function onHorizonChange() {
-  // Oldest-first when viewing 180d — the 96 clusters with elapsed 180d are the oldest ones
-  const horizon = document.getElementById('horizonFilter').value;
-  sortField = 'start_date';
-  sortOrder = horizon === '180' ? 'asc' : 'desc';
-  applyFilters();
-}
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
 
-function applyFilters() {
-  currentPage = 1;
-  renderStats();
-  renderHistoricalTable();
-}
+    function fmtMoney(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
+      if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+      if (Math.abs(n) >= 1_000) return `$${Math.round(n / 1_000)}K`;
+      return `$${Math.round(n)}`;
+    }
 
-// ── Init ──────────────────────────────────────────────────────────────────
-async function init() {
-  await buildSectorIndustryMap();
-  await Promise.all([
-    renderStats(),
-    renderActiveClusters(),
-    renderHistoricalTable(),
-  ]);
-}
+    function fmtPct(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;
+    }
 
-init();
-</script>
+    function parseDate(value) {
+      if (!value) return null;
+      const date = new Date(`${value}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function fmtDate(value) {
+      const date = parseDate(value);
+      if (!date) return '-';
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-AU', { month: 'short' });
+      const year = String(date.getFullYear()).slice(-2);
+      return `${day} ${month} '${year}`;
+    }
+
+    function fmtWindow(start, end) {
+      if (!start && !end) return '-';
+      if (!start || start === end) return fmtDate(end || start);
+      const s = parseDate(start);
+      const e = parseDate(end);
+      if (s && e && s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+        const month = e.toLocaleDateString('en-AU', { month: 'short' });
+        const year = String(e.getFullYear()).slice(-2);
+        return `${s.getDate()}-${e.getDate()} ${month} '${year}`;
+      }
+      return `${fmtDate(start)} - ${fmtDate(end)}`;
+    }
+
+    function signalClass(count) {
+      if (Number(count || 0) >= 6) return 'signal-high';
+      if (Number(count || 0) >= 4) return 'signal-medium';
+      return 'signal-base';
+    }
+
+    function statusBadge(status) {
+      const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+      const cls = status === 'historical' ? 'badge-soft' : status === 'active' ? 'badge-info-soft' : 'badge-warn-soft';
+      return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+    }
+
+    function returnMeta(cluster) {
+      if (!cluster.returns || cluster.returns.alpha_vs_asx200 === null || cluster.returns.alpha_vs_asx200 === undefined) {
+        return statusBadge(cluster.status);
+      }
+      const alpha = Number(cluster.returns.alpha_vs_asx200);
+      const cls = alpha >= 0 ? 'metric-buy' : 'metric-sell';
+      return `${statusBadge(cluster.status)} <span class="${cls} pct">${fmtPct(alpha)} alpha</span>`;
+    }
+
+    function clusterDescriptor(cluster) {
+      if (cluster.industry && cluster.sector) return `${cluster.industry} - ${cluster.sector}`;
+      return cluster.industry || cluster.sector || 'Sector unavailable';
+    }
+
+    function filterClusters() {
+      const timeframe = Number(document.getElementById('timeframeFilter').value || 90);
+      const minDirectors = Number(document.getElementById('minDirectorsFilter').value || 0);
+      const minValue = Number(document.getElementById('minValueFilter').value || 0);
+      const ticker = document.getElementById('tickerFilter').value.trim().toUpperCase();
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - timeframe);
+
+      return allClusters.filter(cluster => {
+        const start = parseDate(cluster.start_date);
+        if (start && start < cutoff) return false;
+        if (Number(cluster.director_count || 0) < minDirectors) return false;
+        if (Number(cluster.total_value_aud || 0) < minValue) return false;
+        if (ticker && !String(cluster.ticker || '').toUpperCase().includes(ticker)) return false;
+        return true;
+      });
+    }
+
+    function renderStats(filtered) {
+      const activeCount = activeClusters.length;
+      const avgDirectors = filtered.length
+        ? filtered.reduce((sum, cluster) => sum + Number(cluster.director_count || 0), 0) / filtered.length
+        : 0;
+      const totalValue = filtered.reduce((sum, cluster) => sum + Number(cluster.total_value_aud || 0), 0);
+      const returnRows = filtered.filter(cluster => cluster.returns && cluster.returns.alpha_vs_asx200 !== null && cluster.returns.alpha_vs_asx200 !== undefined);
+      const hitRate = returnRows.length
+        ? returnRows.filter(cluster => Number(cluster.returns.alpha_vs_asx200) > 0).length / returnRows.length
+        : statsData?.hit_rate_90d;
+      const hitClass = hitRate === null || hitRate === undefined ? '' : hitRate >= 0.5 ? 'metric-buy' : 'metric-sell';
+
+      document.getElementById('clusterStats').innerHTML = `
+        <div class="stat-card stat">
+          <div class="stat-label">Total Active Clusters</div>
+          <div class="stat-value">${activeCount.toLocaleString('en-AU')}</div>
+          <div class="stat-sub-value">${activeClusters.filter(c => c.status === 'maturing').length.toLocaleString('en-AU')} maturing</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Average Directors</div>
+          <div class="stat-value">${avgDirectors ? avgDirectors.toFixed(1) : '-'}</div>
+          <div class="stat-sub-value">Across current filters</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Total $ Value</div>
+          <div class="stat-value">${fmtMoney(totalValue)}</div>
+          <div class="stat-sub-value">Aggregate disclosed buying</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Hit Rate</div>
+          <div class="stat-value ${hitClass}">${hitRate === null || hitRate === undefined ? '-' : `${Math.round(hitRate * 100)}%`}</div>
+          <div class="stat-sub-value">${returnRows.length ? `${returnRows.length} return-tested rows` : 'Uses available return data'}</div>
+        </div>
+      `;
+    }
+
+    function renderClusterRow(cluster) {
+      return `
+        <a class="cluster-row ${signalClass(cluster.director_count)}" href="/clusters/${cluster.cluster_id}">
+          <span class="cluster-count">${Number(cluster.director_count || 0).toLocaleString('en-AU')} directors</span>
+          <span class="tag-ticker">${escapeHtml(cluster.ticker)}</span>
+          <span class="cluster-main">
+            <span class="cluster-title">${escapeHtml(clusterDescriptor(cluster))}</span>
+            <span class="cluster-subtitle">${escapeHtml(cluster.market_cap_bucket || 'Market cap bucket unavailable')}</span>
+          </span>
+          <span class="cluster-date">${escapeHtml(fmtWindow(cluster.start_date, cluster.end_date))}</span>
+          <span class="cluster-value">${fmtMoney(cluster.total_value_aud)}</span>
+          <span class="cluster-meta">${returnMeta(cluster)}</span>
+        </a>`;
+    }
+
+    function renderClusters() {
+      const filtered = filterClusters();
+      renderStats(filtered);
+      document.getElementById('clusterShowing').textContent = `Showing ${filtered.length.toLocaleString('en-AU')} of ${allClusters.length.toLocaleString('en-AU')} fetched clusters`;
+
+      if (!filtered.length) {
+	        document.getElementById('clusterList').innerHTML = `
+	          <div class="empty-panel">
+	            <div>
+	              ${emptyIcon()}
+	              <div class="empty-panel-title">No clusters match these filters</div>
+	              <div class="empty-panel-copy">Lower the director or value thresholds to broaden the list.</div>
+	              <button class="btn btn-ghost btn-sm" type="button" onclick="clearClusterFilters()">Clear filters</button>
+	            </div>
+	          </div>`;
+	        return;
+	      }
+
+	      document.getElementById('clusterList').innerHTML = filtered.map(renderClusterRow).join('');
+	    }
+
+	    function clearClusterFilters() {
+	      document.getElementById('timeframeFilter').value = '365';
+	      document.getElementById('minDirectorsFilter').value = '2';
+	      document.getElementById('minValueFilter').value = '';
+	      document.getElementById('tickerFilter').value = '';
+	      renderClusters();
+	    }
+
+	    async function init() {
+      try {
+        const [clustersRes, activeRes, statsRes] = await Promise.all([
+          fetch('/api/clusters?sort=start_date&order=desc&per_page=200'),
+          fetch('/api/clusters?status=active,maturing&sort=start_date&order=desc&per_page=200'),
+          fetch('/api/clusters/stats'),
+        ]);
+        if (!clustersRes.ok || !activeRes.ok) throw new Error('cluster fetch failed');
+        const clustersData = await clustersRes.json();
+        const activeData = await activeRes.json();
+        statsData = statsRes.ok ? await statsRes.json() : null;
+        allClusters = clustersData.clusters || [];
+        activeClusters = activeData.clusters || [];
+        renderClusters();
+      } catch (error) {
+        document.getElementById('clusterStats').innerHTML = '';
+	        document.getElementById('clusterList').innerHTML = `
+	          <div class="empty-panel">
+	            <div>
+	              ${emptyIcon()}
+	              <div class="empty-panel-title">Unable to load clusters</div>
+	              <div class="empty-panel-copy">Refresh the page to try again.</div>
+	              <button class="btn btn-ghost btn-sm" type="button" onclick="init()">Retry</button>
+	            </div>
+	          </div>`;
+        document.getElementById('clusterShowing').textContent = 'Cluster data unavailable';
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>

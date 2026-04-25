@@ -1,0 +1,152 @@
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--line-body);
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: var(--border-width);
+  text-underline-offset: var(--space-1);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--line-heading);
+}
+
+h1 {
+  font-size: var(--text-display);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+p {
+  color: var(--text-2);
+}
+
+small {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  align-items: center;
+  appearance: none;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: var(--weight-medium);
+  gap: var(--space-2);
+  justify-content: center;
+  min-height: var(--control-md);
+  padding: 0 var(--space-3);
+}
+
+button:hover {
+  border-color: var(--border-strong);
+}
+
+button:disabled {
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+
+input,
+select,
+textarea {
+  appearance: none;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  min-height: var(--control-md);
+  padding: 0 var(--space-3);
+  width: 100%;
+}
+
+textarea {
+  min-height: var(--space-16);
+  padding-block: var(--space-3);
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+  min-height: auto;
+  padding: 0;
+  width: auto;
+}
+
+table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+th {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-align: left;
+  text-transform: uppercase;
+}
+
+td {
+  color: var(--text);
+}

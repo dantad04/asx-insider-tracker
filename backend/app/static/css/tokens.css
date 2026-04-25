@@ -1,0 +1,178 @@
+:root {
+  /* Surfaces */
+  --bg: #FBFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F5F4F0;
+  --border: #E8E5DE;
+  --border-strong: #D6D2C8;
+
+  /* Text */
+  --text: #1C1917;
+  --text-2: #57534E;
+  --text-3: #8C8780;
+
+  /* Brand */
+  --accent: #C2410C;
+  --accent-hover: #9A330A;
+  --accent-soft: #FDEBDC;
+  --accent-ring: rgba(194, 65, 12, 0.18);
+  --accent-contrast: #FFFFFF;
+  --brand-accent: #C2410C;
+  --brand-accent-hover: #9A330A;
+  --brand-accent-soft: #FDEBDC;
+
+  /* Semantic */
+  --buy: #15803D;
+  --buy-soft: #DCFCE7;
+  --sell: #B91C1C;
+  --sell-soft: #FEE2E2;
+  --warn: #B45309;
+  --warn-soft: #FEF3C7;
+  --info: #0F766E;
+  --info-soft: #CCFBF1;
+  --semantic-contrast: #FFFFFF;
+
+  /* Typography */
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SF Mono", Consolas, monospace;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-display: var(--font-ui);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-display: 2.5rem;
+
+  --line-tight: 1.12;
+  --line-heading: 1.2;
+  --line-body: 1.5;
+  --line-ui: 1.25;
+  --tracking-tight: -0.01em;
+  --tracking-label: 0.04em;
+  --tracking-normal: 0;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Layout */
+  --container-max: 1180px;
+  --control-sm: 30px;
+  --control-md: 36px;
+  --control-lg: 40px;
+  --row-dense: 40px;
+  --row-comfortable: 44px;
+  --tag-height: 24px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Borders and shadows */
+  --border-width: 1px;
+  --focus-ring: 0 0 0 2px var(--accent-ring);
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 4px 12px rgba(28, 25, 23, 0.06);
+
+  /* Motion */
+  --ease-finished: cubic-bezier(0.2, 0, 0.13, 1);
+  --duration-hover: 100ms;
+  --duration-focus: 150ms;
+  --duration-row: 80ms;
+  --duration-chip: 120ms;
+}
+
+[data-theme="dark"],
+.dark,
+.dark-mode {
+  --bg: #14110D;
+  --surface: #1C1917;
+  --surface-2: #2A2520;
+  --border: #2D2925;
+  --border-strong: #3D3833;
+  --text: #F5F4F0;
+  --text-2: #B8B2A7;
+  --text-3: #847F76;
+  --accent: #E66B2B;
+  --accent-hover: #F08952;
+  --accent-soft: rgba(230, 107, 43, 0.16);
+  --accent-ring: rgba(230, 107, 43, 0.24);
+  --brand-accent: #E66B2B;
+  --brand-accent-hover: #F08952;
+  --brand-accent-soft: rgba(230, 107, 43, 0.16);
+  --buy: #16A34A;
+  --sell: #EF4444;
+  --warn: #D97706;
+  --info: #14B8A6;
+  --buy-soft: rgba(21, 128, 61, 0.22);
+  --sell-soft: rgba(185, 28, 28, 0.22);
+  --warn-soft: rgba(217, 119, 6, 0.18);
+  --info-soft: rgba(20, 184, 166, 0.18);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-size: 16px;
+  text-size-adjust: 100%;
+}
+
+[data-theme="dark"],
+.dark,
+.dark-mode {
+  color-scheme: dark;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}

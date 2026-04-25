@@ -1,618 +1,571 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cluster Portfolio — ASX Insider Tracker</title>
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg-primary:#ffffff;--bg-secondary:#f5f5f5;--bg-tertiary:#e8e8e8;--text-primary:#1a1a1a;--text-secondary:#666666;--border-color:#d0d0d0;--accent:#0066cc;--accent-hover:#0052a3;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--info:#17a2b8}
-body.dark-mode{--bg-primary:#1a1a1a;--bg-secondary:#2d2d2d;--bg-tertiary:#3d3d3d;--text-primary:#e8e8e8;--text-secondary:#b0b0b0;--border-color:#444444}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;transition:background-color .3s,color .3s}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-header{background:linear-gradient(135deg,var(--accent) 0%,#003d99 100%);color:#fff;padding:1.5rem 2rem;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.header-content{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.header-back{font-size:.85rem;opacity:.8;margin-bottom:.25rem}
-.header-back a{color:inherit;text-decoration:none}.header-back a:hover{opacity:1;text-decoration:underline}
-h1{font-size:1.8rem;font-weight:700;letter-spacing:-.5px}
-.header-subtitle{font-size:.88rem;opacity:.9;font-weight:300;margin-top:.2rem}
-.header-controls{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
-.header-controls a{color:rgba(255,255,255,.85);font-size:.9rem;font-weight:600;text-decoration:none}
-.header-controls a:hover{color:#fff;text-decoration:none}
-button{background-color:var(--accent);color:#fff;border:none;padding:.55rem 1rem;border-radius:4px;cursor:pointer;font-size:.9rem;font-weight:600;transition:background-color .2s}
-button:hover{background-color:var(--accent-hover)}
-.theme-toggle{background:rgba(255,255,255,.2);padding:.5rem .7rem}
-.theme-toggle:hover{background:rgba(255,255,255,.3)}
-.container{max-width:1400px;margin:2rem auto;padding:0 1rem}
-.loading{text-align:center;padding:2rem;color:var(--text-secondary)}
-.loading::after{content:'';display:inline-block;width:18px;height:18px;border:3px solid var(--border-color);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-left:.5rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.section-header{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin:2rem 0 1rem;padding-bottom:.75rem;border-bottom:2px solid var(--border-color);flex-wrap:wrap}
-.section-header h2{font-size:1.3rem;font-weight:600}
-.section-header p{font-size:.86rem;color:var(--text-secondary)}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
-.stat-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1.2rem 1.25rem;min-height:142px;display:flex;flex-direction:column;justify-content:space-between}
-.stat-label{font-size:.78rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.45px;margin-bottom:.35rem;font-weight:600}
-.stat-value{font-size:clamp(1.2rem,1rem + 1.1vw,2rem);line-height:1.12;font-weight:700;color:var(--accent);overflow-wrap:anywhere}
-.stat-value.money{font-size:clamp(1.1rem,.9rem + 1vw,1.75rem)}
-.stat-value.success{color:var(--success)}
-.stat-value.warning{color:#b8860b}
-.stat-value.danger{color:var(--danger)}
-.stat-subtext{font-size:.8rem;color:var(--text-secondary);margin-top:.35rem}
-.panel{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1rem}
-.empty-state{padding:2rem 1rem;text-align:center;color:var(--text-secondary)}
-.pill{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .62rem;font-size:.72rem;font-weight:700;white-space:nowrap}
-.pill.active{background:rgba(0,102,204,.12);color:var(--accent)}
-.pill.closed{background:rgba(40,167,69,.14);color:var(--success)}
-.pill.email-failed{background:rgba(220,53,69,.14);color:var(--danger)}
-.pill.email-sent{background:rgba(40,167,69,.14);color:var(--success)}
-.pill.skip{background:rgba(255,193,7,.18);color:#9a6a00}
-.pill.buy{background:rgba(0,102,204,.12);color:var(--accent)}
-.pill.sell{background:rgba(23,162,184,.15);color:var(--info)}
-.pill.neutral{background:var(--bg-tertiary);color:var(--text-secondary)}
-.metric-positive{color:var(--success);font-weight:700}
-.metric-negative{color:var(--danger);font-weight:700}
-.metric-neutral{color:var(--text-secondary)}
-.table-shell{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;overflow:hidden}
-.table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.9rem}
-thead{background:var(--bg-tertiary);border-bottom:2px solid var(--border-color)}
-th{padding:.85rem .9rem;text-align:left;color:var(--text-secondary);font-size:.78rem;text-transform:uppercase;letter-spacing:.45px;font-weight:700;white-space:nowrap}
-td{padding:.85rem .9rem;border-bottom:1px solid var(--border-color);vertical-align:top}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--bg-tertiary)}
-.mono{font-family:'Courier New',monospace;font-weight:700}
-.muted{color:var(--text-secondary)}
-.summary-banner{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem 1.15rem;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:1.5rem;flex-wrap:wrap}
-.summary-banner strong{font-size:1rem}
-.chart-panel{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1.1rem 1.1rem 1rem}
-.chart-title{font-size:1rem;font-weight:700;margin-bottom:.2rem}
-.chart-subtitle{font-size:.82rem;color:var(--text-secondary);margin-bottom:.9rem}
-.chart-shell{width:100%;overflow-x:auto}
-.chart-svg{width:100%;height:auto;display:block;min-width:640px}
-.chart-grid{stroke:var(--border-color);stroke-width:1}
-.chart-axis{stroke:var(--text-secondary);stroke-width:1.2}
-.chart-line{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.chart-area{fill:url(#chartGradient)}
-.chart-dot{fill:var(--accent);stroke:var(--bg-primary);stroke-width:2}
-.chart-label{fill:var(--text-secondary);font-size:12px}
-.chart-value{fill:var(--text-primary);font-size:12px;font-weight:700}
-.chart-note{font-size:.8rem;color:var(--text-secondary);margin-top:.8rem}
-.event-list{display:flex;flex-direction:column;gap:.8rem}
-.event-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:1rem 1.1rem}
-.event-top{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:.5rem}
-.event-meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-.event-time{font-size:.82rem;color:var(--text-secondary)}
-.event-summary{font-size:.95rem}
-.event-detail{font-size:.84rem;color:var(--text-secondary);margin-top:.35rem}
-.list-inline{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.8rem;color:var(--text-secondary);margin-top:.4rem}
-footer{background:var(--bg-secondary);border-top:1px solid var(--border-color);padding:1.5rem 1rem;margin-top:2.5rem;color:var(--text-secondary);font-size:.82rem}
-.footer-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.footer-links{display:flex;gap:1.25rem}
-.error-text{color:var(--danger);font-weight:600}
-@media(max-width:720px){
-  header{padding:1.2rem 1rem}
-  h1{font-size:1.45rem}
-  .container{margin:1.25rem auto;padding:0 .75rem}
-  th,td{padding:.7rem .65rem;font-size:.82rem}
-  .footer-inner{flex-direction:column}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cluster Portfolio - ASX Insider Tracker</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/vendor/uplot/uPlot.min.css">
+  <link rel="stylesheet" href="/static/css/app-pages.css">
 </head>
 <body>
-<header>
-  <div class="header-content">
-    <div>
-      <div class="header-back"><a href="/static/index.html">← ASX Insider Tracker</a></div>
-      <h1>Cluster Portfolio</h1>
-      <p class="header-subtitle">Read-only paper portfolio and rules-based strategy tracker for Basic Materials cluster buys</p>
-    </div>
-    <div class="header-controls">
-      <a href="/clusters">Cluster Buys</a>
-      <a href="/static/about.html">About</a>
-      <a href="/docs" target="_blank">API</a>
-      <button class="theme-toggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
-    </div>
-  </div>
-</header>
-
-<div class="container">
-  <div id="pageMessage" class="summary-banner" style="display:none"></div>
-
-  <div class="section-header">
-    <div>
-      <h2>Summary</h2>
-      <p>Portfolio cash, deployment, valuation status, and any missing price coverage.</p>
-    </div>
-  </div>
-  <div id="summaryArea">
-    <div class="loading"></div>
-  </div>
-
-  <div class="section-header">
-    <div>
-      <h2>Portfolio Value Over Time</h2>
-      <p>Simple time series for the paper portfolio using stored transaction points and the latest available valuation.</p>
-    </div>
-  </div>
-  <div id="historyChartArea">
-    <div class="loading"></div>
-  </div>
-
-  <div class="section-header">
-    <div>
-      <h2>Open Positions</h2>
-      <p>Current paper positions opened by the rules-based cluster strategy.</p>
-    </div>
-  </div>
-  <div id="openPositionsArea">
-    <div class="loading"></div>
-  </div>
-
-  <div class="section-header">
-    <div>
-      <h2>Closed Positions</h2>
-      <p>Completed paper trades with stored entry and exit dates.</p>
-    </div>
-  </div>
-  <div id="closedPositionsArea">
-    <div class="loading"></div>
-  </div>
-
-  <div class="section-header">
-    <div>
-      <h2>Event Log</h2>
-      <p>Reverse-chronological record of buys, skips, sells, and email outcomes.</p>
-    </div>
-  </div>
-  <div id="eventLogArea">
-    <div class="loading"></div>
-  </div>
-</div>
-
-<footer>
-  <div class="footer-inner">
-    <span>© 2026 ASX Insider Tracker — Cluster Portfolio is a simulated paper portfolio only.</span>
-    <div class="footer-links">
-      <a href="/static/index.html">Trade Feed</a>
-      <a href="/clusters">Cluster Buys</a>
-      <a href="/static/about.html">About</a>
-    </div>
-  </div>
-</footer>
-
-<script>
-let summaryData = null;
-let positionsData = null;
-let eventsData = null;
-let historyData = null;
-let portfolioRefreshTimer = null;
-const PORTFOLIO_REFRESH_MS = 60000;
-
-function fmtCurrency(value){
-  if(value===null || value===undefined) return '—';
-  return new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:2}).format(value);
-}
-
-function fmtPrice(value){
-  if(value===null || value===undefined) return '—';
-  return Number(value).toFixed(4);
-}
-
-function fmtPct(value){
-  if(value===null || value===undefined) return '—';
-  const sign = value > 0 ? '+' : '';
-  return `${sign}${Number(value).toFixed(2)}%`;
-}
-
-function fmtDate(value){
-  if(!value) return '—';
-  return value;
-}
-
-function escapeHtml(value){
-  return String(value ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#39;');
-}
-
-function pnlClass(value){
-  if(value===null || value===undefined) return 'metric-neutral';
-  if(value > 0) return 'metric-positive';
-  if(value < 0) return 'metric-negative';
-  return 'metric-neutral';
-}
-
-function eventPillClass(eventType){
-  const map = {
-    buy: 'buy',
-    sell: 'sell',
-    skip: 'skip',
-    email_sent: 'email-sent',
-    email_failed: 'email-failed',
-    portfolio_init: 'neutral'
-  };
-  return map[eventType] || 'neutral';
-}
-
-function renderMessage(messageHtml){
-  const box = document.getElementById('pageMessage');
-  box.style.display = 'flex';
-  box.innerHTML = messageHtml;
-}
-
-function latestStoredPriceDate(){
-  if(!positionsData || !positionsData.positions) return null;
-  const dates = positionsData.positions
-    .filter(position => position.status === 'open' && position.current_price_date)
-    .map(position => position.current_price_date)
-    .sort();
-  return dates.length ? dates[dates.length - 1] : null;
-}
-
-function renderSummary(){
-  const el = document.getElementById('summaryArea');
-  if(!summaryData || !summaryData.portfolio_exists){
-    el.innerHTML = `
-      <div class="panel empty-state">
-        No Cluster Portfolio has been initialized yet. The paper portfolio will appear here once the rules-based strategy tracker has run.
-      </div>
-    `;
-    return;
-  }
-  const missing = (summaryData.missing_price_tickers || []).join(', ');
-  el.innerHTML = `
-    <div class="summary-grid">
-      <div class="stat-card"><div class="stat-label">Portfolio Name</div><div class="stat-value" style="font-size:1.15rem">${escapeHtml(summaryData.name || 'Cluster Portfolio')}</div><div class="stat-subtext">Paper portfolio</div></div>
-      <div class="stat-card"><div class="stat-label">Starting Cash</div><div class="stat-value money">${fmtCurrency(summaryData.starting_cash)}</div><div class="stat-subtext">Initial capital base</div></div>
-      <div class="stat-card"><div class="stat-label">Current Cash</div><div class="stat-value money">${fmtCurrency(summaryData.current_cash)}</div><div class="stat-subtext">Available to deploy</div></div>
-      <div class="stat-card"><div class="stat-label">Deployed Capital</div><div class="stat-value money">${fmtCurrency(summaryData.deployed_capital)}</div><div class="stat-subtext">Current open allocations</div></div>
-      <div class="stat-card"><div class="stat-label">Open Positions</div><div class="stat-value">${summaryData.open_positions_count}</div><div class="stat-subtext">Active paper holdings</div></div>
-      <div class="stat-card"><div class="stat-label">Closed Positions</div><div class="stat-value">${summaryData.closed_positions_count}</div><div class="stat-subtext">Completed exits</div></div>
-      <div class="stat-card"><div class="stat-label">Total Portfolio Value</div><div class="stat-value money">${summaryData.total_portfolio_value!==null ? fmtCurrency(summaryData.total_portfolio_value) : '—'}</div><div class="stat-subtext">Cash plus marked positions</div></div>
-      <div class="stat-card"><div class="stat-label">Valuation Status</div><div class="stat-value ${summaryData.valuation_complete ? 'success' : 'warning'}">${summaryData.valuation_complete ? 'Complete' : 'Incomplete'}</div><div class="stat-subtext">${missing ? `Missing: ${escapeHtml(missing)}` : 'All open positions priced'}</div></div>
-    </div>
-  `;
-}
-
-function renderHistoryChart(){
-  const el = document.getElementById('historyChartArea');
-  if(!historyData || !historyData.portfolio_exists){
-    el.innerHTML = `<div class="panel empty-state">No portfolio history yet.</div>`;
-    return;
-  }
-  const points = historyData.points || [];
-  if(points.length < 2){
-    el.innerHTML = `<div class="panel empty-state">Not enough portfolio history yet to draw a value line.</div>`;
-    return;
-  }
-
-  const width = 920;
-  const height = 280;
-  const padding = { top: 20, right: 20, bottom: 48, left: 92 };
-  const innerWidth = width - padding.left - padding.right;
-  const innerHeight = height - padding.top - padding.bottom;
-  const values = points.map(point => Number(point.value_aud || 0));
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const spread = Math.max(maxValue - minValue, 1);
-  const paddingValue = spread * 0.15;
-  const domainMin = minValue - paddingValue;
-  const domainMax = maxValue + paddingValue;
-  const xStep = points.length > 1 ? innerWidth / (points.length - 1) : innerWidth / 2;
-
-  const mappedPoints = points.map((point, index) => {
-    const x = padding.left + (xStep * index);
-    const yRatio = (Number(point.value_aud) - domainMin) / (domainMax - domainMin || 1);
-    const y = padding.top + innerHeight - (yRatio * innerHeight);
-    return { ...point, x, y };
-  });
-
-  const path = mappedPoints.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-  const areaPath = `${path} L ${mappedPoints[mappedPoints.length - 1].x} ${padding.top + innerHeight} L ${mappedPoints[0].x} ${padding.top + innerHeight} Z`;
-  const yTicks = Array.from({ length: 4 }, (_, index) => {
-    const ratio = index / 3;
-    const value = domainMax - ((domainMax - domainMin) * ratio);
-    const y = padding.top + (innerHeight * ratio);
-    return { value, y };
-  });
-
-  el.innerHTML = `
-    <div class="chart-panel">
-      <div class="chart-title">Portfolio Value Over Time</div>
-      <div class="chart-subtitle">Derived from stored transaction points and the latest available portfolio valuation.</div>
-      <div class="chart-shell">
-        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Cluster Portfolio value over time">
-          <defs>
-            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="rgba(0,102,204,0.22)"></stop>
-              <stop offset="100%" stop-color="rgba(0,102,204,0.02)"></stop>
-            </linearGradient>
-          </defs>
-          ${yTicks.map(tick => `
-            <g>
-              <line class="chart-grid" x1="${padding.left}" y1="${tick.y}" x2="${width - padding.right}" y2="${tick.y}"></line>
-              <text class="chart-label" x="${padding.left - 12}" y="${tick.y + 4}" text-anchor="end">${escapeHtml(fmtCurrency(tick.value))}</text>
-            </g>
-          `).join('')}
-          <line class="chart-axis" x1="${padding.left}" y1="${padding.top + innerHeight}" x2="${width - padding.right}" y2="${padding.top + innerHeight}"></line>
-          <path class="chart-area" d="${areaPath}"></path>
-          <path class="chart-line" d="${path}"></path>
-          ${mappedPoints.map((point, index) => `
-            <g>
-              <circle class="chart-dot" cx="${point.x}" cy="${point.y}" r="4.5"></circle>
-              <text class="chart-label" x="${point.x}" y="${height - 16}" text-anchor="${index === 0 ? 'start' : index === mappedPoints.length - 1 ? 'end' : 'middle'}">${escapeHtml(point.date)}</text>
-              <text class="chart-value" x="${point.x}" y="${point.y - 10}" text-anchor="${index === 0 ? 'start' : index === mappedPoints.length - 1 ? 'end' : 'middle'}">${escapeHtml(fmtCurrency(point.value_aud))}</text>
-            </g>
-          `).join('')}
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-mark" href="/static/index.html" aria-label="ASX Insider Tracker home">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"></path>
+          <path d="M7 16V9"></path>
+          <path d="M12 16V5"></path>
+          <path d="M17 16v-3"></path>
         </svg>
+        <span>ASX Insider Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+        <a class="site-nav-link" href="/clusters">Cluster Buys</a>
+        <a class="site-nav-link is-active" href="/clusters/portfolio">Cluster Portfolio</a>
+        <a class="site-nav-link" href="/static/about.html">About</a>
+        <a class="site-nav-link" href="/docs">API Docs</a>
+      </nav>
+      <div class="header-actions">
+        <details class="mobile-nav-menu">
+          <summary class="mobile-menu-summary">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+            Menu
+          </summary>
+          <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+            <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+            <a class="site-nav-link" href="/clusters">Cluster Buys</a>
+            <a class="site-nav-link is-active" href="/clusters/portfolio">Cluster Portfolio</a>
+            <a class="site-nav-link" href="/static/about.html">About</a>
+            <a class="site-nav-link" href="/docs">API Docs</a>
+          </nav>
+        </details>
+        <button class="header-icon-button" type="button" onclick="toggleDark()" aria-label="Toggle dark mode">
+          <svg class="theme-icon-moon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+          </svg>
+          <svg class="theme-icon-sun" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </button>
       </div>
-      <div class="chart-note">Methodology: ${escapeHtml((historyData.methodology || 'transaction_based_estimate').replaceAll('_',' '))}</div>
     </div>
-  `;
-}
+  </header>
 
-function renderOpenPositions(){
-  const el = document.getElementById('openPositionsArea');
-  if(!positionsData || !positionsData.portfolio_exists){
-    el.innerHTML = `<div class="panel empty-state">No portfolio data yet.</div>`;
-    return;
-  }
-  const openPositions = (positionsData.positions || []).filter(p => p.status === 'open');
-  if(!openPositions.length){
-    el.innerHTML = `<div class="panel empty-state">No open paper positions right now.</div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="table-shell">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Industry</th>
-              <th>Status</th>
-              <th>Buy Date</th>
-              <th>Planned Exit</th>
-              <th>Entry Price</th>
-              <th>Entry Price Date</th>
-              <th>Current Price</th>
-              <th>Current Price Date</th>
-              <th>Price Source</th>
-              <th>Allocated</th>
-              <th>Quantity</th>
-              <th>Unrealised P&amp;L</th>
-              <th>Cluster</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${openPositions.map(p => `
+  <main class="page-shell">
+    <section class="page-intro" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">Cluster Portfolio</h1>
+      <p>Rules-based paper portfolio tracking cluster-buy entries, current marked value, and realised or unrealised performance.</p>
+    </section>
+
+    <section class="stat-grid" id="portfolioStats" aria-label="Portfolio summary">
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+    </section>
+
+    <section class="page-section" aria-labelledby="holdingsTitle">
+      <div class="page-section-header">
+        <div>
+          <h2 id="holdingsTitle">Holdings</h2>
+          <p>Open and closed paper positions from the cluster strategy.</p>
+        </div>
+      </div>
+      <div class="table-shell">
+        <div class="table-scroll">
+          <table class="table" id="holdingsTable">
+            <thead>
               <tr>
-                <td class="mono">${escapeHtml(p.ticker)}</td>
-                <td>${escapeHtml(p.industry || '—')}</td>
-                <td><span class="pill active">${escapeHtml(p.source_status || 'open')}</span></td>
-                <td>${fmtDate(p.buy_date)}</td>
-                <td>${fmtDate(p.planned_exit_date)}</td>
-                <td>${fmtPrice(p.entry_price)}</td>
-                <td>${fmtDate(p.entry_price_date)}</td>
-                <td>${fmtPrice(p.current_price)}</td>
-                <td>${fmtDate(p.current_price_date)}</td>
-                <td>${escapeHtml(p.current_price_source || '—')}</td>
-                <td>${fmtCurrency(p.allocated_aud)}</td>
-                <td>${Number(p.quantity).toLocaleString('en-AU')}</td>
-                <td>
-                  <span class="${pnlClass(p.unrealised_pnl_aud)}">${fmtCurrency(p.unrealised_pnl_aud)}</span>
-                  <div class="muted">${fmtPct(p.unrealised_pnl_pct)}</div>
-                </td>
-                <td>${p.entry_cluster_id ? `<a href="/clusters/${p.entry_cluster_id}">View cluster</a>` : '—'}</td>
+                <th class="is-sortable" onclick="sortHoldings('ticker')">Ticker</th>
+                <th class="is-sortable" onclick="sortHoldings('company')">Company</th>
+                <th class="is-sortable" onclick="sortHoldings('buy_date')">Entry Date</th>
+                <th class="is-sortable right" onclick="sortHoldings('entry_price')">Entry $</th>
+                <th class="is-sortable right" onclick="sortHoldings('current_price')">Current $</th>
+                <th class="is-sortable right" onclick="sortHoldings('return_pct')">Return %</th>
+                <th class="right">180-Day Return %</th>
+                <th class="is-sortable" onclick="sortHoldings('status')">Status</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody id="holdingsBody">
+              <tr><td colspan="8"><span class="skeleton skeleton-row"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section" aria-labelledby="chartTitle">
+      <div class="page-section-header">
+        <div>
+          <h2 id="chartTitle">Cumulative Return</h2>
+          <p>Portfolio return versus <span class="chart-inline-label" style="--label-color:var(--text-3)">ASX 200 benchmark</span>.</p>
+        </div>
+      </div>
+      <div class="chart-panel" id="portfolioChartPanel">
+        <div class="chart-panel-toolbar">
+          <div class="chart-range-chips" role="radiogroup" aria-label="Portfolio chart time range">
+            <label class="chart-range-chip"><input type="radio" name="portfolioRange" value="1M">1M</label>
+            <label class="chart-range-chip"><input type="radio" name="portfolioRange" value="3M">3M</label>
+            <label class="chart-range-chip"><input type="radio" name="portfolioRange" value="6M" checked>6M</label>
+            <label class="chart-range-chip"><input type="radio" name="portfolioRange" value="1Y">1Y</label>
+            <label class="chart-range-chip"><input type="radio" name="portfolioRange" value="all">All</label>
+          </div>
+          <div class="chart-inline-labels" aria-hidden="true">
+            <span class="chart-inline-label" style="--label-color:var(--accent)">Portfolio</span>
+            <span class="chart-inline-label" style="--label-color:var(--text-3)">ASX 200</span>
+          </div>
+        </div>
+        <div class="chart-stage" id="portfolioChartStage" role="img" aria-label="Portfolio cumulative return chart">
+          <span class="skeleton skeleton-block"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>&copy; 2026 ASX Insider Tracker - Cluster Portfolio is a simulated paper portfolio only.</span>
+      <div class="footer-links">
+        <a href="/static/index.html">Trade Feed</a>
+        <a href="/clusters">Cluster Buys</a>
+        <a href="/docs">API Docs</a>
       </div>
     </div>
-  `;
-}
+  </footer>
 
-function renderClosedPositions(){
-  const el = document.getElementById('closedPositionsArea');
-  if(!positionsData || !positionsData.portfolio_exists){
-    el.innerHTML = `<div class="panel empty-state">No portfolio data yet.</div>`;
-    return;
-  }
-  const closedPositions = (positionsData.positions || []).filter(p => p.status === 'closed');
-  if(!closedPositions.length){
-    el.innerHTML = `<div class="panel empty-state">No closed paper positions yet.</div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="table-shell">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Buy Date</th>
-              <th>Sell Date</th>
-              <th>Entry Price</th>
-              <th>Exit Price</th>
-              <th>Entry Price Date</th>
-              <th>Exit Price Date</th>
-              <th>Allocated</th>
-              <th>Realised P&amp;L</th>
-              <th>Sell Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${closedPositions.map(p => {
-              const realisedAud = (p.exit_price !== null && p.entry_price !== null) ? ((p.exit_price - p.entry_price) * p.quantity) : null;
-              const realisedPct = (realisedAud !== null && p.allocated_aud) ? (realisedAud / p.allocated_aud * 100) : null;
-              return `
-                <tr>
-                  <td class="mono">${escapeHtml(p.ticker)}</td>
-                  <td>${fmtDate(p.buy_date)}</td>
-                  <td>${fmtDate(p.sell_date)}</td>
-                  <td>${fmtPrice(p.entry_price)}</td>
-                  <td>${fmtPrice(p.exit_price)}</td>
-                  <td>${fmtDate(p.entry_price_date)}</td>
-                  <td>${fmtDate(p.exit_price_date)}</td>
-                  <td>${fmtCurrency(p.allocated_aud)}</td>
-                  <td><span class="${pnlClass(realisedAud)}">${fmtCurrency(realisedAud)}</span><div class="muted">${fmtPct(realisedPct)}</div></td>
-                  <td>${escapeHtml(p.sell_reason || '—')}</td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
+  <script src="/static/vendor/uplot/uPlot.iife.min.js"></script>
+  <script>
+    let summaryData = null;
+    let positions = [];
+    let sortField = 'buy_date';
+    let sortAsc = false;
+    let portfolioChart = null;
+    let portfolioChartPoints = [];
+    let benchmarkReturnPct = null;
+    const THEME_STORAGE_KEY = 'theme';
 
-function eventSummary(event){
-  const payload = event.payload_json || {};
-  const ticker = payload.ticker || '—';
-  if(event.event_type === 'buy'){
-    return `Bought ${ticker} at ${fmtPrice(payload.entry_price)} using the rules-based active cluster entry rule.`;
-  }
-  if(event.event_type === 'sell'){
-    return `Closed ${ticker} at ${fmtPrice(payload.exit_price)} after the planned holding period.`;
-  }
-  if(event.event_type === 'skip'){
-    return `Skipped ${ticker}: ${String(payload.reason || 'no reason supplied').replaceAll('_',' ')}.`;
-  }
-  if(event.event_type === 'email_sent'){
-    return `Sent ${payload.notification_trade_event_type || 'trade'} email for ${ticker}.`;
-  }
-  if(event.event_type === 'email_failed'){
-    return `Email failed for ${ticker}: ${payload.error || 'unknown error'}.`;
-  }
-  if(event.event_type === 'portfolio_init'){
-    return `Initialized ${payload.name || 'Cluster Portfolio'}.`;
-  }
-  return `${event.event_type} event recorded.`;
-}
+    function toggleDark() {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    }
 
-function renderEvents(){
-  const el = document.getElementById('eventLogArea');
-  if(!eventsData || !eventsData.portfolio_exists){
-    el.innerHTML = `<div class="panel empty-state">No event log yet.</div>`;
-    return;
-  }
-  const events = eventsData.events || [];
-  if(!events.length){
-    el.innerHTML = `<div class="panel empty-state">No events recorded yet.</div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="event-list">
-      ${events.map(event => {
-        const payload = event.payload_json || {};
-        const ticker = payload.ticker ? `<span class="mono">${escapeHtml(payload.ticker)}</span>` : '';
-        const detailBits = [];
-        if(payload.reason) detailBits.push(`Reason: ${String(payload.reason).replaceAll('_',' ')}`);
-        if(payload.entry_price_date) detailBits.push(`Entry price date: ${payload.entry_price_date}`);
-        if(payload.exit_price_date) detailBits.push(`Exit price date: ${payload.exit_price_date}`);
-        if(payload.notification_replayed) detailBits.push('Replay test');
-        if(payload.error) detailBits.push(`Error: ${payload.error}`);
-        return `
-          <div class="event-card">
-            <div class="event-top">
-              <div>
-                <div class="event-meta">
-                  <span class="pill ${eventPillClass(event.event_type)}">${escapeHtml(event.event_type)}</span>
-                  ${ticker}
-                </div>
-                <div class="event-summary">${escapeHtml(eventSummary(event))}</div>
-                <div class="list-inline">
-                  ${payload.industry ? `<span>Industry: ${escapeHtml(payload.industry)}</span>` : ''}
-                  ${payload.director_count !== undefined ? `<span>Directors: ${escapeHtml(payload.director_count)}</span>` : ''}
-                  ${payload.total_value_aud !== undefined ? `<span>Total value: ${fmtCurrency(payload.total_value_aud)}</span>` : ''}
-                  ${payload.pct_market_cap !== undefined && payload.pct_market_cap !== null ? `<span>% cap: ${(payload.pct_market_cap * 100).toFixed(4)}%</span>` : ''}
+    function preferredTheme() {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
+      const legacyDarkMode = localStorage.getItem('darkMode');
+      if (legacyDarkMode === 'true') return 'dark';
+      if (legacyDarkMode === 'false') return 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme, persist = true) {
+      document.documentElement.dataset.theme = theme;
+      if (persist) {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        localStorage.setItem('darkMode', theme === 'dark' ? 'true' : 'false');
+      }
+      if (portfolioChartPoints.length) window.requestAnimationFrame(() => renderPortfolioChart(portfolioChartPoints));
+    }
+
+    function emptyIcon() {
+      return `<svg class="empty-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-7"></path></svg>`;
+    }
+
+    applyTheme(preferredTheme(), false);
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function fmtCurrency(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n);
+    }
+
+    function fmtPrice(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return `$${n.toFixed(n < 1 ? 4 : 2)}`;
+    }
+
+    function fmtPct(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      return `${n > 0 ? '+' : ''}${n.toFixed(2)}%`;
+    }
+
+    function fmtDate(value) {
+      if (!value) return '-';
+      const date = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return '-';
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-AU', { month: 'short' });
+      const year = String(date.getFullYear()).slice(-2);
+      return `${day} ${month} '${year}`;
+    }
+
+    function fmtLongDate(value) {
+      const date = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function metricClass(value) {
+      const n = Number(value);
+      if (Number.isNaN(n) || n === 0) return 'metric-muted';
+      return n > 0 ? 'metric-buy' : 'metric-sell';
+    }
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function rgbaFromCss(value, alpha) {
+      if (value.startsWith('#')) {
+        const hex = value.slice(1);
+        const full = hex.length === 3 ? hex.split('').map(char => char + char).join('') : hex;
+        const int = Number.parseInt(full, 16);
+        return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
+      }
+      if (value.startsWith('rgb(')) return value.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+      return value;
+    }
+
+    function chartAxes(percent = true) {
+      const text2 = cssVar('--text-2');
+      const border = rgbaFromCss(cssVar('--border'), 0.5);
+      const font = `12px ${cssVar('--font-mono')}`;
+      return [
+        {
+          stroke: text2,
+          grid: { stroke: border, width: 1 },
+          font,
+        },
+        {
+          stroke: text2,
+          grid: { stroke: border, width: 1 },
+          font,
+          values: (_u, vals) => vals.map(value => percent ? `${value.toFixed(0)}%` : value.toFixed(2)),
+        },
+      ];
+    }
+
+    function chartSize(stage) {
+      return {
+        width: Math.max(320, Math.floor(stage.clientWidth)),
+        height: Math.floor(stage.clientHeight || (window.innerWidth < 768 ? 220 : 320)),
+      };
+    }
+
+    function showChartSkeleton(stage) {
+      if (portfolioChart) {
+        portfolioChart.destroy();
+        portfolioChart = null;
+      }
+      stage.classList.remove('is-empty');
+      stage.innerHTML = '<span class="skeleton skeleton-block"></span>';
+    }
+
+    function showChartEmpty(stage, title = 'No price history available') {
+      if (portfolioChart) {
+        portfolioChart.destroy();
+        portfolioChart = null;
+      }
+      stage.classList.add('is-empty');
+      stage.innerHTML = `
+        <div class="chart-empty">
+          <div>
+            ${emptyIcon()}
+            <div class="empty-panel-title">${escapeHtml(title)}</div>
+            <div class="empty-panel-copy">The chart will render once stored return history is available.</div>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="loadPortfolioReturns()">Retry</button>
+          </div>
+        </div>`;
+    }
+
+    function renderPortfolioTooltip(chart, points) {
+      const stage = document.getElementById('portfolioChartStage');
+      let tooltip = stage.querySelector('.chart-tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'chart-tooltip';
+        stage.appendChild(tooltip);
+      }
+      const idx = chart.cursor.idx;
+      if (idx === null || idx === undefined || !points[idx]) {
+        tooltip.classList.remove('is-visible');
+        return;
+      }
+      const point = points[idx];
+      tooltip.innerHTML = `
+        <div class="chart-tooltip-title">${fmtLongDate(point.date)}</div>
+        <div class="chart-tooltip-row"><span>Portfolio</span><span class="chart-tooltip-value">${fmtPct(point.portfolio_return_pct)}</span></div>
+        <div class="chart-tooltip-row"><span>ASX 200</span><span class="chart-tooltip-value">${fmtPct(point.benchmark_return_pct)}</span></div>`;
+      const left = Math.min(stage.clientWidth - tooltip.offsetWidth - 8, Math.max(8, chart.cursor.left + 16));
+      const top = Math.min(stage.clientHeight - tooltip.offsetHeight - 8, Math.max(8, chart.cursor.top + 16));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      tooltip.classList.add('is-visible');
+    }
+
+    function renderPortfolioChart(points) {
+      const stage = document.getElementById('portfolioChartStage');
+      if (!stage) return;
+      if (!window.uPlot || points.length < 2) {
+        showChartEmpty(stage);
+        return;
+      }
+
+      portfolioChartPoints = points;
+      if (portfolioChart) portfolioChart.destroy();
+      stage.classList.remove('is-empty');
+      stage.innerHTML = '';
+
+      const opts = {
+        ...chartSize(stage),
+        cursor: { drag: { x: false, y: false } },
+        scales: { x: { time: true } },
+        axes: chartAxes(true),
+        series: [
+          {},
+          { label: 'Portfolio', stroke: cssVar('--accent'), width: 2, spanGaps: true, points: { show: false } },
+          { label: 'ASX 200', stroke: cssVar('--text-3'), width: 1.5, spanGaps: true, points: { show: false } },
+        ],
+        hooks: {
+          setCursor: [chart => renderPortfolioTooltip(chart, points)],
+          leave: [
+            () => {
+              const tooltip = stage.querySelector('.chart-tooltip');
+              if (tooltip) tooltip.classList.remove('is-visible');
+            },
+          ],
+        },
+      };
+      const data = [
+        points.map(point => Math.floor(new Date(`${point.date}T00:00:00`).getTime() / 1000)),
+        points.map(point => point.portfolio_return_pct),
+        points.map(point => point.benchmark_return_pct),
+      ];
+      portfolioChart = new uPlot(opts, data, stage);
+    }
+
+    async function loadPortfolioReturns(range = document.querySelector('input[name="portfolioRange"]:checked')?.value || '6M') {
+      const stage = document.getElementById('portfolioChartStage');
+      showChartSkeleton(stage);
+      try {
+        const response = await fetch(`/api/portfolio/returns?range=${encodeURIComponent(range)}`);
+        if (!response.ok) throw new Error('portfolio returns fetch failed');
+        const payload = await response.json();
+        const points = payload.points || [];
+        const latestBenchmark = [...points].reverse().find(point => point.benchmark_return_pct !== null && point.benchmark_return_pct !== undefined);
+        benchmarkReturnPct = latestBenchmark ? latestBenchmark.benchmark_return_pct : null;
+        renderStats();
+        if (!payload.portfolio_exists || points.length < 2) {
+          showChartEmpty(stage);
+          return;
+        }
+        renderPortfolioChart(points);
+      } catch (error) {
+        showChartEmpty(stage, 'Unable to load return history');
+      }
+    }
+
+    function positionCompany(position) {
+      if (position.industry && position.sector) return `${position.industry} - ${position.sector}`;
+      return position.industry || position.sector || 'Company name unavailable';
+    }
+
+    function positionCurrentPrice(position) {
+      return position.status === 'closed' ? position.exit_price : position.current_price;
+    }
+
+    function positionReturnPct(position) {
+      if (position.status === 'open') return position.unrealised_pnl_pct;
+      if (position.exit_price === null || position.exit_price === undefined || !position.entry_price) return null;
+      return ((Number(position.exit_price) - Number(position.entry_price)) / Number(position.entry_price)) * 100;
+    }
+
+    function winRate() {
+      const tested = positions
+        .map(positionReturnPct)
+        .filter(value => value !== null && value !== undefined && !Number.isNaN(Number(value)));
+      if (!tested.length) return null;
+      return tested.filter(value => Number(value) > 0).length / tested.length * 100;
+    }
+
+    function renderStats() {
+      if (!summaryData || !summaryData.portfolio_exists) {
+        document.getElementById('portfolioStats').innerHTML = `
+          <div class="empty-panel" style="grid-column:1/-1">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">No portfolio initialized</div>
+              <div class="empty-panel-copy">The portfolio appears once the paper strategy has run.</div>
+              <a class="section-link" href="/clusters">Review clusters &rarr;</a>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const portfolioValue = Number(summaryData.total_portfolio_value ?? summaryData.current_cash ?? 0);
+      const startingCash = Number(summaryData.starting_cash || 0);
+      const totalReturnPct = startingCash ? ((portfolioValue - startingCash) / startingCash) * 100 : null;
+      const benchmarkDelta = benchmarkReturnPct === null || totalReturnPct === null ? null : totalReturnPct - benchmarkReturnPct;
+      const rate = winRate();
+
+      document.getElementById('portfolioStats').innerHTML = `
+        <div class="stat-card stat">
+          <div class="stat-label">Portfolio Value</div>
+          <div class="stat-value">${fmtCurrency(portfolioValue)}</div>
+          <div class="stat-sub-value">${fmtCurrency(summaryData.current_cash)} cash</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Total Return</div>
+          <div class="stat-value ${metricClass(totalReturnPct)}">${fmtPct(totalReturnPct)}</div>
+          <div class="stat-sub-value">Since strategy inception</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Vs ASX 200 Benchmark</div>
+          <div class="stat-value ${metricClass(benchmarkDelta)}">${fmtPct(benchmarkDelta)}</div>
+          <div class="stat-sub-value">${benchmarkReturnPct === null ? 'Benchmark loading' : `${fmtPct(benchmarkReturnPct)} ASX 200`}</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value ${metricClass(rate === null ? null : rate - 50)}">${rate === null ? '-' : `${Math.round(rate)}%`}</div>
+          <div class="stat-sub-value">${positions.length.toLocaleString('en-AU')} tracked positions</div>
+        </div>
+      `;
+    }
+
+    function statusBadge(status) {
+      const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+      const cls = status === 'open' ? 'badge-info-soft' : 'badge-soft';
+      return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+    }
+
+    function renderHoldings() {
+      const tbody = document.getElementById('holdingsBody');
+      if (!positions.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-panel">
+                <div>
+                  ${emptyIcon()}
+                  <div class="empty-panel-title">No holdings yet</div>
+                  <div class="empty-panel-copy">Positions will appear once the strategy records a buy.</div>
+                  <a class="section-link" href="/clusters">Review clusters &rarr;</a>
                 </div>
               </div>
-              <div class="event-time">${escapeHtml(event.event_time)}</div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      const rows = [...positions].sort((a, b) => {
+        const aVal = sortField === 'company' ? positionCompany(a) : sortField === 'current_price' ? positionCurrentPrice(a) : sortField === 'return_pct' ? positionReturnPct(a) : a[sortField];
+        const bVal = sortField === 'company' ? positionCompany(b) : sortField === 'current_price' ? positionCurrentPrice(b) : sortField === 'return_pct' ? positionReturnPct(b) : b[sortField];
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+        if (typeof aVal === 'number' || typeof bVal === 'number') return sortAsc ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal);
+        return sortAsc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+      });
+
+      tbody.innerHTML = rows.map(position => {
+        const returnPct = positionReturnPct(position);
+        return `
+          <tr>
+            <td><a class="tag-ticker" href="${position.entry_cluster_id ? `/clusters/${position.entry_cluster_id}` : `/static/company.html?ticker=${encodeURIComponent(position.ticker)}`}">${escapeHtml(position.ticker)}</a></td>
+            <td><span title="${escapeHtml(positionCompany(position))}">${escapeHtml(positionCompany(position))}</span></td>
+            <td>${fmtDate(position.buy_date)}</td>
+            <td class="right money">${fmtPrice(position.entry_price)}</td>
+            <td class="right money">${fmtPrice(positionCurrentPrice(position))}</td>
+            <td class="right pct ${metricClass(returnPct)}">${fmtPct(returnPct)}</td>
+            <td class="right pct metric-muted">-</td>
+            <td>${statusBadge(position.status)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function sortHoldings(field) {
+      if (sortField === field) {
+        sortAsc = !sortAsc;
+      } else {
+        sortField = field;
+        sortAsc = field === 'ticker' || field === 'company' || field === 'status';
+      }
+      renderHoldings();
+    }
+
+    async function init() {
+      try {
+        const [summaryRes, positionsRes] = await Promise.all([
+          fetch('/api/cluster-portfolio/summary'),
+          fetch('/api/cluster-portfolio/positions'),
+        ]);
+        if (!summaryRes.ok || !positionsRes.ok) throw new Error('portfolio fetch failed');
+        summaryData = await summaryRes.json();
+        const positionsData = await positionsRes.json();
+        positions = positionsData.positions || [];
+        renderStats();
+        renderHoldings();
+        loadPortfolioReturns();
+      } catch (error) {
+        document.getElementById('portfolioStats').innerHTML = `
+          <div class="empty-panel" style="grid-column:1/-1">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">Unable to load portfolio data</div>
+              <div class="empty-panel-copy">Refresh the page to try again.</div>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="init()">Retry</button>
             </div>
-            <div class="event-detail">${detailBits.length ? escapeHtml(detailBits.join(' • ')) : 'No additional details.'}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
-
-function scrollToHashIfNeeded(){
-  if(!window.location.hash) return;
-  const target = document.querySelector(window.location.hash);
-  if(target){
-    target.scrollIntoView({ behavior: 'auto', block: 'start' });
-  }
-}
-
-async function loadPortfolioPage(){
-  try{
-    const [summaryRes, positionsRes, eventsRes, historyRes] = await Promise.all([
-      fetch('/api/cluster-portfolio/summary'),
-      fetch('/api/cluster-portfolio/positions'),
-      fetch('/api/cluster-portfolio/events?limit=50'),
-      fetch('/api/cluster-portfolio/history')
-    ]);
-    if(!summaryRes.ok || !positionsRes.ok || !eventsRes.ok || !historyRes.ok){
-      throw new Error('Failed to load Cluster Portfolio data');
-    }
-    summaryData = await summaryRes.json();
-    positionsData = await positionsRes.json();
-    eventsData = await eventsRes.json();
-    historyData = await historyRes.json();
-
-    if(summaryData.portfolio_exists){
-      const latestPriceDate = latestStoredPriceDate();
-      renderMessage(`
-        <div>
-          <strong>${escapeHtml(summaryData.name || 'Cluster Portfolio')}</strong>
-          <div class="muted">Live paper portfolio data from the current rules-based strategy tracker.</div>
-        </div>
-        <div class="muted">Cash ${fmtCurrency(summaryData.current_cash)} · Open positions ${summaryData.open_positions_count}${latestPriceDate ? ` · Latest stored price ${escapeHtml(latestPriceDate)}` : ''}</div>
-      `);
+          </div>`;
+        document.getElementById('holdingsBody').innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-panel">
+                <div>
+                  ${emptyIcon()}
+                  <div class="empty-panel-title">Portfolio data unavailable</div>
+                  <div class="empty-panel-copy">Refresh the page to try again.</div>
+                  <button class="btn btn-ghost btn-sm" type="button" onclick="init()">Retry</button>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+        showChartEmpty(document.getElementById('portfolioChartStage'), 'Unable to load return history');
+      }
     }
 
-    renderSummary();
-    renderHistoryChart();
-    renderOpenPositions();
-    renderClosedPositions();
-    renderEvents();
-    scrollToHashIfNeeded();
-  }catch(err){
-    document.getElementById('summaryArea').innerHTML = `<div class="panel empty-state"><span class="error-text">Unable to load Cluster Portfolio data.</span></div>`;
-    document.getElementById('historyChartArea').innerHTML = `<div class="panel empty-state">Please try refreshing the page.</div>`;
-    document.getElementById('openPositionsArea').innerHTML = `<div class="panel empty-state">Please try refreshing the page.</div>`;
-    document.getElementById('closedPositionsArea').innerHTML = `<div class="panel empty-state">Please try refreshing the page.</div>`;
-    document.getElementById('eventLogArea').innerHTML = `<div class="panel empty-state">Please try refreshing the page.</div>`;
-  }
-}
+    document.querySelectorAll('input[name="portfolioRange"]').forEach(input => {
+      input.addEventListener('change', event => loadPortfolioReturns(event.target.value));
+    });
+    window.addEventListener('resize', () => {
+      if (portfolioChartPoints.length) renderPortfolioChart(portfolioChartPoints);
+    });
 
-function toggleDark(){
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-}
-
-if(localStorage.getItem('darkMode') === 'true'){
-  document.body.classList.add('dark-mode');
-}
-
-loadPortfolioPage();
-portfolioRefreshTimer = window.setInterval(() => {
-  loadPortfolioPage();
-}, PORTFOLIO_REFRESH_MS);
-window.addEventListener('beforeunload', () => {
-  if(portfolioRefreshTimer){
-    window.clearInterval(portfolioRefreshTimer);
-  }
-});
-</script>
+    init();
+  </script>
 </body>
 </html>
