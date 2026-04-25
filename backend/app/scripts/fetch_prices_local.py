@@ -35,15 +35,22 @@ from dotenv import load_dotenv
 # ── Database connection ──────────────────────────────────────────────────────
 
 def _build_dsn() -> str:
-    """Read DATABASE_URL from .env, convert to psycopg2 format (localhost)."""
+    """Read DATABASE_URL and convert it to a psycopg2-compatible URL.
+
+    The script is still safe for local use, but it can also run inside Railway
+    where DATABASE_URL is provided directly by the environment.
+    """
     env_path = Path(__file__).resolve().parents[3] / ".env"
     load_dotenv(env_path)
     url = os.getenv("DATABASE_URL", "")
     if not url:
-        sys.exit("DATABASE_URL not found in .env")
-    # asyncpg driver → psycopg2;  Docker service name 'db' → localhost
-    dsn = url.replace("postgresql+asyncpg://", "postgresql://")
-    dsn = dsn.replace("@db:", "@localhost:")
+        sys.exit("DATABASE_URL not found in environment or .env")
+    # asyncpg driver → psycopg2.
+    dsn = url.replace("postgresql+asyncpg://", "postgresql://", 1)
+    # Local Mac runs need Docker's service host rewritten; Railway/internal
+    # production URLs must stay untouched.
+    if not os.getenv("RAILWAY_ENVIRONMENT") and not os.getenv("RAILWAY_PROJECT_ID"):
+        dsn = dsn.replace("@db:", "@localhost:")
     return dsn
 
 

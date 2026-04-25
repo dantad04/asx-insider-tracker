@@ -8,8 +8,10 @@ Jobs:
 
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 logger = logging.getLogger(__name__)
@@ -83,6 +85,19 @@ async def refresh_cluster_portfolio_prices():
         logger.error(f"✗ Cluster Portfolio price refresh failed: {e}", exc_info=True)
 
 
+async def run_daily_cluster_update():
+    """Run cluster detection/returns/status refresh and the paper portfolio."""
+    logger.info(f"Running daily cluster update at {datetime.now().isoformat()}")
+
+    try:
+        from app.scripts.daily_cluster_update import run
+
+        summary = await run(lookback_days=180)
+        logger.info("✓ Daily cluster update complete: %s", summary)
+    except Exception as e:
+        logger.error(f"✗ Daily cluster update failed: {e}", exc_info=True)
+
+
 def setup_scheduler():
     """Initialize the APScheduler with trade sync and portfolio price refresh jobs."""
     scheduler = AsyncIOScheduler()
@@ -100,8 +115,16 @@ def setup_scheduler():
         name="Refresh open Cluster Portfolio prices",
         replace_existing=True,
     )
+    scheduler.add_job(
+        run_daily_cluster_update,
+        trigger=CronTrigger(hour=18, minute=30, timezone=ZoneInfo("Australia/Melbourne")),
+        id="daily_cluster_update",
+        name="Daily cluster detection + portfolio cycle",
+        replace_existing=True,
+    )
     logger.info(
         "✓ Scheduler started — trade sync every 2 minutes, "
-        "Cluster Portfolio price refresh every 15 minutes"
+        "Cluster Portfolio price refresh every 15 minutes, "
+        "daily cluster update at 18:30 Australia/Melbourne"
     )
     return scheduler

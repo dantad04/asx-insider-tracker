@@ -24,7 +24,7 @@ import argparse
 import asyncio
 import logging
 import sys
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import text
 
@@ -43,6 +43,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_LOOKBACK_DAYS = 90
 PRICE_BATCH_SIZE = 10
 PRICE_BATCH_DELAY = 2  # seconds between batches
+PRICE_BOOTSTRAP_STW_MIN_DAYS = 120
+PRICE_RECENT_BUY_LOOKBACK_DAYS = 180
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -54,10 +56,61 @@ async def _count(session, table: str) -> int:
 
 # ── Step 1: Price Update ────────────────────────────────────────────────────
 
-def _yf_history(yf_code: str):
+def _yf_history(yf_code: str, period: str = "5d"):
     """Sync helper — called inside asyncio.to_thread."""
     import yfinance as yf
-    return yf.Ticker(yf_code).history(period="5d")
+    return yf.Ticker(yf_code).history(period=period)
+
+
+async def _price_update_tickers(session) -> tuple[list[str], bool]:
+    """Return the stored and recent tickers needed by the cluster pipeline.
+
+    Fresh production databases start with no yf_daily_prices rows. Including
+    recent on-market buy tickers lets the cluster detector bootstrap enough
+    price coverage to create active/maturing clusters instead of only STW.
+    """
+    since = date.today() - timedelta(days=PRICE_RECENT_BUY_LOOKBACK_DAYS)
+
+    stw_count = (
+        await session.execute(
+            text("SELECT COUNT(*) FROM yf_daily_prices WHERE ticker = 'STW'")
+        )
+    ).scalar_one()
+    bootstrap_history = stw_count < PRICE_BOOTSTRAP_STW_MIN_DAYS
+
+    result = await session.execute(
+        text(
+            """
+            SELECT DISTINCT ticker
+            FROM (
+                SELECT ticker FROM yf_daily_prices
+                UNION ALL
+                SELECT 'STW' AS ticker
+                UNION ALL
+                SELECT DISTINCT c.ticker
+                FROM trades t
+                JOIN companies c ON c.id = t.company_id
+                WHERE t.date_of_trade >= :since
+                  AND (
+                    UPPER(t.trade_type) IN ('ON_MARKET_BUY', 'ONMARKETBUY')
+                    OR LOWER(t.trade_type) = 'on_market_buy'
+                  )
+                UNION ALL
+                SELECT ticker
+                FROM clusters
+                WHERE status IN ('active', 'maturing')
+                UNION ALL
+                SELECT ticker
+                FROM cluster_portfolio_positions
+                WHERE status = 'open'
+            ) tickers
+            WHERE ticker IS NOT NULL AND ticker <> ''
+            ORDER BY ticker
+            """
+        ),
+        {"since": since},
+    )
+    return [row.ticker for row in result.all()], bootstrap_history
 
 
 async def _step_prices(dry_run: bool) -> dict:
@@ -71,17 +124,16 @@ async def _step_prices(dry_run: bool) -> dict:
         return result
 
     async with async_session() as session:
-        r = await session.execute(
-            text("SELECT DISTINCT ticker FROM yf_daily_prices")
-        )
-        tickers = [row.ticker for row in r.all()]
-    if "STW" not in tickers:
-        tickers.append("STW")
+        tickers, bootstrap_history = await _price_update_tickers(session)
 
     result["attempted"] = len(tickers)
+    result["period"] = "3y" if bootstrap_history else "5d"
 
     if dry_run:
-        logger.info(f"  [DRY RUN] Would fetch prices for {len(tickers)} tickers")
+        logger.info(
+            f"  [DRY RUN] Would fetch {result['period']} prices for "
+            f"{len(tickers)} tickers"
+        )
         return result
 
     total_batches = (len(tickers) + PRICE_BATCH_SIZE - 1) // PRICE_BATCH_SIZE
@@ -94,7 +146,11 @@ async def _step_prices(dry_run: bool) -> dict:
                 fetched = False
                 for attempt in range(2):
                     try:
-                        hist = await asyncio.to_thread(_yf_history, f"{ticker}.AX")
+                        hist = await asyncio.to_thread(
+                            _yf_history,
+                            f"{ticker}.AX",
+                            str(result["period"]),
+                        )
                         if hist.empty:
                             break
                         for ts, row in hist.iterrows():
