@@ -324,8 +324,15 @@ async def get_all_trades(db: AsyncSession = Depends(get_db)):
         )
         .join(Company, Company.id == Trade.company_id)
         .join(Director, Director.id == Trade.director_id)
-        .where(Trade.trade_type.in_(FEED_TRADE_TYPES))
-        .order_by(Trade.date_lodged.desc())
+        .where(
+            Trade.trade_type.in_(FEED_TRADE_TYPES),
+            Trade.date_of_trade <= date.today(),
+        )
+        .order_by(
+            Trade.date_of_trade.desc(),
+            Trade.date_lodged.desc(),
+            Trade.id.desc(),
+        )
     )
     rows = result.all()
 
