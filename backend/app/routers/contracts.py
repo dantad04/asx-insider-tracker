@@ -29,6 +29,7 @@ class LiveContract(BaseModel):
     value_aud: float | None
     agency: str
     description: str | None
+    category_unspsc: str | None
     supplier_name: str
     supplier_abn: str
     parent_ticker: str | None
@@ -174,6 +175,7 @@ async def list_live_contracts(
             c.value_aud,
             c.agency,
             c.description,
+            c.category_unspsc,
             COALESCE(s.supplier_name, c.supplier_name_raw) AS supplier_name,
             c.supplier_abn,
             s.parent_ticker,
@@ -207,6 +209,7 @@ async def list_live_contracts(
             value_aud=_float_or_none(row.value_aud),
             agency=row.agency,
             description=row.description,
+            category_unspsc=row.category_unspsc,
             supplier_name=row.supplier_name,
             supplier_abn=row.supplier_abn,
             parent_ticker=row.parent_ticker,

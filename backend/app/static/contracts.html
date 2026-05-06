@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Government Contracts - ASX Insider Tracker</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/app-pages.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-mark" href="/static/index.html" aria-label="ASX Insider Tracker home">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"></path>
+          <path d="M7 16V9"></path>
+          <path d="M12 16V5"></path>
+          <path d="M17 16v-3"></path>
+        </svg>
+        <span>ASX Insider Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+        <a class="site-nav-link" href="/clusters">Cluster Buys</a>
+        <a class="site-nav-link is-active" href="/contracts">Contracts</a>
+        <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+        <a class="site-nav-link" href="/static/about.html">About</a>
+        <a class="site-nav-link" href="/docs">API Docs</a>
+      </nav>
+      <div class="header-actions">
+        <details class="mobile-nav-menu">
+          <summary class="mobile-menu-summary">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h16"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+            Menu
+          </summary>
+          <nav class="mobile-nav-panel" aria-label="Mobile navigation">
+            <a class="site-nav-link" href="/static/index.html">Trade Feed</a>
+            <a class="site-nav-link" href="/clusters">Cluster Buys</a>
+            <a class="site-nav-link is-active" href="/contracts">Contracts</a>
+            <a class="site-nav-link" href="/clusters/portfolio">Cluster Portfolio</a>
+            <a class="site-nav-link" href="/static/about.html">About</a>
+            <a class="site-nav-link" href="/docs">API Docs</a>
+          </nav>
+        </details>
+        <button class="header-icon-button" type="button" onclick="toggleDark()" aria-label="Toggle dark mode">
+          <svg class="theme-icon-moon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path>
+          </svg>
+          <svg class="theme-icon-sun" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="page-intro" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">Live Government Contracts</h1>
+      <p>Federal contract awards tracked via AusTender. ASX-linked suppliers flagged where mapped.</p>
+    </section>
+
+    <section class="stat-grid" id="contractStats" aria-label="Contract summary">
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+      <div class="stat-card"><span class="skeleton skeleton-card"></span></div>
+    </section>
+
+    <section class="page-section" aria-labelledby="alertFeedTitle">
+      <div class="page-section-header">
+        <div>
+          <h2 id="alertFeedTitle">Alert Feed</h2>
+          <p>Newest generated contract signals first.</p>
+        </div>
+      </div>
+
+      <div class="filter-toolbar contract-filter-toolbar">
+        <div class="filter-field">
+          <span class="filter-label">Alert type</span>
+          <div class="contract-pill-group" role="radiogroup" aria-label="Alert type">
+            <label class="chart-range-chip"><input type="radio" name="alertType" value="" checked>All</label>
+            <label class="chart-range-chip"><input type="radio" name="alertType" value="defence">Defence</label>
+            <label class="chart-range-chip"><input type="radio" name="alertType" value="asx_linked">ASX-linked</label>
+            <label class="chart-range-chip"><input type="radio" name="alertType" value="high_value">High value</label>
+          </div>
+        </div>
+        <div class="filter-field">
+          <label for="priorityFilter">Priority</label>
+          <select class="select" id="priorityFilter">
+            <option value="">All</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+          </select>
+        </div>
+        <div class="filter-summary" id="alertShowing" aria-live="polite">Loading alerts</div>
+      </div>
+
+      <div class="contract-alert-list" id="alertList">
+        <div class="empty-panel"><div class="skeleton skeleton-card"></div></div>
+      </div>
+    </section>
+
+    <section class="page-section" aria-labelledby="contractTableTitle">
+      <div class="page-section-header">
+        <div>
+          <h2 id="contractTableTitle">Contracts</h2>
+          <p>Latest live contract notices from the stored OCDS feed.</p>
+        </div>
+      </div>
+
+      <div class="filter-toolbar contract-filter-toolbar">
+        <div class="filter-field">
+          <label for="contractSearch">Search</label>
+          <input class="input" id="contractSearch" type="search" placeholder="Supplier or description">
+        </div>
+        <div class="filter-field">
+          <span class="filter-label">Defence only</span>
+          <label class="checkbox">
+            <input id="defenceOnlyFilter" type="checkbox">
+            <span>Show defence contracts</span>
+          </label>
+        </div>
+        <div class="filter-field">
+          <span class="filter-label">Min value</span>
+          <div class="contract-pill-group" role="radiogroup" aria-label="Minimum value">
+            <label class="chart-range-chip"><input type="radio" name="minValue" value="0" checked>$0</label>
+            <label class="chart-range-chip"><input type="radio" name="minValue" value="1000000">$1M</label>
+            <label class="chart-range-chip"><input type="radio" name="minValue" value="10000000">$10M</label>
+            <label class="chart-range-chip"><input type="radio" name="minValue" value="50000000">$50M</label>
+            <label class="chart-range-chip"><input type="radio" name="minValue" value="100000000">$100M+</label>
+          </div>
+        </div>
+        <div class="filter-summary" id="contractShowing" aria-live="polite">Loading contracts</div>
+      </div>
+
+      <div class="table-shell is-attached">
+        <div class="table-scroll">
+          <table class="table contract-table" id="contractsTable">
+            <thead>
+              <tr>
+                <th class="is-sortable" data-sort="publish_date" onclick="sortContracts('publish_date')">Date</th>
+                <th class="is-sortable" data-sort="parent_ticker" onclick="sortContracts('parent_ticker')">Ticker</th>
+                <th class="is-sortable" data-sort="supplier_name" onclick="sortContracts('supplier_name')">Supplier</th>
+                <th class="is-sortable" data-sort="agency" onclick="sortContracts('agency')">Agency</th>
+                <th class="is-sortable right" data-sort="value_aud" onclick="sortContracts('value_aud')">Value</th>
+                <th class="is-sortable" data-sort="category_unspsc" onclick="sortContracts('category_unspsc')">Category</th>
+                <th class="is-sortable" data-sort="is_defence_contract" onclick="sortContracts('is_defence_contract')">DEF</th>
+                <th class="is-sortable" data-sort="is_amendment" onclick="sortContracts('is_amendment')">AMD</th>
+              </tr>
+            </thead>
+            <tbody id="contractsBody">
+              <tr><td colspan="8"><div class="skeleton skeleton-row"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="contract-footer-note">Data sourced from AusTender via the official OCDS API. Supplier-ASX mappings verified manually. Not investment advice. Updated daily.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>&copy; 2026 ASX Insider Tracker - Data sourced from ASX announcements.</span>
+      <div class="footer-links">
+        <a href="/static/index.html">Trade Feed</a>
+        <a href="/clusters">Cluster Buys</a>
+        <a href="/docs">API Docs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let statusData = null;
+    let alertRows = [];
+    let contractRows = [];
+    let contractSortField = 'publish_date';
+    let contractSortAsc = false;
+    const THEME_STORAGE_KEY = 'theme';
+
+    function toggleDark() {
+      applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+    }
+
+    function preferredTheme() {
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
+      const legacyDarkMode = localStorage.getItem('darkMode');
+      if (legacyDarkMode === 'true') return 'dark';
+      if (legacyDarkMode === 'false') return 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme, persist = true) {
+      document.documentElement.dataset.theme = theme;
+      if (persist) {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+        localStorage.setItem('darkMode', theme === 'dark' ? 'true' : 'false');
+      }
+    }
+
+    function emptyIcon() {
+      return `<svg class="empty-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-7"></path></svg>`;
+    }
+
+    applyTheme(preferredTheme(), false);
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function truncate(value, maxLength) {
+      const text = String(value ?? '').trim();
+      if (!text) return '-';
+      return text.length > maxLength ? `${text.slice(0, maxLength - 1)}...` : text;
+    }
+
+    function fmtMoney(value) {
+      const n = Number(value);
+      if (value === null || value === undefined || Number.isNaN(n)) return '-';
+      if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
+      if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+      if (Math.abs(n) >= 1_000) return `$${Math.round(n / 1_000)}K`;
+      return `$${Math.round(n)}`;
+    }
+
+    function parseAnyDate(value) {
+      if (!value) return null;
+      const date = new Date(value.includes('T') ? value : `${value}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function fmtDate(value) {
+      const date = parseAnyDate(value);
+      if (!date) return '-';
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-AU', { month: 'short' });
+      const year = date.getFullYear();
+      return `${day} ${month} ${year}`;
+    }
+
+    function priorityBadge(priority) {
+      const normalised = String(priority || '').toLowerCase();
+      const cls = normalised === 'high' ? 'badge-sell-soft' : 'badge-soft';
+      return `<span class="badge ${cls}">${escapeHtml(normalised.toUpperCase() || 'MEDIUM')}</span>`;
+    }
+
+    function alertTypeBadge(type) {
+      const normalised = String(type || '').toLowerCase();
+      const label = {
+        defence: 'DEFENCE',
+        asx_linked: 'ASX-LINKED',
+        high_value: 'HIGH VALUE',
+      }[normalised] || normalised.toUpperCase();
+      const cls = normalised === 'defence' ? 'badge-warn-soft' : normalised === 'asx_linked' ? 'badge-info-soft' : 'badge-sell-soft';
+      return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+    }
+
+    function tickerBadge(ticker) {
+      return ticker ? `<span class="tag-ticker">${escapeHtml(ticker)}</span>` : '<span class="contract-cell-muted">-</span>';
+    }
+
+    function flagBadge(label, enabled) {
+      return `<span class="badge ${enabled ? 'badge-info-soft' : 'badge-soft contract-flag-empty'}">${enabled ? escapeHtml(label) : '-'}</span>`;
+    }
+
+    function renderStats() {
+      const status = statusData || {};
+      document.getElementById('contractStats').innerHTML = `
+        <div class="stat-card stat">
+          <div class="stat-label">Contracts tracked</div>
+          <div class="stat-value">${Number(status.contract_count || 0).toLocaleString('en-AU')}</div>
+          <div class="stat-sub-value">Stored OCDS notices</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">Defence alerts</div>
+          <div class="stat-value">${Number(status.defence_contract_count || 0).toLocaleString('en-AU')}</div>
+          <div class="stat-sub-value">Defence matched contracts</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">ASX-linked</div>
+          <div class="stat-value">${Number(status.asx_linked_count || 0).toLocaleString('en-AU')}</div>
+          <div class="stat-sub-value">Mapped supplier alerts</div>
+        </div>
+        <div class="stat-card stat">
+          <div class="stat-label">High priority</div>
+          <div class="stat-value metric-warn">${Number(status.high_priority_alert_count || 0).toLocaleString('en-AU')}</div>
+          <div class="stat-sub-value">Requires review</div>
+        </div>
+      `;
+    }
+
+    function alertQueryString() {
+      const params = new URLSearchParams({ limit: '20' });
+      const alertType = document.querySelector('input[name="alertType"]:checked')?.value || '';
+      const priority = document.getElementById('priorityFilter').value;
+      if (alertType) params.set('alert_type', alertType);
+      if (priority) params.set('priority', priority);
+      return params.toString();
+    }
+
+    function renderAlertRow(alert) {
+      return `
+        <div class="contract-alert-row">
+          <span class="contract-date">${escapeHtml(fmtDate(alert.detected_at))}</span>
+          ${priorityBadge(alert.priority)}
+          ${alertTypeBadge(alert.alert_type)}
+          ${tickerBadge(alert.ticker)}
+          <span class="contract-cell-main" title="${escapeHtml(alert.supplier_name)}">${escapeHtml(alert.supplier_name || '-')}</span>
+          <span class="contract-cell-muted" title="${escapeHtml(alert.agency)}">${escapeHtml(truncate(alert.agency, 40))}</span>
+          <span class="contract-value">${fmtMoney(alert.contract_value_aud)}</span>
+          <span class="contract-cell-muted" title="${escapeHtml(alert.description)}">${escapeHtml(truncate(alert.description, 80))}</span>
+        </div>`;
+    }
+
+    async function loadAlerts() {
+      const list = document.getElementById('alertList');
+      const showing = document.getElementById('alertShowing');
+      list.innerHTML = '<div class="empty-panel"><div class="skeleton skeleton-card"></div></div>';
+      showing.textContent = 'Loading alerts';
+      try {
+        const response = await fetch(`/api/contracts/alerts?${alertQueryString()}`);
+        if (!response.ok) throw new Error('contract alert fetch failed');
+        const payload = await response.json();
+        alertRows = payload.alerts || [];
+        showing.textContent = `Showing ${alertRows.length.toLocaleString('en-AU')} of ${Number(payload.total || 0).toLocaleString('en-AU')} alerts`;
+        if (!alertRows.length) {
+          list.innerHTML = `
+            <div class="empty-panel">
+              <div>
+                ${emptyIcon()}
+                <div class="empty-panel-title">No alerts match these filters</div>
+                <div class="empty-panel-copy">Broaden the alert type or priority filter.</div>
+              </div>
+            </div>`;
+          return;
+        }
+        list.innerHTML = alertRows.map(renderAlertRow).join('');
+      } catch (error) {
+        list.innerHTML = `
+          <div class="empty-panel">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">Unable to load alerts</div>
+              <div class="empty-panel-copy">Refresh the page to try again.</div>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="loadAlerts()">Retry</button>
+            </div>
+          </div>`;
+        showing.textContent = 'Alert data unavailable';
+      }
+    }
+
+    function currentContractFilters() {
+      return {
+        search: document.getElementById('contractSearch').value.trim().toLowerCase(),
+        defenceOnly: document.getElementById('defenceOnlyFilter').checked,
+        minValue: Number(document.querySelector('input[name="minValue"]:checked')?.value || 0),
+      };
+    }
+
+    function filteredContracts() {
+      const filters = currentContractFilters();
+      return contractRows.filter(contract => {
+        if (filters.defenceOnly && !contract.is_defence_contract) return false;
+        if (Number(contract.value_aud || 0) < filters.minValue) return false;
+        if (filters.search) {
+          const haystack = `${contract.supplier_name || ''} ${contract.description || ''}`.toLowerCase();
+          if (!haystack.includes(filters.search)) return false;
+        }
+        return true;
+      });
+    }
+
+    function sortValue(contract, field) {
+      if (field === 'value_aud') return Number(contract.value_aud || 0);
+      if (field === 'is_defence_contract' || field === 'is_amendment') return contract[field] ? 1 : 0;
+      return contract[field] || '';
+    }
+
+    function sortedContracts(contracts) {
+      return [...contracts].sort((a, b) => {
+        const aVal = sortValue(a, contractSortField);
+        const bVal = sortValue(b, contractSortField);
+        if (typeof aVal === 'number' || typeof bVal === 'number') {
+          return contractSortAsc ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal);
+        }
+        return contractSortAsc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+      });
+    }
+
+    function updateSortHeaders() {
+      document.querySelectorAll('#contractsTable th[data-sort]').forEach(th => {
+        th.classList.remove('is-sorted-asc', 'is-sorted-desc');
+        if (th.dataset.sort === contractSortField) {
+          th.classList.add(contractSortAsc ? 'is-sorted-asc' : 'is-sorted-desc');
+        }
+      });
+    }
+
+    function renderContractRow(contract) {
+      return `
+        <tr>
+          <td>${escapeHtml(fmtDate(contract.publish_date))}</td>
+          <td>${tickerBadge(contract.parent_ticker)}</td>
+          <td class="contract-supplier"><span class="contract-cell-main" title="${escapeHtml(contract.supplier_name)}">${escapeHtml(contract.supplier_name || '-')}</span></td>
+          <td class="contract-agency"><span class="contract-cell-muted" title="${escapeHtml(contract.agency)}">${escapeHtml(contract.agency || '-')}</span></td>
+          <td class="right money">${fmtMoney(contract.value_aud)}</td>
+          <td class="contract-category"><span class="contract-cell-muted" title="${escapeHtml(contract.category_unspsc)}">${escapeHtml(truncate(contract.category_unspsc, 24))}</span></td>
+          <td>${flagBadge('DEF', contract.is_defence_contract)}</td>
+          <td>${flagBadge('AMD', contract.is_amendment)}</td>
+        </tr>`;
+    }
+
+    function renderContracts() {
+      const filtered = sortedContracts(filteredContracts());
+      document.getElementById('contractShowing').textContent = `Showing ${filtered.length.toLocaleString('en-AU')} of ${contractRows.length.toLocaleString('en-AU')} fetched contracts`;
+      updateSortHeaders();
+      if (!filtered.length) {
+        document.getElementById('contractsBody').innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-panel">
+                <div>
+                  ${emptyIcon()}
+                  <div class="empty-panel-title">No contracts match these filters</div>
+                  <div class="empty-panel-copy">Clear the search or lower the value threshold.</div>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+        return;
+      }
+      document.getElementById('contractsBody').innerHTML = filtered.map(renderContractRow).join('');
+    }
+
+    function sortContracts(field) {
+      if (contractSortField === field) {
+        contractSortAsc = !contractSortAsc;
+      } else {
+        contractSortField = field;
+        contractSortAsc = field === 'parent_ticker' || field === 'supplier_name' || field === 'agency' || field === 'category_unspsc';
+      }
+      renderContracts();
+    }
+
+    async function init() {
+      try {
+        const [statusRes, contractsRes] = await Promise.all([
+          fetch('/api/contracts/status'),
+          fetch('/api/contracts/live?limit=100'),
+        ]);
+        if (!statusRes.ok || !contractsRes.ok) throw new Error('contract fetch failed');
+        statusData = await statusRes.json();
+        const contractsData = await contractsRes.json();
+        contractRows = contractsData.contracts || [];
+        renderStats();
+        renderContracts();
+        await loadAlerts();
+      } catch (error) {
+        document.getElementById('contractStats').innerHTML = '';
+        document.getElementById('alertList').innerHTML = `
+          <div class="empty-panel">
+            <div>
+              ${emptyIcon()}
+              <div class="empty-panel-title">Unable to load contract data</div>
+              <div class="empty-panel-copy">Refresh the page to try again.</div>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="init()">Retry</button>
+            </div>
+          </div>`;
+        document.getElementById('contractsBody').innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-panel">
+                <div>
+                  ${emptyIcon()}
+                  <div class="empty-panel-title">Contract data unavailable</div>
+                  <div class="empty-panel-copy">Refresh the page to try again.</div>
+                </div>
+              </div>
+            </td>
+          </tr>`;
+        document.getElementById('alertShowing').textContent = 'Alert data unavailable';
+        document.getElementById('contractShowing').textContent = 'Contract data unavailable';
+      }
+    }
+
+    document.querySelectorAll('input[name="alertType"]').forEach(input => {
+      input.addEventListener('change', loadAlerts);
+    });
+    document.getElementById('priorityFilter').addEventListener('change', loadAlerts);
+    document.getElementById('contractSearch').addEventListener('input', renderContracts);
+    document.getElementById('defenceOnlyFilter').addEventListener('change', renderContracts);
+    document.querySelectorAll('input[name="minValue"]').forEach(input => {
+      input.addEventListener('change', renderContracts);
+    });
+
+    init();
+  </script>
+</body>
+</html>

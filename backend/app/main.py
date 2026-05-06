@@ -114,6 +114,11 @@ async def clusters_page():
     return FileResponse(str(static_dir / "clusters.html"))
 
 
+@app.get("/contracts")
+async def contracts_page():
+    return FileResponse(str(static_dir / "contracts.html"))
+
+
 @app.get("/clusters/{cluster_id:int}")
 async def cluster_detail_page(cluster_id: int):
     return FileResponse(str(static_dir / "cluster_detail.html"))
