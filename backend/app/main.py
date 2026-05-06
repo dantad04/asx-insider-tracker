@@ -11,7 +11,16 @@ from fastapi.staticfiles import StaticFiles
 from app import __version__
 from app.config import settings
 from app.database import close_db, init_db
-from app.routers import cluster_portfolio, clusters, compliance, health, jobs, portfolio_returns, public
+from app.routers import (
+    cluster_portfolio,
+    clusters,
+    compliance,
+    contracts,
+    health,
+    jobs,
+    portfolio_returns,
+    public,
+)
 from app.scheduler import setup_scheduler
 
 
@@ -83,6 +92,7 @@ app.include_router(health.router)
 app.include_router(compliance.router)
 app.include_router(public.router)
 app.include_router(clusters.router)
+app.include_router(contracts.router)
 app.include_router(cluster_portfolio.router)
 app.include_router(portfolio_returns.router)
 app.include_router(jobs.router)
