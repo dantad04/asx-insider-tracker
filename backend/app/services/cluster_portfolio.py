@@ -16,7 +16,7 @@ from app.models.cluster_portfolio import (
 )
 from app.services.price_fetcher import get_close_price_with_date, get_latest_price_with_source
 
-DEFAULT_PORTFOLIO_NAME = "Basic Materials Cluster Portfolio"
+DEFAULT_PORTFOLIO_NAME = "Materials Cluster Portfolio"
 DEFAULT_STRATEGY_KEY = "basic-materials-active-clusters-v1"
 DEFAULT_STARTING_CASH = 100_000.0
 DEFAULT_ALLOCATION_AUD = 10_000.0
@@ -24,7 +24,8 @@ UPGRADED_ALLOCATION_AUD = 15_000.0
 UPGRADED_DIRECTOR_COUNT = 3
 MAX_CONCURRENT_POSITIONS = 10
 EXIT_HOLD_DAYS = 90
-TARGET_SECTOR = "Basic Materials"
+# clusters.sector stores the ASX/GICS label as "Materials", not "Basic Materials".
+TARGET_SECTOR = "Materials"
 BUYABLE_SOURCE_STATUS = "active"
 
 EVENT_BUY = "buy"
@@ -167,7 +168,7 @@ class ClusterPortfolioEngine:
         db: AsyncSession,
         portfolio_id: int,
     ) -> list[ClusterCandidate]:
-        """Return unseen Basic Materials clusters still in active/maturing states."""
+        """Return unseen target-sector clusters still in active/maturing states."""
         cluster_sql = text(
             """
             SELECT
@@ -363,7 +364,7 @@ class ClusterPortfolioEngine:
         today: date,
         dry_run: bool = False,
     ) -> tuple[list[PortfolioAction], list[PortfolioAction]]:
-        """Process newly detected Basic Materials clusters into buys or skips."""
+        """Process newly detected target-sector clusters into buys or skips."""
         actions_buy: list[PortfolioAction] = []
         actions_skip: list[PortfolioAction] = []
 
@@ -445,9 +446,9 @@ class ClusterPortfolioEngine:
 
             planned_exit = today + timedelta(days=EXIT_HOLD_DAYS)
             reason = (
-                "rules-based active Basic Materials cluster entry"
+                f"rules-based active {TARGET_SECTOR} cluster entry"
                 if allocation == DEFAULT_ALLOCATION_AUD
-                else "rules-based active Basic Materials cluster entry (upgraded allocation)"
+                else f"rules-based active {TARGET_SECTOR} cluster entry (upgraded allocation)"
             )
 
             action = PortfolioAction(
