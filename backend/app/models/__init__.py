@@ -7,6 +7,7 @@ from app.models.cluster_portfolio import (
     ClusterPortfolioPosition,
 )
 from app.models.company import Company
+from app.models.contracts import Contract, ContractAlert, ContractSupplier
 from app.models.director import Director
 from app.models.director_company import DirectorCompany
 from app.models.pending_3y_parse import Pending3YParse, ParseStatus
@@ -15,6 +16,9 @@ from app.models.trade import Trade
 
 __all__ = [
     "Company",
+    "Contract",
+    "ContractAlert",
+    "ContractSupplier",
     "Director",
     "DirectorCompany",
     "Trade",
