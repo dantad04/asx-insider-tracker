@@ -60,6 +60,7 @@ UNSPSC_PREFIXES = ("14", "58", "95")
 HIGH_VALUE_THRESHOLD = Decimal("50000000")
 VERY_HIGH_VALUE_THRESHOLD = Decimal("200000000")
 ASX_LINKED_HIGH_VALUE_THRESHOLD = Decimal("10000000")
+ALERT_INSERT_BATCH_SIZE = 1000
 
 
 @dataclass(frozen=True)
@@ -207,14 +208,18 @@ async def _insert_alerts(db: AsyncSession, alert_rows: list[dict]) -> int:
     if not alert_rows:
         return 0
 
-    stmt = (
-        insert(ContractAlert)
-        .values(alert_rows)
-        .on_conflict_do_nothing(index_elements=["cn_id", "alert_type"])
-        .returning(ContractAlert.id)
-    )
-    result = await db.execute(stmt)
-    inserted = len(result.scalars().all())
+    inserted = 0
+    for start in range(0, len(alert_rows), ALERT_INSERT_BATCH_SIZE):
+        batch = alert_rows[start:start + ALERT_INSERT_BATCH_SIZE]
+        stmt = (
+            insert(ContractAlert)
+            .values(batch)
+            .on_conflict_do_nothing(index_elements=["cn_id", "alert_type"])
+            .returning(ContractAlert.id)
+        )
+        result = await db.execute(stmt)
+        inserted += len(result.scalars().all())
+
     await db.commit()
     return inserted
 
