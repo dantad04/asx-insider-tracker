@@ -92,6 +92,39 @@ body {
   transform: scaleX(1);
 }
 
+.site-nav-link.site-nav-cta {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 999px;
+  color: var(--accent-contrast);
+  display: inline-flex;
+  font-weight: 650;
+  justify-content: center;
+  line-height: 1;
+  min-height: var(--control-md);
+  padding: 0 var(--space-4);
+  transition:
+    background-color var(--duration-hover) var(--ease-finished),
+    color var(--duration-hover) var(--ease-finished),
+    box-shadow var(--duration-focus) var(--ease-finished);
+}
+
+.site-nav-link.site-nav-cta::after {
+  display: none;
+}
+
+.site-nav-link.site-nav-cta:hover,
+.site-nav-link.site-nav-cta.is-active {
+  background: var(--accent-hover);
+  color: var(--accent-contrast);
+  text-decoration: none;
+}
+
+.site-nav-link.site-nav-cta:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
 .header-actions {
   align-items: center;
   display: inline-flex;

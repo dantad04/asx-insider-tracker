@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASX Insider Tracker - Real-time Director Trade Monitoring</title>
+    <meta property="og:title" content="ASX Insider Tracker" />
+    <meta property="og:description" content="Track director trades and federal contracts across 1,500+ ASX companies in real time." />
+    <meta property="og:image" content="https://asxdirectortrades.com.au/static/og-image.png" />
+    <meta property="og:url" content="https://asxdirectortrades.com.au" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -943,6 +949,39 @@
         .site-nav-link.is-active::after {
             opacity: 1;
             transform: scaleX(1);
+        }
+
+        .site-nav-link.site-nav-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 0 16px;
+            background: var(--accent);
+            border-radius: 999px;
+            color: var(--accent-contrast) !important;
+            font-weight: 650 !important;
+            line-height: 1;
+            transition:
+                background-color var(--duration-hover) var(--ease-finished),
+                color var(--duration-hover) var(--ease-finished),
+                box-shadow var(--duration-focus) var(--ease-finished);
+        }
+
+        .site-nav-link.site-nav-cta::after {
+            display: none;
+        }
+
+        .site-nav-link.site-nav-cta:hover,
+        .site-nav-link.site-nav-cta.is-active {
+            background: var(--accent-hover);
+            color: var(--accent-contrast) !important;
+            text-decoration: none !important;
+        }
+
+        .site-nav-link.site-nav-cta:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
 
         .header-icon-button,
@@ -2698,9 +2737,8 @@
                 <span>ASX Insider Tracker</span>
             </div>
             <nav class="header-controls" aria-label="Primary navigation">
-                <a href="/clusters/portfolio" class="site-nav-link">View Cluster Portfolio</a>
                 <a href="/clusters" class="site-nav-link">Cluster Buys</a>
-                <a href="/contracts" class="site-nav-link">Contracts</a>
+                <a href="/contracts" class="site-nav-link site-nav-cta">Contracts</a>
                 <a href="/clusters/portfolio" class="site-nav-link">Cluster Portfolio</a>
                 <a href="/static/about.html" class="site-nav-link">About</a>
                 <a href="/docs" target="_blank" class="site-nav-link">API Docs</a>
@@ -2716,9 +2754,8 @@
                         Menu
                     </summary>
                     <nav class="mobile-nav-panel" aria-label="Mobile navigation">
-                        <a href="/clusters/portfolio" class="site-nav-link">View Cluster Portfolio</a>
                         <a href="/clusters" class="site-nav-link">Cluster Buys</a>
-                        <a href="/contracts" class="site-nav-link">Contracts</a>
+                        <a href="/contracts" class="site-nav-link site-nav-cta">Contracts</a>
                         <a href="/clusters/portfolio" class="site-nav-link">Cluster Portfolio</a>
                         <a href="/static/about.html" class="site-nav-link">About</a>
                         <a href="/docs" target="_blank" class="site-nav-link">API Docs</a>
